@@ -1,6 +1,6 @@
-const CACHE_STATIC = 'static-v6'
-const CACHE_PAGES = 'pages-v6'
-const CACHE_API = 'api-v6'
+const CACHE_STATIC = 'static-v7'
+const CACHE_PAGES = 'pages-v7'
+const CACHE_API = 'api-v7'
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...')
@@ -113,8 +113,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url)
 
-  // Subscription-related API routes → network only (never cache)
-  const NO_CACHE_API = ['/api/subscribe', '/api/unsubscribe', '/api/vapid-key']
+  // Auth and subscription-related API routes → network only (never cache).
+  // Caching Auth.js endpoints (csrf/session/providers/callback) serves stale
+  // tokens and cookies, silently breaking the login flow.
+  const NO_CACHE_API = ['/api/subscribe', '/api/unsubscribe', '/api/vapid-key', '/api/auth']
   if (NO_CACHE_API.some((p) => url.pathname.startsWith(p))) {
     event.respondWith(fetch(request))
     return
