@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import MapaGlobalClient from '@/modules/mapa/components/MapaGlobalClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MapaPage() {
   const posts = await prisma.post.findMany({
     where: { latitude: { not: null }, longitude: { not: null } },
