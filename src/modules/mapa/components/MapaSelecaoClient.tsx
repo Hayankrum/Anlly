@@ -15,3 +15,5 @@ export default function MapaSelecaoClient({ initialLat, initialLng, onLocationSe
   const { theme } = useTheme()
   return <MapaSelecao initialLat={initialLat} initialLng={initialLng} onLocationSelect={onLocationSelect} dark={theme === 'dark'} />
 }
+
+
