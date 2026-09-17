@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Meu App</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-primary, #09090b);
+      color: var(--text-primary, #fafafa);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container { text-align: center; max-width: 400px; }
+    .icon { font-size: 48px; margin-bottom: 24px; }
+    h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; color: var(--text-primary, #fafafa); }
+    p { color: var(--text-secondary, #a1a1aa); margin-bottom: 24px; line-height: 1.5; max-width: 400px; }
+    button {
+      background-color: var(--btn-secondary-bg, #27272a);
+      color: var(--text-primary, #fafafa);
+      border: 1px solid var(--border-color, #3f3f46);
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    button:hover { background-color: var(--btn-secondary-hover, #3f3f46); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Você está offline</h1>
+    <p>Verifique sua conexão com a internet e tente novamente.</p>
+    <button onclick="window.location.reload()">Tentar Novamente</button>
+  </div>
+</body>
+</html>

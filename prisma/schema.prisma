@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Post {
+  id         Int         @id @default(autoincrement())
+  titulo     String
+  conteudo   String
+  latitude   Float?
+  longitude  Float?
+  criadoEm   DateTime    @default(now())
+  autorId    Int
+  autor      Usuario     @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  comentarios Comentario[]
+}
+
+model Comentario {
+  id        Int      @id @default(autoincrement())
+  texto     String
+  criadoEm  DateTime @default(now())
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  autorId   Int
+  autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+}
+
+model Usuario {
+  id                   Int              @id @default(autoincrement())
+  nome                 String
+  email                String           @unique
+  senha                String
+  bio                  String?
+  fotoUrl              String?
+  aceitouTermos        Boolean          @default(false)
+  notificacoesAtivas   Boolean          @default(true)
+  notificarComentarios Boolean          @default(true)
+  notificarSistema     Boolean          @default(true)
+  criadoEm             DateTime         @default(now())
+  posts                Post[]
+  comentarios          Comentario[]
+  sessoes              Sessao[]
+  inscricoes           InscricaoPush[]
+  notificacoes         Notificacao[]
+  medias               Media[]
+}
+
+model Sessao {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEm  DateTime
+  criadoEm  DateTime @default(now())
+}
+
+model InscricaoPush {
+  id           Int      @id @default(autoincrement())
+  endpoint     String
+  p256dh       String
+  auth         String
+  usuarioId    Int
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  criadoEm     DateTime @default(now())
+
+  @@unique([endpoint])
+}
+
+model Notificacao {
+  id         Int      @id @default(autoincrement())
+  titulo     String
+  mensagem   String
+  url        String?
+  lida       Boolean  @default(false)
+  criadaEm   DateTime @default(now())
+  enviadaEm  DateTime?
+  usuarioId  Int
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  ownerId     Int
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  storageKey  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       Usuario  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
