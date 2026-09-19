@@ -17,7 +17,7 @@ export async function GET(
   })
 
   if (!evento) {
-    return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 })
+    return NextResponse.json({ error: 'Nota não encontrada' }, { status: 404 })
   }
 
   return NextResponse.json(evento)

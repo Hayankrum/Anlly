@@ -1,6 +1,6 @@
-const CACHE_STATIC = 'static-v8'
-const CACHE_PAGES = 'pages-v8'
-const CACHE_API = 'api-v8'
+const CACHE_STATIC = 'static-v9'
+const CACHE_PAGES = 'pages-v9'
+const CACHE_API = 'api-v9'
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...')

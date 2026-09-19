@@ -136,7 +136,7 @@ export default function MapaGlobal({ eventos, dark }: Props) {
           <div style="min-width: 150px;">
             <strong>${escapeHtml(evento.titulo)}</strong>${evento.done ? ' <small style="color: #16a34a;">✓</small>' : ''}<br/>
             <small style="color: #71717a;">${escapeHtml(data)}</small><br/>
-            <a href="/eventos/${evento.id}" style="color: #3b82f6; text-decoration: underline; font-size: 12px;">Ver evento</a>
+            <a href="/eventos/${evento.id}" style="color: #3b82f6; text-decoration: underline; font-size: 12px;">Ver nota</a>
           </div>
         `)
       markersLayerRef.current!.addLayer(marker)
@@ -164,7 +164,7 @@ export default function MapaGlobal({ eventos, dark }: Props) {
 
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} no mapa
+          {eventosFiltrados.length} nota{eventosFiltrados.length !== 1 ? 's' : ''} no mapa
         </p>
         {busca && (
           <button

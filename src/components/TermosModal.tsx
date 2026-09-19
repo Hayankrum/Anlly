@@ -45,7 +45,7 @@ export default function TermosModal({ isOpen, onClose, readonly = false }: Termo
 
         <div className="flex-1 overflow-y-auto px-6 py-4 prose prose-sm max-w-none" style={{ color: 'var(--text-secondary)' }}>
           <p className="mb-4">
-            Ao utilizar esta plataforma para organizar e cadastrar seus eventos, o usuário declara estar ciente e de
+            Ao utilizar esta plataforma para organizar e cadastrar suas notas, o usuário declara estar ciente e de
             acordo com as condições estabelecidas neste Termo.
           </p>
 

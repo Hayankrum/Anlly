@@ -39,7 +39,7 @@ export default function EventoDetailPage({ id }: { id: number }) {
     return (
       <div>
         <OfflineBanner fromCache={fromCache} />
-        <p style={{ color: 'var(--text-tertiary)' }}>Evento não encontrado.</p>
+        <p style={{ color: 'var(--text-tertiary)' }}>Nota não encontrada.</p>
         <Link href="/" className="text-sm mt-4 inline-block hover:underline" style={{ color: 'var(--text-tertiary)' }}>
           ← Início
         </Link>
@@ -232,7 +232,7 @@ export default function EventoDetailPage({ id }: { id: number }) {
             color: e.done ? 'var(--text-primary)' : 'var(--btn-primary-text)',
           }}
         >
-          {e.done ? 'Reabrir evento' : 'Concluir evento'}
+          {e.done ? 'Reabrir nota' : 'Concluir nota'}
         </button>
         <Link
           href={`/eventos/${e.id}/editar`}
@@ -252,9 +252,9 @@ export default function EventoDetailPage({ id }: { id: number }) {
       {confirmandoExclusao && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="rounded-xl p-6 w-full max-w-sm mx-4" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Excluir evento</h2>
+            <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Excluir nota</h2>
             <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-              Tem certeza que quer excluir este evento? Esta ação não pode ser desfeita.
+              Tem certeza que quer excluir esta nota? Esta ação não pode ser desfeita.
             </p>
             <div className="flex gap-3 justify-end">
               <button

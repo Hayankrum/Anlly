@@ -220,7 +220,7 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
             style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderLeft: `4px solid ${proximoEvento.color ?? '#3b82f6'}` }}
           >
             <div className="min-w-0">
-              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Próximo evento</p>
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Próxima nota</p>
               <p className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{proximoEvento.title}</p>
             </div>
             <span className="text-lg font-semibold whitespace-nowrap" style={{ color: '#3b82f6' }}>
@@ -272,7 +272,7 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
             className="font-medium rounded-lg px-4 py-2 text-sm transition-colors inline-block"
             style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
-            Criar primeiro evento
+            Criar primeira nota
           </Link>
         </div>
       ) : (

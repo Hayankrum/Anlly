@@ -87,7 +87,7 @@ export default function NotificationPermissionPopup({ usuarioId }: Props) {
             ? 'Você receberá alertas dos seus lembretes'
             : permissionDenied
               ? 'Clique no ícone 🔒 na barra de endereço e ative'
-              : 'Receba alertas dos seus lembretes de eventos'}
+              : 'Receba alertas dos seus lembretes de notas'}
         </span>
         {error && (
           <span className="text-xs mt-1 text-red-500 whitespace-pre-line">{error}</span>

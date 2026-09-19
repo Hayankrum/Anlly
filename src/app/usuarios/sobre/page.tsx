@@ -149,7 +149,7 @@ export default function SobrePage() {
           <ul className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
             <li className="flex items-center gap-2">
               <span>📝</span>
-              <span>Criação e gerenciamento de eventos</span>
+              <span>Criação e gerenciamento de notas</span>
             </li>
             <li className="flex items-center gap-2">
               <span>🗺️</span>

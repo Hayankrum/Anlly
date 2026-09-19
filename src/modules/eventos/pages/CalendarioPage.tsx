@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useEventos } from '../useEventos'
 import { alternarConclusaoEvento } from '../eventos.actions'
@@ -374,7 +373,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
                   borderColor: selecionado ? 'var(--text-tertiary)' : 'transparent',
                   opacity: pertence ? 1 : 0.4,
                 }}
-                aria-label={`Dia ${chave}, ${doDia.length} evento(s)`}
+                aria-label={`Dia ${chave}, ${doDia.length} nota(s)`}
               >
                 <span
                   className="text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full"
@@ -411,17 +410,10 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="mb-3">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
           {formatarDataLonga(new Date(`${diaSelecionado}T00:00`))}
         </h2>
-        <Link
-          href={`/eventos/novo?data=${diaSelecionado}`}
-          className="text-xs font-medium rounded-lg px-3 py-1.5 transition-colors flex-shrink-0"
-          style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-        >
-          + Evento
-        </Link>
       </div>
 
       {loading ? (
@@ -439,7 +431,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
         </div>
       ) : eventosSelecionados.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          Nenhum evento neste dia.
+          Nenhuma nota neste dia.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -461,7 +453,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
           className="text-sm font-medium rounded-lg px-4 py-2 transition-colors flex items-center justify-between gap-2 w-full mb-2"
           style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
         >
-          <span>🗺️ Mapa dos eventos</span>
+          <span>🗺️ Mapa das notas</span>
           <span>{mapaAberto ? '▲' : '▼'}</span>
         </button>
         {mapaAberto && <MapaGlobalClient eventos={eventosComCoordenadas} />}

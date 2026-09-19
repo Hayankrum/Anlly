@@ -147,7 +147,7 @@ function calcularReminders(startsAt: Date, offsets: number[]) {
 
 export async function criarEvento(dados: DadosEvento) {
   const usuario = await getUsuarioLogado()
-  if (!usuario) return { error: 'Você precisa estar logado para criar um evento' }
+  if (!usuario) return { error: 'Você precisa estar logado para criar uma nota' }
 
   const resultado = validarDados(dados)
   if (!resultado.ok) return { error: resultado.error }
@@ -180,10 +180,10 @@ export async function criarEvento(dados: DadosEvento) {
 
 export async function editarEvento(id: number, dados: DadosEvento) {
   const usuario = await getUsuarioLogado()
-  if (!usuario) return { error: 'Você precisa estar logado para editar um evento' }
+  if (!usuario) return { error: 'Você precisa estar logado para editar uma nota' }
 
   const evento = await prisma.event.findUnique({ where: { id } })
-  if (!evento) return { error: 'Evento não encontrado' }
+  if (!evento) return { error: 'Nota não encontrada' }
 
   const resultado = validarDados(dados)
   if (!resultado.ok) return { error: resultado.error }
@@ -222,7 +222,7 @@ export async function alternarConclusaoEvento(id: number, done: boolean) {
   if (!usuario) return { error: 'Você precisa estar logado' }
 
   const evento = await prisma.event.findUnique({ where: { id } })
-  if (!evento) return { error: 'Evento não encontrado' }
+  if (!evento) return { error: 'Nota não encontrada' }
 
   await prisma.event.update({ where: { id }, data: { done } })
   revalidatePath('/eventos')
@@ -236,7 +236,7 @@ export async function deletarEvento(id: number) {
   if (!usuario) return { error: 'Você precisa estar logado' }
 
   const evento = await prisma.event.findUnique({ where: { id } })
-  if (!evento) return { error: 'Evento não encontrado' }
+  if (!evento) return { error: 'Nota não encontrada' }
 
   await prisma.event.delete({ where: { id } })
   revalidatePath('/eventos')

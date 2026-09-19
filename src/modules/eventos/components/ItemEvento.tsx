@@ -45,7 +45,7 @@ export default function ItemEvento({ evento, onToggle, mostrarData = true }: Pro
         checked={evento.done}
         onChange={() => onToggle(evento)}
         className="w-5 h-5 cursor-pointer flex-shrink-0"
-        aria-label={evento.done ? 'Reabrir evento' : 'Marcar como concluído'}
+        aria-label={evento.done ? 'Reabrir nota' : 'Marcar como concluído'}
       />
       <Link href={`/eventos/${evento.id}`} className="flex-1 min-w-0 block">
         <p

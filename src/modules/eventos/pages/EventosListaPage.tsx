@@ -96,7 +96,7 @@ export default function EventosListaPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Todos os eventos
+              Todas as notas
             </h1>
             {!loading && eventos.length > 0 && (
               <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
@@ -109,7 +109,7 @@ export default function EventosListaPage() {
             className="font-medium rounded-lg px-4 py-2 text-sm transition-colors flex-shrink-0"
             style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
-            + Novo evento
+            + Nova nota
           </Link>
         </div>
         {!loading && eventos.length > 0 && (
@@ -160,14 +160,14 @@ export default function EventosListaPage() {
           style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         >
           <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
-            Nenhum evento por aqui ainda.
+            Nenhuma nota por aqui ainda.
           </p>
           <Link
             href="/eventos/novo"
             className="font-medium rounded-lg px-4 py-2 text-sm transition-colors inline-block"
             style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
           >
-            Criar primeiro evento
+            Criar primeira nota
           </Link>
         </div>
       ) : (

@@ -16,7 +16,7 @@ async function buscarEventos(range: EventosRange): Promise<Evento[]> {
   if (range.to) params.set('to', range.to)
   const qs = params.toString()
   const res = await fetch(`/api/eventos${qs ? `?${qs}` : ''}`)
-  if (!res.ok) throw new Error('Falha ao carregar eventos')
+  if (!res.ok) throw new Error('Falha ao carregar notas')
   const data = await res.json()
   return Array.isArray(data?.eventos) ? data.eventos : []
 }
@@ -112,7 +112,7 @@ export function useEvento(id: number, refreshKey = 0) {
       setLoading(true)
       try {
         const res = await fetch(`/api/eventos/${id}`)
-        if (!res.ok) throw new Error('Falha ao carregar evento')
+        if (!res.ok) throw new Error('Falha ao carregar nota')
         const data = await res.json()
         if (!cancelled && mountedRef.current) {
           setEvento(data)

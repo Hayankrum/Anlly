@@ -175,7 +175,7 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6" style={{ color: 'var(--text-primary)' }}>
-        {isEditing ? 'Editar evento' : 'Novo evento'}
+        {isEditing ? 'Editar nota' : 'Nova nota'}
       </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -191,7 +191,7 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Título do evento"
+            placeholder="Título da nota"
             required
             className={inputClass}
             style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
@@ -399,7 +399,7 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
           className="font-medium rounded-lg px-4 py-2 transition-colors w-fit disabled:opacity-50"
           style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
         >
-          {saving ? 'Salvando...' : isEditing ? 'Salvar' : 'Criar evento'}
+          {saving ? 'Salvando...' : isEditing ? 'Salvar' : 'Criar nota'}
         </button>
       </form>
     </div>
