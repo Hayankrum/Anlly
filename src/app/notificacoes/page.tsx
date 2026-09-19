@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePushSubscription } from '@/lib/usePushSubscription'
 import { toggleNotificacoes } from '@/modules/usuarios/usuarios.actions'
 import { ListaSkeleton } from '@/components/Skeletons'
+import PushTestPanel from '@/components/testes/PushTestPanel'
 
 interface NotificacaoHistorico {
   id: number
@@ -176,6 +177,16 @@ export default function NotificacoesPage() {
           </button>
         </div>
       </div>
+
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6">
+          <div className="pt-6 mb-4" style={{ borderTop: '1px solid var(--border-color)' }}>
+            <h2 className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Testes de Push (dev)</h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>Ative as notificações acima e depois envie um push para você mesmo.</p>
+          </div>
+          <PushTestPanel />
+        </div>
+      )}
 
       <div className="pt-4" style={{ borderTop: '1px solid var(--border-color)' }}>
         <div className="flex items-center justify-between mb-3">
