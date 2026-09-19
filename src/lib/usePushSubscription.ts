@@ -252,15 +252,23 @@ export function usePushSubscription() {
 
         // Brave-specific error handling
         if (browser.isBrave) {
+          const mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)
           if (errMsg.includes('push service') || errMsg.includes('Push service')) {
+            if (mobile) {
+              return {
+                success: false,
+                error: 'O Brave bloqueou a criação do push.\n\nSolução:\n1. Acesse brave://settings/content/notifications\n2. Adicione este site à lista de permissões\n3. Volte e tente ativar novamente',
+              }
+            }
             return {
               success: false,
-              error: 'O Brave bloqueia notificações push por padrão.\n\nSolução:\n1. Acesse brave://settings/content/notifications\n2. Adicione este site à lista de permissões\n3. Ou use Chrome/Firefox para melhor compatibilidade',
+              error:
+                'O Brave do PC bloqueia o serviço de push por padrão.\n\nSolução:\n1. Acesse brave://settings/?search=push\n2. Ative "Use Google services for push messaging"\n3. Reinicie o Brave e tente ativar novamente\n\nPara receber push com o Brave fechado, ative também "Continuar executando aplicativos em segundo plano" em brave://settings/system',
             }
           }
           return {
             success: false,
-            error: `Erro no Brave: ${errMsg}\n\nVerifique brave://settings/content/notifications`,
+            error: `Erro no Brave: ${errMsg}\n\nVerifique brave://settings/content/notifications\nE em PC: brave://settings/?search=push`,
           }
         }
 

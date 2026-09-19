@@ -142,7 +142,7 @@ export default function NotificacoesPage() {
 
       {statusMessage && (
         <div
-          className="mb-4 p-3 rounded-lg text-sm"
+          className="mb-4 p-3 rounded-lg text-sm whitespace-pre-line"
           style={{
             backgroundColor: statusMessage.type === 'success' ? '#dcfce7' : '#fee2e2',
             color: statusMessage.type === 'success' ? '#16a34a' : '#dc2626',
