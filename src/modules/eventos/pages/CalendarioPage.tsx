@@ -36,6 +36,26 @@ function agruparPorDia(eventos: Evento[]): Map<string, Evento[]> {
   return mapa
 }
 
+function agruparPorMes(
+  eventos: Evento[]
+): Map<number, Map<number, Map<number, Evento[]>>> {
+  const mapa = new Map<number, Map<number, Map<number, Evento[]>>>()
+  for (const evento of eventos) {
+    const d = new Date(evento.startsAt)
+    const ano = d.getFullYear()
+    const mes = d.getMonth()
+    const dia = d.getDate()
+    const porMes = mapa.get(ano) ?? new Map<number, Map<number, Evento[]>>()
+    const porDia = porMes.get(mes) ?? new Map<number, Evento[]>()
+    const lista = porDia.get(dia) ?? []
+    lista.push(evento)
+    porDia.set(dia, lista)
+    porMes.set(mes, porDia)
+    mapa.set(ano, porMes)
+  }
+  return mapa
+}
+
 export default function CalendarioPage({ mesInicial }: { mesInicial?: string | null }) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [acaoError, setAcaoError] = useState('')
@@ -44,6 +64,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
   const hojeChave = dataParaInputDate(hoje)
 
   const [mes, setMes] = useState<Date>(() => paramParaMes(mesInicial) ?? inicioDoMes(hoje))
+  const [modo, setModo] = useState<'mes' | 'ano'>('mes')
   const [diaSelecionado, setDiaSelecionado] = useState<string>(() => {
     const inicial = paramParaMes(mesInicial) ?? inicioDoMes(hoje)
     return inicial.getFullYear() === hoje.getFullYear() && inicial.getMonth() === hoje.getMonth()
@@ -58,13 +79,19 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
     return { inicioGrade: somarDias(primeiro, -deslocamento), totalCelulas: celulas }
   }, [mes])
 
-  const range = useMemo(
-    () => ({
+  const range = useMemo(() => {
+    if (modo === 'ano') {
+      const ano = mes.getFullYear()
+      return {
+        from: new Date(ano, 0, 1).toISOString(),
+        to: new Date(ano, 11, 31, 23, 59, 59, 999).toISOString(),
+      }
+    }
+    return {
       from: inicioGrade.toISOString(),
       to: new Date(somarDias(inicioGrade, totalCelulas).getTime() - 1).toISOString(),
-    }),
-    [inicioGrade, totalCelulas]
-  )
+    }
+  }, [modo, mes, inicioGrade, totalCelulas])
 
   const { eventos, loading, fromCache } = useEventos(range, refreshKey)
   const porDia = useMemo(() => agruparPorDia(eventos), [eventos])
@@ -76,6 +103,18 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
   }, [inicioGrade, totalCelulas])
 
   const eventosSelecionados = porDia.get(diaSelecionado) ?? []
+
+  const eventosPorAno = useMemo(() => agruparPorMes(eventos), [eventos])
+  const ano = mes.getFullYear()
+  const porMesAno = eventosPorAno.get(ano) ?? new Map<number, Map<number, Evento[]>>()
+
+  function totalEventosNoMes(mesIndice: number): number {
+    const mesMap = porMesAno.get(mesIndice)
+    if (!mesMap) return 0
+    let total = 0
+    for (const lista of mesMap.values()) total += lista.length
+    return total
+  }
 
   async function toggleDone(evento: Evento) {
     setAcaoError('')
@@ -109,8 +148,24 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
   function irParaHoje() {
     const novo = inicioDoMes(hoje)
     setMes(novo)
-    setDiaSelecionado(hojeChave)
+    if (modo === 'mes') setDiaSelecionado(hojeChave)
     atualizarUrl(novo)
+  }
+
+  function irParaAno(delta: number) {
+    const novo = new Date(mes.getFullYear() + delta, 0, 1)
+    setMes(novo)
+    atualizarUrl(novo)
+  }
+
+  function abrirMes(anoAlvo: number, mesAlvo: number) {
+    const alvo = new Date(anoAlvo, mesAlvo, 1)
+    setMes(alvo)
+    const ehHoje =
+      alvo.getFullYear() === hoje.getFullYear() && alvo.getMonth() === hoje.getMonth()
+    setDiaSelecionado(ehHoje ? hojeChave : dataParaInputDate(alvo))
+    setModo('mes')
+    atualizarUrl(alvo)
   }
 
   const botaoMes =
@@ -120,42 +175,135 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
     <div>
       <OfflineBanner fromCache={fromCache} />
 
-      <div className="flex items-center justify-between mb-4 gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold capitalize truncate" style={{ color: 'var(--text-primary)' }}>
-            {nomeDoMes(mes.getMonth())} {mes.getFullYear()}
-          </h1>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => irParaMes(-1)}
-            className={botaoMes}
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold capitalize truncate" style={{ color: 'var(--text-primary)' }}>
+              {modo === 'ano' ? `Anual ${ano}` : `${nomeDoMes(mes.getMonth())} ${ano}`}
+            </h1>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <div
+              className="flex items-center gap-0.5 rounded-lg p-0.5"
+              style={{ backgroundColor: 'var(--btn-secondary-bg)' }}
+            >
+              {(['mes', 'ano'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setModo(m)}
+                  aria-label={m === 'mes' ? 'Visão mensal' : 'Visão anual'}
+                  className="h-7 px-2.5 rounded-md text-xs font-medium transition-colors"
+                  style={{
+                    backgroundColor: modo === m ? 'var(--btn-primary-bg)' : 'transparent',
+                    color: modo === m ? 'var(--btn-primary-text)' : 'var(--text-primary)',
+                  }}
+                >
+                  {m === 'mes' ? 'Mês' : 'Ano'}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => (modo === 'ano' ? irParaAno(-1) : irParaMes(-1))}
+              className={botaoMes}
+              style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)' }}
+              aria-label={modo === 'ano' ? 'Ano anterior' : 'Mês anterior'}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={irParaHoje}
+              className="h-9 px-3 rounded-lg text-xs font-medium transition-colors"
+              style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)' }}
+            >
+              Hoje
+            </button>
+            <button
+              type="button"
+              onClick={() => (modo === 'ano' ? irParaAno(1) : irParaMes(1))}
+              className={botaoMes}
             style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)' }}
-            aria-label="Mês anterior"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            onClick={irParaHoje}
-            className="h-9 px-3 rounded-lg text-xs font-medium transition-colors"
-            style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)' }}
-          >
-            Hoje
-          </button>
-          <button
-            type="button"
-            onClick={() => irParaMes(1)}
-            className={botaoMes}
-            style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)' }}
-            aria-label="Próximo mês"
+            aria-label={modo === 'ano' ? 'Próximo ano' : 'Próximo mês'}
           >
             ›
           </button>
         </div>
       </div>
+      {modo === 'ano' && loading && (
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          Carregando eventos do ano...
+        </p>
+      )}
+    </div>
 
+    {modo === 'ano' && (
+      <div
+        className="rounded-2xl p-3 md:p-4 mb-6"
+        style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
+          {Array.from({ length: 12 }, (_, i) => {
+            const ehMesAtual = ano === hoje.getFullYear() && i === hoje.getMonth()
+            const diaHoje = ehMesAtual ? hoje.getDate() : null
+            const diasDoMes = porMesAno.get(i)
+            const total = totalEventosNoMes(i)
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => abrirMes(ano, i)}
+                className="rounded-xl p-3 flex flex-col gap-2 transition-colors text-left"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid',
+                  borderColor: ehMesAtual ? 'var(--btn-primary-bg)' : 'var(--card-border)',
+                }}
+                aria-label={`Abrir ${nomeDoMes(i)} de ${ano}`}
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {nomeDoMes(i)}
+                  </span>
+                  {total > 0 && (
+                    <span
+                      className="text-[11px] rounded-full px-2 py-0.5 flex-shrink-0"
+                      style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-secondary)' }}
+                    >
+                      {total}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-7 gap-[3px]">
+                  {Array.from({ length: diasNoMes(new Date(ano, i, 1)) }, (_, d) => {
+                    const numDia = d + 1
+                    const doDia = diasDoMes?.get(numDia) ?? []
+                    const ehHojeDia = numDia === diaHoje
+                    let cor = 'var(--card-border)'
+                    if (doDia.length > 0) {
+                      cor = doDia.some((e) => !e.done) ? 'var(--text-secondary)' : 'var(--text-tertiary)'
+                    }
+                    if (ehHojeDia) cor = 'var(--btn-primary-bg)'
+                    return (
+                      <span
+                        key={numDia}
+                        title={`${numDia} — ${doDia.length} evento(s)`}
+                        className="rounded-full"
+                        style={{ width: 6, height: 6, backgroundColor: cor }}
+                      />
+                    )
+                  })}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )}
+
+    {modo === 'mes' && (
+      <>
       <div
         className="rounded-2xl p-2 md:p-3 mb-6"
         style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
@@ -271,7 +419,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
           ))}
         </div>
       )}
-
+      </>)}
       <Link
         href="/eventos"
         className="text-sm hover:underline inline-block mt-6"
