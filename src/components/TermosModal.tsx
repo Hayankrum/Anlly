@@ -45,13 +45,13 @@ export default function TermosModal({ isOpen, onClose, readonly = false }: Termo
 
         <div className="flex-1 overflow-y-auto px-6 py-4 prose prose-sm max-w-none" style={{ color: 'var(--text-secondary)' }}>
           <p className="mb-4">
-            Ao utilizar esta plataforma para criar ou interagir com posts, o usuário declara estar ciente e de acordo
-            com as condições estabelecidas neste Termo.
+            Ao utilizar esta plataforma para organizar e cadastrar seus eventos, o usuário declara estar ciente e de
+            acordo com as condições estabelecidas neste Termo.
           </p>
 
           <h2 className="text-lg font-semibold mt-4 mb-2" style={{ color: 'var(--text-primary)' }}>1. Sobre a plataforma</h2>
           <p className="mb-4">
-            Esta é uma plataforma para criação, compartilhamento e exploração de posts, com suporte a comentários,
+            Esta é uma plataforma de agenda e eventos, com suporte a
             geolocalização, notificações push e funcionamento offline.
           </p>
 

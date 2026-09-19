@@ -47,7 +47,7 @@ export default function BotaoDeletarPerfil({ id, temSenha }: Props) {
           <div className="rounded-xl p-6 w-full max-w-sm mx-4" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
             <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Deletar conta</h2>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Tem certeza que quer deletar sua conta? Todos os seus posts também serão deletados. Esta ação não pode ser desfeita.
+              Tem certeza que quer deletar sua conta? Esta ação não pode ser desfeita.
             </p>
             {temSenha && (
               <div className="mb-4">
