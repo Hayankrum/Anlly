@@ -5,20 +5,20 @@ import { useTheme } from '@/lib/ThemeProvider'
 
 const MapaGlobal = dynamic(() => import('./MapaGlobal'), { ssr: false })
 
-interface PostMarker {
+export interface EventoMarker {
   id: number
   titulo: string
+  startsAt: string
   latitude: number
   longitude: number
-  autorNome: string
-  criadoEm: string
+  done: boolean
 }
 
 interface Props {
-  posts: PostMarker[]
+  eventos: EventoMarker[]
 }
 
-export default function MapaGlobalClient({ posts }: Props) {
+export default function MapaGlobalClient({ eventos }: Props) {
   const { theme } = useTheme()
-  return <MapaGlobal posts={posts} dark={theme === 'dark'} />
+  return <MapaGlobal eventos={eventos} dark={theme === 'dark'} />
 }

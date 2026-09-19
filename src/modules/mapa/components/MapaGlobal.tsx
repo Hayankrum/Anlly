@@ -7,15 +7,7 @@ import 'leaflet-fullscreen/dist/leaflet.fullscreen.css'
 import 'leaflet-fullscreen/dist/Leaflet.fullscreen'
 import 'leaflet.locatecontrol/dist/L.Control.Locate.min.css'
 import 'leaflet.locatecontrol/dist/L.Control.Locate.min.js'
-
-interface PostMarker {
-  id: number
-  titulo: string
-  latitude: number
-  longitude: number
-  autorNome: string
-  criadoEm: string
-}
+import type { EventoMarker } from './MapaGlobalClient'
 
 function escapeHtml(str: string): string {
   return str
@@ -27,24 +19,19 @@ function escapeHtml(str: string): string {
 }
 
 interface Props {
-  posts: PostMarker[]
+  eventos: EventoMarker[]
   dark?: boolean
 }
 
-export default function MapaGlobal({ posts, dark }: Props) {
+export default function MapaGlobal({ eventos, dark }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const markersLayerRef = useRef<L.LayerGroup | null>(null)
-  const [filtroAutor, setFiltroAutor] = useState<string>('')
   const [busca, setBusca] = useState<string>('')
 
-  const autores = [...new Set(posts.map(p => p.autorNome))].sort()
-
-  const postsFiltrados = useMemo(() => posts.filter(post => {
-    const matchAutor = !filtroAutor || post.autorNome === filtroAutor
-    const matchBusca = !busca || post.titulo.toLowerCase().includes(busca.toLowerCase())
-    return matchAutor && matchBusca
-  }), [posts, filtroAutor, busca])
+  const eventosFiltrados = useMemo(() => eventos.filter(evento => {
+    return !busca || evento.titulo.toLowerCase().includes(busca.toLowerCase())
+  }), [eventos, busca])
 
   useEffect(() => {
     if (!mapRef.current) return
@@ -111,80 +98,71 @@ export default function MapaGlobal({ posts, dark }: Props) {
 
     markersLayerRef.current.clearLayers()
 
-    const createIcon = () => L.divIcon({
+    const createIcon = (done: boolean) => L.divIcon({
       className: 'custom-marker',
       html: `<div style="
         width: 20px;
         height: 20px;
-        background: ${dark ? '#f87171' : '#ef4444'};
+        background: ${done ? '#71717a' : dark ? '#f87171' : '#ef4444'};
         border: 3px solid ${dark ? '#18181b' : '#ffffff'};
         border-radius: 50%;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        opacity: ${done ? 0.6 : 1};
       "></div>`,
       iconSize: [20, 20],
       iconAnchor: [10, 10],
     })
 
-    postsFiltrados.forEach(post => {
-      const marker = L.marker([post.latitude, post.longitude], { icon: createIcon() })
+    eventosFiltrados.forEach(evento => {
+      const data = new Date(evento.startsAt).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      const marker = L.marker([evento.latitude, evento.longitude], { icon: createIcon(evento.done) })
         .bindPopup(`
           <div style="min-width: 150px;">
-            <strong>${escapeHtml(post.titulo)}</strong><br/>
-            <small style="color: #71717a;">por ${escapeHtml(post.autorNome)}</small><br/>
-            <small style="color: #71717a;">${new Date(post.criadoEm).toLocaleDateString('pt-BR')}</small><br/>
-            <a href="/posts/${post.id}" style="color: #3b82f6; text-decoration: underline; font-size: 12px;">Ver post</a>
+            <strong>${escapeHtml(evento.titulo)}</strong>${evento.done ? ' <small style="color: #16a34a;">✓</small>' : ''}<br/>
+            <small style="color: #71717a;">${escapeHtml(data)}</small><br/>
+            <a href="/eventos/${evento.id}" style="color: #3b82f6; text-decoration: underline; font-size: 12px;">Ver evento</a>
           </div>
         `)
       markersLayerRef.current!.addLayer(marker)
     })
 
-    if (postsFiltrados.length > 0) {
-      const bounds = L.latLngBounds(postsFiltrados.map(p => [p.latitude, p.longitude]))
+    if (eventosFiltrados.length > 0) {
+      const bounds = L.latLngBounds(eventosFiltrados.map(e => [e.latitude, e.longitude]))
       mapInstance.current.fitBounds(bounds, { padding: [50, 50] })
     }
-  }, [postsFiltrados, dark])
+  }, [eventosFiltrados, dark])
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Buscar por título</label>
-          <input
-            type="text"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Digite para buscar..."
-            className="rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
-          />
-        </div>
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Filtrar por autor</label>
-          <select
-            value={filtroAutor}
-            onChange={(e) => setFiltroAutor(e.target.value)}
-            className="rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
-          >
-            <option value="">Todos os autores</option>
-            {autores.map(autor => (
-              <option key={autor} value={autor}>{autor}</option>
-            ))}
-          </select>
-        </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Buscar por título</label>
+        <input
+          type="text"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Digite para buscar..."
+          className="rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
+          style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
+        />
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          {postsFiltrados.length} post{postsFiltrados.length !== 1 ? 's' : ''} no mapa
+          {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} no mapa
         </p>
-        {(busca || filtroAutor) && (
+        {busca && (
           <button
-            onClick={() => { setBusca(''); setFiltroAutor('') }}
+            onClick={() => setBusca('')}
             className="text-xs transition-colors hover:underline"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Limpar filtros
+            Limpar filtro
           </button>
         )}
       </div>

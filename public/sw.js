@@ -290,16 +290,3 @@ self.addEventListener('pushsubscriptionchange', (event) => {
   )
 })
 
-// Background sync
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-mutations') {
-    event.waitUntil(syncPending())
-  }
-})
-
-async function syncPending() {
-  const clients_list = await self.clients.matchAll()
-  for (const client of clients_list) {
-    client.postMessage({ type: 'SYNC_MUTATIONS' })
-  }
-}

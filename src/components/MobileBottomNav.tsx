@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SinoNotificacoes from '@/modules/notificacoes/SinoNotificacoes'
-import PendingSyncBadge from '@/modules/layout/PendingSyncBadge'
 
 interface Usuario {
   id: number
@@ -17,10 +16,16 @@ const navItems = [
       <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
   )},
-  { href: '/posts', icon: (
+  { href: '/calendario', icon: (
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+      <rect width="18" height="18" x="3" y="4" rx="2"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+      <path d="M8 14h.01"/>
+      <path d="M12 14h.01"/>
+      <path d="M16 14h.01"/>
+      <path d="M8 18h.01"/>
+      <path d="M12 18h.01"/>
+      <path d="M16 18h.01"/>
     </svg>
   )},
   { href: '/mapa', icon: (
@@ -55,16 +60,14 @@ export default function MobileBottomNav({ usuario }: { usuario: Usuario | null }
         {navItems.map(item => {
           const isActive = item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(item.href + '/')
           return (
-            <div key={item.href} className="relative">
-              <Link
-                href={item.href}
-                className={linkClass()}
-                style={activeStyle(isActive)}
-              >
-                {item.icon}
-              </Link>
-              {usuario && item.href === '/posts' && <PendingSyncBadge mobile />}
-            </div>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={linkClass()}
+              style={activeStyle(isActive)}
+            >
+              {item.icon}
+            </Link>
           )
         })}
 

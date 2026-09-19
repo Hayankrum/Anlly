@@ -7,7 +7,6 @@ interface Usuario {
   nome: string
   email: string
   notificacoesAtivas: boolean
-  notificarComentarios: boolean
   notificarSistema: boolean
   inscricoes: { id: number; endpoint: string; criadoEm: string }[]
 }
@@ -15,7 +14,7 @@ interface Usuario {
 interface LogEnvio {
   key: string
   timestamp: string
-  tipo: 'sistema' | 'comentario'
+  tipo: 'sistema'
   destinatario: string
   destinatarioId: number
   resultado: 'enviado' | 'bloqueado' | 'erro'
@@ -52,19 +51,18 @@ export default function PushTestPanel() {
     setLogs((prev) => [{ ...log, key, timestamp: new Date().toLocaleTimeString('pt-BR') }, ...prev].slice(0, 50))
   }, [])
 
-  const verificarSeReceberia = (u: Usuario, tipo: 'sistema' | 'comentario') => {
+  const verificarSeReceberia = (u: Usuario) => {
     if (!u.notificacoesAtivas) return { receberia: false, motivo: 'Notificacoes desativadas' }
-    if (tipo === 'comentario' && !u.notificarComentarios) return { receberia: false, motivo: 'Tipo comentario desativado' }
-    if (tipo === 'sistema' && !u.notificarSistema) return { receberia: false, motivo: 'Tipo sistema desativado' }
+    if (!u.notificarSistema) return { receberia: false, motivo: 'Tipo sistema desativado' }
     if (u.inscricoes.length === 0) return { receberia: false, motivo: 'Sem inscricoes push' }
     return { receberia: true, motivo: null }
   }
 
-  const enviarParaUsuario = async (u: Usuario, tipo: 'sistema' | 'comentario') => {
+  const enviarParaUsuario = async (u: Usuario) => {
     setEnviando(u.id)
-    const verificacao = verificarSeReceberia(u, tipo)
+    const verificacao = verificarSeReceberia(u)
     if (!verificacao.receberia) {
-      addLog({ tipo, destinatario: u.nome, destinatarioId: u.id, resultado: 'bloqueado', motivo: verificacao.motivo || undefined, titulo })
+      addLog({ tipo: 'sistema', destinatario: u.nome, destinatarioId: u.id, resultado: 'bloqueado', motivo: verificacao.motivo || undefined, titulo })
       setEnviando(null)
       return
     }
@@ -72,30 +70,30 @@ export default function PushTestPanel() {
       const res = await fetch('/api/notifications/test-push-individual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuarioId: u.id, titulo, mensagem, url, tipo }),
+        body: JSON.stringify({ usuarioId: u.id, titulo, mensagem, url }),
       })
       const data = await res.json()
-      addLog({ tipo, destinatario: u.nome, destinatarioId: u.id, resultado: data.enviadosComSucesso > 0 ? 'enviado' : 'erro', titulo })
+      addLog({ tipo: 'sistema', destinatario: u.nome, destinatarioId: u.id, resultado: data.enviadosComSucesso > 0 ? 'enviado' : 'erro', titulo })
     } catch {
-      addLog({ tipo, destinatario: u.nome, destinatarioId: u.id, resultado: 'erro', motivo: 'Erro na requisicao', titulo })
+      addLog({ tipo: 'sistema', destinatario: u.nome, destinatarioId: u.id, resultado: 'erro', motivo: 'Erro na requisicao', titulo })
     }
     setEnviando(null)
   }
 
-  const enviarParaTodos = async (tipo: 'sistema' | 'comentario') => {
+  const enviarParaTodos = async () => {
     setEnviando(-1)
     try {
       await fetch('/api/notifications/test-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, mensagem, url, tipo }),
+        body: JSON.stringify({ titulo, mensagem, url }),
       })
       for (const u of usuarios) {
-        const verificacao = verificarSeReceberia(u, tipo)
-        addLog({ tipo, destinatario: u.nome, destinatarioId: u.id, resultado: verificacao.receberia ? 'enviado' : 'bloqueado', motivo: verificacao.motivo || undefined, titulo })
+        const verificacao = verificarSeReceberia(u)
+        addLog({ tipo: 'sistema', destinatario: u.nome, destinatarioId: u.id, resultado: verificacao.receberia ? 'enviado' : 'bloqueado', motivo: verificacao.motivo || undefined, titulo })
       }
     } catch {
-      addLog({ tipo, destinatario: 'Todos', destinatarioId: 0, resultado: 'erro', motivo: 'Erro na requisicao', titulo })
+      addLog({ tipo: 'sistema', destinatario: 'Todos', destinatarioId: 0, resultado: 'erro', motivo: 'Erro na requisicao', titulo })
     }
     setEnviando(null)
   }
@@ -139,15 +137,10 @@ export default function PushTestPanel() {
             className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
         </div>
         <div className="flex gap-3">
-          <button onClick={() => enviarParaTodos('sistema')} disabled={enviando !== null}
+          <button onClick={enviarParaTodos} disabled={enviando !== null}
             className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
             style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}>
             Enviar Todos - Sistema
-          </button>
-          <button onClick={() => enviarParaTodos('comentario')} disabled={enviando !== null}
-            className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
-            style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}>
-            Enviar Todos - Comentario
           </button>
           <button onClick={() => { setLogs([]); setLoading(true); fetchUsuarios() }}
             className="px-4 py-2 rounded-lg text-sm"
@@ -178,8 +171,7 @@ export default function PushTestPanel() {
             ) : (
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {usuariosFiltrados.map((u) => {
-                  const verifSistema = verificarSeReceberia(u, 'sistema')
-                  const verifComentario = verificarSeReceberia(u, 'comentario')
+                  const verifSistema = verificarSeReceberia(u)
                   return (
                     <div key={u.id} className="rounded-lg p-3 flex items-center gap-3"
                       style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--border-color)' }}>
@@ -190,20 +182,14 @@ export default function PushTestPanel() {
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${u.notificacoesAtivas ? 'bg-green-500' : 'bg-red-500'}`} />
-                          <span className={`w-1.5 h-1.5 rounded-full ${u.notificarComentarios ? 'bg-green-500' : 'bg-red-500'}`} />
                           <span className={`w-1.5 h-1.5 rounded-full ${u.notificarSistema ? 'bg-green-500' : 'bg-red-500'}`} />
                         </div>
                       </div>
                       <div className="flex gap-1">
-                        <button onClick={() => enviarParaUsuario(u, 'sistema')} disabled={enviando !== null}
+                        <button onClick={() => enviarParaUsuario(u)} disabled={enviando !== null}
                           className="px-2 py-1 rounded text-xs disabled:opacity-50"
                           style={{ backgroundColor: verifSistema.receberia ? '#16a34a20' : '#dc262620', color: verifSistema.receberia ? '#16a34a' : '#dc2626' }}>
                           {enviando === u.id ? '...' : 'Sys'}
-                        </button>
-                        <button onClick={() => enviarParaUsuario(u, 'comentario')} disabled={enviando !== null}
-                          className="px-2 py-1 rounded text-xs disabled:opacity-50"
-                          style={{ backgroundColor: verifComentario.receberia ? '#16a34a20' : '#dc262620', color: verifComentario.receberia ? '#16a34a' : '#dc2626' }}>
-                          {enviando === u.id ? '...' : 'Com'}
                         </button>
                       </div>
                     </div>

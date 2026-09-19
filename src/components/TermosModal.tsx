@@ -77,7 +77,7 @@ export default function TermosModal({ isOpen, onClose, readonly = false }: Termo
             possui os direitos necessários e que o conteúdo não viola direitos de terceiros.
           </p>
           <p className="mb-4">
-            O fato de um post estar disponível na plataforma não significa que seu conteúdo tenha sido analisado,
+            O fato de um conteúdo estar disponível na plataforma não significa que ele tenha sido analisado,
             aprovado ou validado pelo sistema.
           </p>
           <p className="mb-4">
@@ -87,7 +87,7 @@ export default function TermosModal({ isOpen, onClose, readonly = false }: Termo
 
           <h2 className="text-lg font-semibold mt-4 mb-2" style={{ color: 'var(--text-primary)' }}>5. Responsabilidades</h2>
           <p className="mb-4">
-            O autor de um post é responsável por seu conteúdo, finalidade e utilização. Isso inclui as informações
+            O usuário é responsável pelo conteúdo que cadastra, sua finalidade e utilização. Isso inclui as informações
             apresentadas, a forma de divulgação e a utilização dos dados publicados.
           </p>
           <p className="mb-4">

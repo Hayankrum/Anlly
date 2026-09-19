@@ -7,7 +7,6 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import InstallPWMPopup from "@/components/InstallPWMPopup";
 import NotificationPermissionPopup from "@/components/NotificationPermissionPopup";
 import ServiceWorkerRegister from "@/modules/layout/ServiceWorkerRegister";
-import SyncProvider from "@/modules/layout/SyncProvider";
 import { getUsuarioLogado } from "@/modules/usuarios/usuarios.actions";
 import TermosChecker from "@/components/TermosChecker";
 
@@ -73,7 +72,6 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <ServiceWorkerRegister />
-          <SyncProvider />
           <Navbar usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
           <MobileBottomNav usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
           <div className="h-[76px] hidden md:block" />

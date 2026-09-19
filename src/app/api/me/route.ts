@@ -17,7 +17,6 @@ export async function GET() {
       bio: true,
       fotoUrl: true,
       senha: true,
-      notificarComentarios: true,
       notificarSistema: true,
     },
   })
@@ -33,7 +32,6 @@ export async function GET() {
     bio: fullUser.bio,
     fotoUrl: fullUser.fotoUrl,
     temSenha: !!fullUser.senha,
-    notificarComentarios: fullUser.notificarComentarios,
     notificarSistema: fullUser.notificarSistema,
   })
 }

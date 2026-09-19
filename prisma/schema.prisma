@@ -7,28 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Post {
-  id         Int         @id @default(autoincrement())
-  titulo     String
-  conteudo   String
-  latitude   Float?
-  longitude  Float?
-  criadoEm   DateTime    @default(now())
-  autorId    Int
-  autor      Usuario     @relation(fields: [autorId], references: [id], onDelete: Cascade)
-  comentarios Comentario[]
-}
-
-model Comentario {
-  id        Int      @id @default(autoincrement())
-  texto     String
-  criadoEm  DateTime @default(now())
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  autorId   Int
-  autor     Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
-}
-
 model Usuario {
   id                   Int              @id @default(autoincrement())
   nome                 String
@@ -38,11 +16,8 @@ model Usuario {
   fotoUrl              String?
   aceitouTermos        Boolean          @default(false)
   notificacoesAtivas   Boolean          @default(true)
-  notificarComentarios Boolean          @default(true)
   notificarSistema     Boolean          @default(true)
   criadoEm             DateTime         @default(now())
-  posts                Post[]
-  comentarios          Comentario[]
   sessoes              Sessao[]
   inscricoes           InscricaoPush[]
   notificacoes         Notificacao[]
@@ -94,4 +69,33 @@ model Media {
   updatedAt   DateTime @updatedAt
 
   owner       Usuario  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  startsAt     DateTime
+  endsAt       DateTime?
+  allDay       Boolean   @default(false)
+  locationText String?
+  latitude     Float?
+  longitude    Float?
+  done         Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  reminders    Reminder[]
+}
+
+model Reminder {
+  id            Int      @id @default(autoincrement())
+  eventId       Int
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  offsetMinutes Int
+  notifyAt      DateTime
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([sentAt, notifyAt])
 }

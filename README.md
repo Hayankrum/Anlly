@@ -52,6 +52,7 @@ Acesse http://localhost:3000
 - [Migração](docs/MIGRATION.md) - Trocar entre provedores
 - [Deploy](docs/DEPLOYMENT.md) - Implantar em diferentes plataformas
 - [Desenvolvimento](docs/DEVELOPMENT.md) - Setup local e guia de contribuição
+- [Cron](docs/CRON.md) - Agendamento do disparo de lembretes
 
 ## Estrutura
 

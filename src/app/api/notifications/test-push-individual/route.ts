@@ -7,14 +7,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Rota indisponível em produção' }, { status: 403 })
     }
 
-    const { usuarioId, titulo, mensagem, url, tipo = 'sistema' } = await request.json()
+    const { usuarioId, titulo, mensagem, url } = await request.json()
 
     if (!usuarioId || !titulo || !mensagem) {
       return NextResponse.json({ error: 'usuarioId, título e mensagem são obrigatórios' }, { status: 400 })
-    }
-
-    if (tipo !== 'comentario' && tipo !== 'sistema') {
-      return NextResponse.json({ error: 'Tipo deve ser "comentario" ou "sistema"' }, { status: 400 })
     }
 
     const usuario = await prisma.usuario.findUnique({
@@ -30,11 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Usuário com notificações desativadas' }, { status: 400 })
     }
 
-    if (tipo === 'comentario' && !usuario.notificarComentarios) {
-      return NextResponse.json({ error: 'Usuário desativou notificações de comentários' }, { status: 400 })
-    }
-
-    if (tipo === 'sistema' && !usuario.notificarSistema) {
+    if (!usuario.notificarSistema) {
       return NextResponse.json({ error: 'Usuário desativou notificações de sistema' }, { status: 400 })
     }
 
@@ -102,7 +94,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email },
-      tipo,
       inscricoes: usuario.inscricoes.length,
       enviadosComSucesso: enviados,
     })

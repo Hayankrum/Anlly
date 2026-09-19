@@ -7,7 +7,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Rota indisponível em produção' }, { status: 403 })
     }
 
-    const { usuarioId, notificacoesAtivas, notificarComentarios, notificarSistema } = await request.json()
+    const { usuarioId, notificacoesAtivas, notificarSistema } = await request.json()
 
     if (!usuarioId) {
       return NextResponse.json({ error: 'usuarioId é obrigatório' }, { status: 400 })
@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 
     const dadosAtualizacao: Record<string, boolean> = {}
     if (notificacoesAtivas !== undefined) dadosAtualizacao.notificacoesAtivas = notificacoesAtivas
-    if (notificarComentarios !== undefined) dadosAtualizacao.notificarComentarios = notificarComentarios
     if (notificarSistema !== undefined) dadosAtualizacao.notificarSistema = notificarSistema
 
     const atualizado = await prisma.usuario.update({
@@ -30,7 +29,6 @@ export async function POST(request: Request) {
         id: true,
         nome: true,
         notificacoesAtivas: true,
-        notificarComentarios: true,
         notificarSistema: true,
       },
     })

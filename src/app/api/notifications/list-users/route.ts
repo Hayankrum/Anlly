@@ -13,7 +13,6 @@ export async function GET() {
         nome: true,
         email: true,
         notificacoesAtivas: true,
-        notificarComentarios: true,
         notificarSistema: true,
         inscricoes: {
           select: {

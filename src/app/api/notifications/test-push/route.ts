@@ -7,14 +7,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Rota indisponível em produção' }, { status: 403 })
     }
 
-    const { titulo, mensagem, url, tipo = 'sistema' } = await request.json()
+    const { titulo, mensagem, url } = await request.json()
 
     if (!titulo || !mensagem) {
       return NextResponse.json({ error: 'Título e mensagem são obrigatórios' }, { status: 400 })
-    }
-
-    if (tipo !== 'comentario' && tipo !== 'sistema') {
-      return NextResponse.json({ error: 'Tipo deve ser "comentario" ou "sistema"' }, { status: 400 })
     }
 
     const usuarios = await prisma.usuario.findMany({
@@ -49,11 +45,7 @@ export async function POST(request: Request) {
     for (const u of usuarios) {
       if (u.inscricoes.length === 0) continue
 
-      if (tipo === 'comentario' && !u.notificarComentarios) {
-        totalOmitido++
-        continue
-      }
-      if (tipo === 'sistema' && !u.notificarSistema) {
+      if (!u.notificarSistema) {
         totalOmitido++
         continue
       }
@@ -94,7 +86,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      tipo,
       usuariosNotificados: usuarios.length - totalOmitido,
       usuariosOmitidos: totalOmitido,
       inscricoesTotais: totalInscricoes,

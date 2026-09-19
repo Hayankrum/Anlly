@@ -179,7 +179,6 @@ export class NextAuthProvider implements AuthProvider {
     fotoUrl?: string | null
     aceitouTermos: boolean
     notificacoesAtivas: boolean
-    notificarComentarios: boolean
     notificarSistema: boolean
     criadoEm: Date
   }): AuthSession {
@@ -192,7 +191,6 @@ export class NextAuthProvider implements AuthProvider {
         fotoUrl: usuario.fotoUrl,
         aceitouTermos: usuario.aceitouTermos,
         notificacoesAtivas: usuario.notificacoesAtivas,
-        notificarComentarios: usuario.notificarComentarios,
         notificarSistema: usuario.notificarSistema,
         criadoEm: usuario.criadoEm,
       },

@@ -37,7 +37,7 @@ src/
 │   ├── auth.ts                   # Configuração NextAuth
 │   ├── session.ts                # Gerenciamento de sessões
 │   ├── prisma.ts                 # Cliente Prisma
-│   ├── useData.ts                # Hooks de dados
+│   ├── db.ts                     # Cache offline (IndexedDB)
 │   └── utils.ts                  # Funções utilitárias
 │
 ├── modules/                      # Módulos de domínio
@@ -46,8 +46,7 @@ src/
 │   │   ├── components/           # Componentes
 │   │   └── pages/                # Páginas
 │   │
-│   ├── posts/                    # Posts
-│   ├── comentarios/              # Comentários
+│   ├── eventos/                  # Agenda de eventos
 │   ├── media/                    # Mídia
 │   ├── mapa/                     # Mapa interativo
 │   └── notificacoes/             # Notificações
@@ -76,7 +75,7 @@ src/
 
 ### 4. Serviços
 - MediaService
-- PostService
+- EventoService
 - UserService
 
 ## Princípios de Design
