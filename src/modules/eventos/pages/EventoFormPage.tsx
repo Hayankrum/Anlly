@@ -80,6 +80,7 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
   )
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState(error ?? '')
+  const [descExpandido, setDescExpandido] = useState(false)
 
   const handleLocationSelect = useCallback((lat: number, lng: number) => {
     setLatitude(lat)
@@ -200,14 +201,31 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
 
         <div className="flex flex-col gap-1">
           <label className={labelClass} style={{ color: 'var(--text-secondary)' }}>Descrição</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Descrição (opcional)"
-            className="rounded-lg px-4 py-2 text-sm focus:outline-none transition-colors resize-y"
-            style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
-          />
+          <div className="relative">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={descExpandido ? 16 : 6}
+              placeholder="Descrição (opcional)"
+              className="rounded-lg px-4 py-3 pr-14 pb-12 text-sm focus:outline-none transition-colors w-full leading-relaxed resize-none"
+              style={{ backgroundColor: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}
+            />
+            <button
+              type="button"
+              onClick={() => setDescExpandido((v) => !v)}
+              className="absolute right-2 bottom-2 w-9 h-9 rounded-lg flex items-center justify-center text-base transition-colors"
+              style={{
+                backgroundColor: 'var(--btn-secondary-bg)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--input-border)',
+              }}
+              aria-label={descExpandido ? 'Recolher descrição' : 'Expandir descrição'}
+              aria-expanded={descExpandido}
+              title={descExpandido ? 'Recolher' : 'Expandir'}
+            >
+              {descExpandido ? '⤢' : '⤡'}
+            </button>
+          </div>
         </div>
 
         <label className="flex items-center gap-3 cursor-pointer">
