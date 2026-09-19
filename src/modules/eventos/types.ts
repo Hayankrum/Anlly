@@ -13,9 +13,11 @@ export interface Evento {
   startsAt: string
   endsAt: string | null
   allDay: boolean
+  dias: string[] | null
   locationText: string | null
   latitude: number | null
   longitude: number | null
+  color: string
   done: boolean
   createdAt: string
   updatedAt: string

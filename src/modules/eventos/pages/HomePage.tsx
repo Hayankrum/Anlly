@@ -8,7 +8,9 @@ import type { Evento } from '../types'
 import {
   dataParaInputDate,
   diasDeCalendarioAte,
+  diasDoEvento,
   formatarDataCurta,
+  formatarHora,
   inicioDoDiaLocal,
   somarDias,
 } from '../dateUtils'
@@ -26,6 +28,30 @@ interface GrupoDia {
   rotulo: string
   diasAte: number
   eventos: Evento[]
+}
+
+function ContadorCard({ rotulo, valor, cor }: { rotulo: string; valor: number; cor: string }) {
+  return (
+    <div
+      className="rounded-2xl p-4 flex flex-col gap-1"
+      style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+    >
+      <span className="text-3xl font-semibold leading-none" style={{ color: valor > 0 ? cor : 'var(--text-tertiary)' }}>
+        {valor}
+      </span>
+      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+        {rotulo}
+      </span>
+    </div>
+  )
+}
+
+function textoProximoEvento(evento: Evento): string {
+  const inicio = new Date(evento.startsAt)
+  const diff = diasDeCalendarioAte(inicio, new Date())
+  if (diff <= 0) return `hoje às ${formatarHora(inicio)}`
+  if (diff === 1) return 'amanhã'
+  return `em ${diff} dias`
 }
 
 function Secao({
@@ -82,7 +108,7 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
 
   const { eventos, loading, fromCache } = useEventos(range, refreshKey)
 
-  const { atrasados, hoje, amanha, proximos } = useMemo(() => {
+  const { atrasados, hoje, amanha, proximos, proximosTotal, proximoEvento } = useMemo(() => {
     const agora = new Date()
     const inicioHoje = inicioDoDiaLocal(agora)
     const atrasados: Evento[] = []
@@ -90,14 +116,19 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
 
     for (const evento of eventos) {
       const inicio = new Date(evento.startsAt)
-      if (!evento.done && inicio.getTime() < inicioHoje.getTime()) {
+      const fim = evento.allDay && evento.endsAt ? new Date(evento.endsAt) : null
+      const terminou = fim && fim.getTime() < inicioHoje.getTime()
+      if (!evento.done && (!fim ? inicio.getTime() < inicioHoje.getTime() : terminou)) {
         atrasados.push(evento)
         continue
       }
-      const chave = dataParaInputDate(inicio)
-      const lista = porDia.get(chave)
-      if (lista) lista.push(evento)
-      else porDia.set(chave, [evento])
+      const dias = diasDoEvento(inicio, fim, evento.dias ?? null)
+      for (const d of dias) {
+        const chave = dataParaInputDate(d)
+        const lista = porDia.get(chave)
+        if (lista) lista.push(evento)
+        else porDia.set(chave, [evento])
+      }
     }
 
     const comparar = (a: Evento, b: Evento) =>
@@ -109,20 +140,30 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
     for (const [chave, lista] of porDia) {
       lista.sort(comparar)
       const primeiro = new Date(lista[0].startsAt)
+      const dia = new Date(`${chave}T00:00`)
       grupos.push({
         chave,
         rotulo: formatarDataCurta(primeiro),
-        diasAte: diasDeCalendarioAte(primeiro, agora),
+        diasAte: diasDeCalendarioAte(dia, agora),
         eventos: lista,
       })
     }
     grupos.sort((a, b) => a.chave.localeCompare(b.chave))
 
+    const proximos = grupos.filter((g) => g.diasAte >= 2 && g.diasAte <= HORIZONTE_AGRUPADO)
+    const proximosTotal = new Set(proximos.flatMap((g) => g.eventos).map((e) => e.id)).size
+
+    const proximoEvento = eventos
+      .filter((e) => !e.done && new Date(e.startsAt).getTime() >= agora.getTime())
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0] ?? null
+
     return {
       atrasados,
       hoje: grupos.find((g) => g.diasAte === 0)?.eventos ?? [],
       amanha: grupos.find((g) => g.diasAte === 1)?.eventos ?? [],
-      proximos: grupos.filter((g) => g.diasAte >= 2 && g.diasAte <= HORIZONTE_AGRUPADO),
+      proximos,
+      proximosTotal,
+      proximoEvento,
     }
   }, [eventos])
 
@@ -171,6 +212,29 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
           </Link>
         </div>
       </header>
+
+      <div className="flex flex-col gap-3 mb-6">
+        {proximoEvento && (
+          <div
+            className="rounded-2xl px-5 py-4 flex items-center justify-between gap-3"
+            style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', borderLeft: `4px solid ${proximoEvento.color ?? '#3b82f6'}` }}
+          >
+            <div className="min-w-0">
+              <p className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>Próximo evento</p>
+              <p className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{proximoEvento.title}</p>
+            </div>
+            <span className="text-lg font-semibold whitespace-nowrap" style={{ color: '#3b82f6' }}>
+              {textoProximoEvento(proximoEvento)}
+            </span>
+          </div>
+        )}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <ContadorCard rotulo="Hoje" valor={hoje.length} cor="#3b82f6" />
+          <ContadorCard rotulo="Amanhã" valor={amanha.length} cor="#10b981" />
+          <ContadorCard rotulo="Atrasados" valor={atrasados.length} cor="#ef4444" />
+          <ContadorCard rotulo={`Próximos (${HORIZONTE_AGRUPADO}d)`} valor={proximosTotal} cor="#f59e0b" />
+        </div>
+      </div>
 
       {acaoError && (
         <p
@@ -243,23 +307,6 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
               </p>
             </div>
           )}
-
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link
-              href="/eventos"
-              className="text-sm hover:underline"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
-              Ver todos os eventos →
-            </Link>
-            <Link
-              href="/calendario"
-              className="text-sm hover:underline"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
-              Calendário →
-            </Link>
-          </div>
         </>
       )}
     </div>

@@ -9,6 +9,11 @@ import 'leaflet.locatecontrol/dist/L.Control.Locate.min.css'
 import 'leaflet.locatecontrol/dist/L.Control.Locate.min.js'
 import type { EventoMarker } from './MapaGlobalClient'
 
+function aplicarTemaTiles(map: L.Map, escuro?: boolean) {
+  const pane = map.getPane('tilePane')
+  if (pane) pane.classList.toggle('tiles-escuro', !!escuro)
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -42,7 +47,6 @@ export default function MapaGlobal({ eventos, dark }: Props) {
     }
 
     const tileLight = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-    const tileDark = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     const tileSatellite = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 
     const map = L.map(mapRef.current, {
@@ -56,14 +60,20 @@ export default function MapaGlobal({ eventos, dark }: Props) {
 
     L.control.zoom({ position: 'topright' }).addTo(map)
 
+    const layerEscuro = L.tileLayer(tileLight)
     const baseLayers = {
       'Padrão': L.tileLayer(tileLight),
-      'Escuro': L.tileLayer(tileDark),
+      'Escuro': layerEscuro,
       'Satélite': L.tileLayer(tileSatellite),
     }
 
-    baseLayers[dark ? 'Escuro' : 'Padrão'].addTo(map)
+    const baseInicial = dark ? layerEscuro : baseLayers['Padrão']
+    baseInicial.addTo(map)
+    aplicarTemaTiles(map, dark)
     L.control.layers(baseLayers, undefined, { position: 'topright' }).addTo(map)
+    map.on('baselayerchange', (e: L.LayersControlEvent) => {
+      aplicarTemaTiles(map, e.layer === layerEscuro)
+    })
 
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map)
 
@@ -98,12 +108,12 @@ export default function MapaGlobal({ eventos, dark }: Props) {
 
     markersLayerRef.current.clearLayers()
 
-    const createIcon = (done: boolean) => L.divIcon({
+    const createIcon = (done: boolean, color?: string) => L.divIcon({
       className: 'custom-marker',
       html: `<div style="
         width: 20px;
         height: 20px;
-        background: ${done ? '#71717a' : dark ? '#f87171' : '#ef4444'};
+        background: ${done ? '#71717a' : color ?? (dark ? '#f87171' : '#ef4444')};
         border: 3px solid ${dark ? '#18181b' : '#ffffff'};
         border-radius: 50%;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -121,7 +131,7 @@ export default function MapaGlobal({ eventos, dark }: Props) {
         hour: '2-digit',
         minute: '2-digit',
       })
-      const marker = L.marker([evento.latitude, evento.longitude], { icon: createIcon(evento.done) })
+      const marker = L.marker([evento.latitude, evento.longitude], { icon: createIcon(evento.done, evento.color) })
         .bindPopup(`
           <div style="min-width: 150px;">
             <strong>${escapeHtml(evento.titulo)}</strong>${evento.done ? ' <small style="color: #16a34a;">✓</small>' : ''}<br/>

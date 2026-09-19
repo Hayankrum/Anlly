@@ -97,13 +97,51 @@ export function formatarHora(d: Date): string {
 export function formatarQuandoEvento(
   startsAt: Date,
   endsAt: Date | null,
-  allDay: boolean
+  allDay: boolean,
+  dias: string[] | null
 ): string {
+  const marcados = diasDoEvento(startsAt, allDay ? endsAt : null, dias)
+  if (marcados.length > 1) {
+    const rotuloDias =
+      marcados.length > 5
+        ? `${marcados.length} dias`
+        : marcados
+            .slice()
+            .sort((a, b) => a.getTime() - b.getTime())
+            .map(formatarDataCurta)
+            .join(' · ')
+    if (allDay) return rotuloDias
+    return `${formatarHora(startsAt)} · ${rotuloDias}`
+  }
   if (allDay) return formatarDataLonga(startsAt)
   if (endsAt) {
+    if (!ehMesmoDia(startsAt, endsAt)) {
+      return `${formatarDataHoraCurta(startsAt)} às ${formatarDataHoraCurta(endsAt)}`
+    }
     return `${formatarDataHoraCurta(startsAt)} às ${formatarHora(endsAt)}`
   }
   return formatarDataHoraCurta(startsAt)
+}
+
+export function diasDoIntervalo(inicio: Date, fim: Date): Date[] {
+  const dias: Date[] = []
+  const atual = inicioDoDiaLocal(new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate()))
+  const alvo = inicioDoDiaLocal(new Date(fim.getFullYear(), fim.getMonth(), fim.getDate()))
+  while (atual.getTime() <= alvo.getTime()) {
+    dias.push(new Date(atual))
+    atual.setDate(atual.getDate() + 1)
+  }
+  return dias
+}
+
+export function diaPorChave(chave: string): Date {
+  return new Date(`${chave}T12:00`)
+}
+
+export function diasDoEvento(inicio: Date, fim: Date | null, dias: string[] | null): Date[] {
+  if (dias && dias.length > 0) return dias.map((c) => diaPorChave(c))
+  if (fim && !ehMesmoDia(inicio, fim)) return diasDoIntervalo(inicio, fim)
+  return [inicio]
 }
 
 export function formatarDataHoraCurta(d: Date): string {

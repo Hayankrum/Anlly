@@ -19,8 +19,18 @@ export async function GET(request: NextRequest) {
 
   const eventos = await prisma.event.findMany({
     where: {
-      ...(from ? { startsAt: { gte: from } } : {}),
-      ...(to ? { startsAt: { lte: to } } : {}),
+      ...(from && to
+        ? {
+            OR: [
+              { startsAt: { gte: from, lte: to } },
+              { startsAt: { lt: from }, endsAt: { gte: from } },
+            ],
+          }
+        : from
+        ? { startsAt: { gte: from } }
+        : to
+        ? { startsAt: { lte: to } }
+        : {}),
     },
     include: { reminders: { orderBy: { notifyAt: 'asc' } } },
     orderBy: { startsAt: 'asc' },

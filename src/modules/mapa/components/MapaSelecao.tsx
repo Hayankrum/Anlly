@@ -8,6 +8,11 @@ import 'leaflet-fullscreen/dist/Leaflet.fullscreen'
 import 'leaflet.locatecontrol/dist/L.Control.Locate.min.css'
 import 'leaflet.locatecontrol/dist/L.Control.Locate.min.js'
 
+function aplicarTemaTiles(map: L.Map, escuro?: boolean) {
+  const pane = map.getPane('tilePane')
+  if (pane) pane.classList.toggle('tiles-escuro', !!escuro)
+}
+
 interface Props {
   initialLat?: number | null
   initialLng?: number | null
@@ -40,7 +45,6 @@ export default function MapaSelecao({ initialLat, initialLng, onLocationSelect, 
       : [-15.7801, -47.9292]
 
     const tileLight = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-    const tileDark = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     const tileSatellite = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 
     const map = L.map(mapRef.current, {
@@ -54,14 +58,20 @@ export default function MapaSelecao({ initialLat, initialLng, onLocationSelect, 
 
     L.control.zoom({ position: 'topright' }).addTo(map)
 
+    const layerEscuro = L.tileLayer(tileLight)
     const baseLayers = {
       'Padrão': L.tileLayer(tileLight),
-      'Escuro': L.tileLayer(tileDark),
+      'Escuro': layerEscuro,
       'Satélite': L.tileLayer(tileSatellite),
     }
 
-    baseLayers[dark ? 'Escuro' : 'Padrão'].addTo(map)
+    const baseInicial = dark ? layerEscuro : baseLayers['Padrão']
+    baseInicial.addTo(map)
+    aplicarTemaTiles(map, dark)
     L.control.layers(baseLayers, undefined, { position: 'topright' }).addTo(map)
+    map.on('baselayerchange', (e: L.LayersControlEvent) => {
+      aplicarTemaTiles(map, e.layer === layerEscuro)
+    })
 
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map)
 

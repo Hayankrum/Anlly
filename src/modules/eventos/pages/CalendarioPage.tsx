@@ -8,6 +8,7 @@ import type { Evento } from '../types'
 import {
   dataParaInputDate,
   diasNoMes,
+  diasDoEvento,
   formatarDataLonga,
   inicioDoMes,
   mesParaParam,
@@ -19,14 +20,25 @@ import {
 } from '../dateUtils'
 import OfflineBanner from '@/components/OfflineBanner'
 import ItemEvento from '../components/ItemEvento'
+import MapaGlobalClient from '@/modules/mapa/components/MapaGlobalClient'
 
 function agruparPorDia(eventos: Evento[]): Map<string, Evento[]> {
   const mapa = new Map<string, Evento[]>()
   for (const evento of eventos) {
-    const chave = dataParaInputDate(new Date(evento.startsAt))
-    const lista = mapa.get(chave)
-    if (lista) lista.push(evento)
-    else mapa.set(chave, [evento])
+    const inicio = new Date(evento.startsAt)
+    const fim = evento.allDay && evento.endsAt ? new Date(evento.endsAt) : null
+    let chaves: string[]
+    const diasEvento = diasDoEvento(inicio, fim, evento.dias ?? null)
+    if (diasEvento.length > 1) {
+      chaves = diasEvento.map(dataParaInputDate)
+    } else {
+      chaves = [dataParaInputDate(inicio)]
+    }
+    for (const chave of chaves) {
+      const lista = mapa.get(chave)
+      if (lista) lista.push(evento)
+      else mapa.set(chave, [evento])
+    }
   }
   for (const lista of mapa.values()) {
     lista.sort(
@@ -41,17 +53,21 @@ function agruparPorMes(
 ): Map<number, Map<number, Map<number, Evento[]>>> {
   const mapa = new Map<number, Map<number, Map<number, Evento[]>>>()
   for (const evento of eventos) {
-    const d = new Date(evento.startsAt)
-    const ano = d.getFullYear()
-    const mes = d.getMonth()
-    const dia = d.getDate()
-    const porMes = mapa.get(ano) ?? new Map<number, Map<number, Evento[]>>()
-    const porDia = porMes.get(mes) ?? new Map<number, Evento[]>()
-    const lista = porDia.get(dia) ?? []
-    lista.push(evento)
-    porDia.set(dia, lista)
-    porMes.set(mes, porDia)
-    mapa.set(ano, porMes)
+    const inicio = new Date(evento.startsAt)
+    const fim = evento.allDay && evento.endsAt ? new Date(evento.endsAt) : null
+    const ds = diasDoEvento(inicio, fim, evento.dias ?? null)
+    for (const d of ds) {
+      const ano = d.getFullYear()
+      const mes = d.getMonth()
+      const dia = d.getDate()
+      const porMes = mapa.get(ano) ?? new Map<number, Map<number, Evento[]>>()
+      const porDia = porMes.get(mes) ?? new Map<number, Evento[]>()
+      const lista = porDia.get(dia) ?? []
+      lista.push(evento)
+      porDia.set(dia, lista)
+      porMes.set(mes, porDia)
+      mapa.set(ano, porMes)
+    }
   }
   return mapa
 }
@@ -59,6 +75,7 @@ function agruparPorMes(
 export default function CalendarioPage({ mesInicial }: { mesInicial?: string | null }) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [acaoError, setAcaoError] = useState('')
+  const [mapaAberto, setMapaAberto] = useState(false)
 
   const hoje = new Date()
   const hojeChave = dataParaInputDate(hoje)
@@ -103,6 +120,22 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
   }, [inicioGrade, totalCelulas])
 
   const eventosSelecionados = porDia.get(diaSelecionado) ?? []
+
+  const eventosComCoordenadas = useMemo(
+    () =>
+      eventos
+        .filter((e) => e.latitude != null && e.longitude != null)
+        .map((e) => ({
+          id: e.id,
+          titulo: e.title,
+          startsAt: e.startsAt,
+          latitude: e.latitude!,
+          longitude: e.longitude!,
+          done: e.done,
+          color: e.color ?? '#3b82f6',
+        })),
+    [eventos]
+  )
 
   const eventosPorAno = useMemo(() => agruparPorMes(eventos), [eventos])
   const ano = mes.getFullYear()
@@ -282,7 +315,8 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
                     const ehHojeDia = numDia === diaHoje
                     let cor = 'var(--card-border)'
                     if (doDia.length > 0) {
-                      cor = doDia.some((e) => !e.done) ? 'var(--text-secondary)' : 'var(--text-tertiary)'
+                      const pendente = doDia.find((e) => !e.done)
+                      cor = pendente ? (pendente.color ?? '#3b82f6') : 'var(--text-tertiary)'
                     }
                     if (ehHojeDia) cor = 'var(--btn-primary-bg)'
                     return (
@@ -357,7 +391,7 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
                       key={evento.id}
                       className="w-1.5 h-1.5 rounded-full"
                       style={{
-                        backgroundColor: evento.done ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                        backgroundColor: evento.done ? 'var(--text-tertiary)' : (evento.color ?? '#3b82f6'),
                       }}
                     />
                   ))}
@@ -420,13 +454,18 @@ export default function CalendarioPage({ mesInicial }: { mesInicial?: string | n
         </div>
       )}
       </>)}
-      <Link
-        href="/eventos"
-        className="text-sm hover:underline inline-block mt-6"
-        style={{ color: 'var(--text-tertiary)' }}
-      >
-        Ver todos os eventos →
-      </Link>
+      <div className="mt-8">
+        <button
+          type="button"
+          onClick={() => setMapaAberto((v) => !v)}
+          className="text-sm font-medium rounded-lg px-4 py-2 transition-colors flex items-center justify-between gap-2 w-full mb-2"
+          style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
+        >
+          <span>🗺️ Mapa dos eventos</span>
+          <span>{mapaAberto ? '▲' : '▼'}</span>
+        </button>
+        {mapaAberto && <MapaGlobalClient eventos={eventosComCoordenadas} />}
+      </div>
     </div>
   )
 }

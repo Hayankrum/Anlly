@@ -33,9 +33,13 @@ export default async function Page({ params }: Props) {
         startsAt: evento.startsAt.toISOString(),
         endsAt: evento.endsAt ? evento.endsAt.toISOString() : null,
         allDay: evento.allDay,
+        dias: Array.isArray(evento.dias)
+          ? evento.dias.filter((d): d is string => typeof d === 'string')
+          : null,
         locationText: evento.locationText,
         latitude: evento.latitude,
         longitude: evento.longitude,
+        color: evento.color,
         reminders: evento.reminders.map((r) => ({ offsetMinutes: r.offsetMinutes })),
       }}
     />

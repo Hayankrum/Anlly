@@ -18,7 +18,8 @@ export default function ItemEvento({ evento, onToggle, mostrarData = true }: Pro
     quando = formatarQuandoEvento(
       new Date(evento.startsAt),
       evento.endsAt ? new Date(evento.endsAt) : null,
-      evento.allDay
+      evento.allDay,
+      evento.dias ?? null
     )
   } else if (evento.allDay) {
     quando = 'Dia inteiro'
@@ -35,6 +36,7 @@ export default function ItemEvento({ evento, onToggle, mostrarData = true }: Pro
       style={{
         backgroundColor: 'var(--card-bg)',
         border: '1px solid var(--card-border)',
+        borderLeft: `4px solid ${evento.color ?? '#3b82f6'}`,
         opacity: evento.done ? 0.55 : 1,
       }}
     >

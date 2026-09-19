@@ -81,6 +81,8 @@ model Event {
   locationText String?
   latitude     Float?
   longitude    Float?
+  color        String    @default("#3b82f6")
+  dias         Json?
   done         Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

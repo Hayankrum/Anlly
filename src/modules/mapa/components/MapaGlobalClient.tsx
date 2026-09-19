@@ -12,6 +12,7 @@ export interface EventoMarker {
   latitude: number
   longitude: number
   done: boolean
+  color?: string
 }
 
 interface Props {

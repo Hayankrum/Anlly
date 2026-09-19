@@ -7,9 +7,11 @@ import { useEvento } from '../useEventos'
 import { alternarConclusaoEvento, deletarEvento } from '../eventos.actions'
 import { formatarOffset } from '../types'
 import {
-  formatarDataHoraLonga,
-  formatarDataLonga,
+  diasDoEvento,
+  formatarDataCurta,
   formatarDataHoraCurta,
+  formatarDataLonga,
+  formatarHora,
 } from '../dateUtils'
 import MapaPosteClient from '@/modules/mapa/components/MapaPosteClient'
 import OfflineBanner from '@/components/OfflineBanner'
@@ -18,6 +20,7 @@ export default function EventoDetailPage({ id }: { id: number }) {
   const router = useRouter()
   const [refreshKey, setRefreshKey] = useState(0)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
+  const [mapaAberto, setMapaAberto] = useState(false)
   const [acaoError, setAcaoError] = useState('')
   const { evento, loading, fromCache } = useEvento(id, refreshKey)
 
@@ -50,13 +53,24 @@ export default function EventoDetailPage({ id }: { id: number }) {
   const ends = e.endsAt ? new Date(e.endsAt) : null
 
   function dataHoraTexto() {
-    if (e.allDay) {
-      return ends && !e.allDay ? null : formatarDataLonga(starts)
+    const diasMarcados = diasDoEvento(starts, e.allDay ? ends : null, e.dias ?? null)
+    if (diasMarcados.length > 1) {
+      const labelDias =
+        diasMarcados.length > 5
+          ? `${diasMarcados.length} dias marcados`
+          : diasMarcados
+              .slice()
+              .sort((a, b) => a.getTime() - b.getTime())
+              .map(formatarDataCurta)
+              .join('  ·  ')
+      if (e.allDay) return labelDias
+      return `${formatarHora(starts)} às ${formatarHora(ends ?? starts)} · ${labelDias}`
     }
+    if (e.allDay) return formatarDataLonga(starts)
     if (ends) {
-      return `${formatarDataHoraCurta(starts)} às ${ends.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+      return `${formatarDataCurta(starts)} às ${formatarHora(starts)} às ${formatarHora(ends)}`
     }
-    return formatarDataHoraLonga(starts)
+    return `${formatarDataCurta(starts)} às ${formatarHora(starts)}`
   }
 
   async function handleToggleDone() {
@@ -93,6 +107,16 @@ export default function EventoDetailPage({ id }: { id: number }) {
     <div>
       <OfflineBanner fromCache={fromCache} />
 
+      <div
+        className="rounded-xl mb-5"
+        style={{
+          height: 20,
+          background: `linear-gradient(90deg, ${e.color ?? '#3b82f6'} 0%, ${e.color ?? '#3b82f6'}88 100%)`,
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)',
+        }}
+        aria-hidden="true"
+      />
+
       <Link
         href="/"
         className="text-sm transition-colors mb-6 inline-block hover:underline"
@@ -106,6 +130,7 @@ export default function EventoDetailPage({ id }: { id: number }) {
       </h1>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: e.color ?? '#3b82f6' }} aria-label={`Cor do evento ${e.color ?? '#3b82f6'}`} title={e.color ?? '#3b82f6'} />
         {e.done && (
           <span
             className="text-xs font-medium rounded-full px-2.5 py-0.5"
@@ -146,12 +171,23 @@ export default function EventoDetailPage({ id }: { id: number }) {
 
       {temLocal && (
         <div className="mb-8">
-          <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Localização no mapa</h2>
-          <MapaPosteClient
-            latitude={e.latitude!}
-            longitude={e.longitude!}
-            titulo={e.title}
-          />
+          <button
+            onClick={() => setMapaAberto((v) => !v)}
+            className="text-sm font-medium rounded-lg px-4 py-2 transition-colors flex items-center justify-between gap-2 w-full"
+            style={{ backgroundColor: 'var(--btn-secondary-bg)', color: 'var(--text-primary)', border: '1px solid var(--card-border)' }}
+          >
+            <span>🗺️ Ver localização no mapa</span>
+            <span>{mapaAberto ? '▲' : '▼'}</span>
+          </button>
+          {mapaAberto && (
+            <div className="mt-2">
+              <MapaPosteClient
+                latitude={e.latitude!}
+                longitude={e.longitude!}
+                titulo={e.title}
+              />
+            </div>
+          )}
         </div>
       )}
 
