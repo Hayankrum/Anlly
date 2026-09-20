@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { obterSessao } from '@/lib/session'
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const usuario = await obterSessao()
+  if (!usuario) {
+    return NextResponse.json({ error: 'Nota não encontrada' }, { status: 404 })
+  }
+
   const { id } = await params
   const eventoId = parseInt(id, 10)
   if (isNaN(eventoId)) {
@@ -12,7 +18,7 @@ export async function GET(
   }
 
   const evento = await prisma.event.findUnique({
-    where: { id: eventoId },
+    where: { id: eventoId, usuarioId: usuario.id },
     include: { reminders: { orderBy: { notifyAt: 'asc' } } },
   })
 

@@ -20,11 +20,6 @@ export async function dispararLembretes(): Promise<ResultadoDisparo> {
     take: LIMITE_POR_EXECUCAO,
   })
 
-  const destinatarios = await prisma.usuario.findMany({
-    where: { notificacoesAtivas: true, notificarSistema: true },
-    select: { id: true },
-  })
-
   const resultado: ResultadoDisparo = {
     verificados: vencidos.length,
     enviados: 0,
@@ -42,6 +37,21 @@ export async function dispararLembretes(): Promise<ResultadoDisparo> {
       continue
     }
 
+    if (lembrete.event.usuarioId == null) {
+      resultado.ignorados++
+      continue
+    }
+
+    const dono = await prisma.usuario.findUnique({
+      where: { id: lembrete.event.usuarioId },
+      select: { id: true, notificacoesAtivas: true, notificarSistema: true },
+    })
+
+    if (!dono || !dono.notificacoesAtivas || !dono.notificarSistema) {
+      resultado.ignorados++
+      continue
+    }
+
     const quando =
       lembrete.offsetMinutes === 0
         ? 'Começa agora'
@@ -50,14 +60,12 @@ export async function dispararLembretes(): Promise<ResultadoDisparo> {
       ? `${quando} · ${lembrete.event.locationText}`
       : quando
 
-    for (const usuario of destinatarios) {
-      await criarNotificacao({
-        usuarioId: usuario.id,
-        titulo: lembrete.event.title,
-        mensagem,
-        url: `/eventos/${lembrete.eventId}`,
-      })
-    }
+    await criarNotificacao({
+      usuarioId: dono.id,
+      titulo: lembrete.event.title,
+      mensagem,
+      url: `/eventos/${lembrete.eventId}`,
+    })
 
     resultado.enviados++
   }

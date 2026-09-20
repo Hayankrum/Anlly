@@ -12,17 +12,17 @@ export default async function Page({ params }: Props) {
   const eventoId = Number(id)
   if (isNaN(eventoId)) notFound()
 
+  const usuario = await getUsuarioLogado()
+  if (!usuario) {
+    redirect('/usuarios/login')
+  }
+
   const evento = await prisma.event.findUnique({
-    where: { id: eventoId },
+    where: { id: eventoId, usuarioId: usuario.id },
     include: { reminders: true },
   })
 
   if (!evento) notFound()
-
-  const usuario = await getUsuarioLogado()
-  if (!usuario) {
-    redirect(`/eventos/${evento.id}`)
-  }
 
   return (
     <EventoFormPage

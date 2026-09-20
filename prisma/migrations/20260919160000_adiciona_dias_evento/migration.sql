@@ -1,5 +1,5 @@
--- A coluna "dias" já foi criada em uma tentativa anterior (ALTER TABLE auto-commit).
--- Aqui fica apenas o backfill dos eventos existentes.
+-- A coluna "dias" precisou ser criada para o backfill abaixo.
+ALTER TABLE "Event" ADD COLUMN "dias" JSONB;
 
 -- Eventos com fim no mesmo dia do início (o intervalo começa em startsAt).
 UPDATE "Event"

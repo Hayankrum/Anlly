@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { obterSessao } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
+  const usuario = await obterSessao()
+  if (!usuario) {
+    return NextResponse.json({ eventos: [] })
+  }
+
   const { searchParams } = new URL(request.url)
 
   const parseIso = (value: string | null): Date | undefined => {
@@ -19,6 +25,7 @@ export async function GET(request: NextRequest) {
 
   const eventos = await prisma.event.findMany({
     where: {
+      usuarioId: usuario.id,
       ...(from && to
         ? {
             OR: [

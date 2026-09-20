@@ -21,6 +21,7 @@ export interface Evento {
   done: boolean
   createdAt: string
   updatedAt: string
+  usuarioId?: number | null
   reminders: Reminder[]
 }
 

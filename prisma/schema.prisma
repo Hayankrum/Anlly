@@ -22,6 +22,7 @@ model Usuario {
   inscricoes           InscricaoPush[]
   notificacoes         Notificacao[]
   medias               Media[]
+  eventos              Event[]
 }
 
 model Sessao {
@@ -86,6 +87,9 @@ model Event {
   done         Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  usuarioId Int?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   reminders    Reminder[]
 }

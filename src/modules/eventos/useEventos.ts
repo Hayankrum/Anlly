@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { Evento } from './types'
-import { cacheEventos, getCachedEventos, getCachedEvento } from '@/lib/db'
+import {
+  cacheEventos,
+  getCachedEventos,
+  getCachedEvento,
+  getCacheOwner,
+  setCacheOwner,
+} from '@/lib/db'
 import { useOnlineStatus } from '@/lib/useOnlineStatus'
 
 interface EventosRange {
@@ -21,6 +27,18 @@ async function buscarEventos(range: EventosRange): Promise<Evento[]> {
   return Array.isArray(data?.eventos) ? data.eventos : []
 }
 
+async function buscarUsuarioId(): Promise<number | null> {
+  try {
+    const res = await fetch('/api/me')
+    const data = res.ok ? await res.json() : null
+    const id = typeof data?.id === 'number' ? data.id : null
+    await setCacheOwner(id)
+    return id
+  } catch {
+    return await getCacheOwner()
+  }
+}
+
 function useMounted() {
   const mountedRef = useRef(true)
   useEffect(() => {
@@ -32,6 +50,23 @@ function useMounted() {
   return mountedRef
 }
 
+function useUsuarioId() {
+  const [usuarioId, setUsuarioId] = useState<number | null | undefined>(undefined)
+  const mountedRef = useMounted()
+
+  useEffect(() => {
+    let cancelled = false
+    buscarUsuarioId().then((id) => {
+      if (!cancelled && mountedRef.current) setUsuarioId(id)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return usuarioId
+}
+
 export function useEventos(range: EventosRange = {}, refreshKey = 0) {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,8 +74,11 @@ export function useEventos(range: EventosRange = {}, refreshKey = 0) {
   const mountedRef = useMounted()
   const isOnline = useOnlineStatus()
   const primeiraRenderizacao = useRef(true)
+  const usuarioId = useUsuarioId()
 
   useEffect(() => {
+    if (usuarioId === undefined) return
+    const uid = usuarioId
     let cancelled = false
 
     async function run() {
@@ -54,7 +92,7 @@ export function useEventos(range: EventosRange = {}, refreshKey = 0) {
         }
       } catch {
         if (!cancelled && mountedRef.current) {
-          const cached = await getCachedEventos(range)
+          const cached = await getCachedEventos(uid, range)
           setEventos(cached)
           setFromCache(true)
         }
@@ -67,14 +105,14 @@ export function useEventos(range: EventosRange = {}, refreshKey = 0) {
     return () => {
       cancelled = true
     }
-  }, [range.from, range.to, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [usuarioId, range.from, range.to, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (primeiraRenderizacao.current) {
       primeiraRenderizacao.current = false
       return
     }
-    if (!isOnline) return
+    if (!isOnline || usuarioId === undefined) return
 
     let cancelled = false
     async function revalidar() {
@@ -103,9 +141,11 @@ export function useEvento(id: number, refreshKey = 0) {
   const [loading, setLoading] = useState(true)
   const [fromCache, setFromCache] = useState(false)
   const mountedRef = useMounted()
+  const usuarioId = useUsuarioId()
 
   useEffect(() => {
-    if (!id) return
+    if (!id || usuarioId === undefined) return
+    const uid = usuarioId
     let cancelled = false
 
     async function run() {
@@ -121,7 +161,7 @@ export function useEvento(id: number, refreshKey = 0) {
         }
       } catch {
         if (!cancelled && mountedRef.current) {
-          const cached = await getCachedEvento(id)
+          const cached = await getCachedEvento(uid, id)
           if (cached) {
             setEvento(cached)
             setFromCache(true)
@@ -138,7 +178,7 @@ export function useEvento(id: number, refreshKey = 0) {
     return () => {
       cancelled = true
     }
-  }, [id, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, usuarioId, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { evento, loading, fromCache }
 }

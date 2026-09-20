@@ -23,6 +23,7 @@ export interface EventoCache {
   done: boolean
   createdAt: string
   updatedAt: string
+  usuarioId?: number | null
   reminders: ReminderCache[]
 }
 
@@ -37,7 +38,7 @@ let dbPromise: Promise<IDBPDatabase> | null = null
 
 function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB('meu-app-db', 4, {
+    dbPromise = openDB('meu-app-db', 5, {
       upgrade(db) {
         for (const nome of LEGACY_STORES) {
           if (db.objectStoreNames.contains(nome)) {
@@ -48,10 +49,28 @@ function getDB() {
           const store = db.createObjectStore('eventos', { keyPath: 'id' })
           store.createIndex('startsAt', 'startsAt')
         }
+        if (!db.objectStoreNames.contains('meta')) {
+          db.createObjectStore('meta')
+        }
       },
     })
   }
   return dbPromise
+}
+
+// ---------- Escopo do cache (usuário dono) ----------
+
+const CACHE_OWNER_KEY = 'eventosCacheOwner'
+
+export async function setCacheOwner(usuarioId: number | null) {
+  const db = await getDB()
+  await db.put('meta', usuarioId, CACHE_OWNER_KEY)
+}
+
+export async function getCacheOwner(): Promise<number | null> {
+  const db = await getDB()
+  const value = await db.get('meta', CACHE_OWNER_KEY)
+  return typeof value === 'number' ? value : null
 }
 
 // ---------- Eventos ----------
@@ -81,7 +100,10 @@ export async function cacheEventos(eventos: EventoCache[], range?: EventosRange)
   await tx.done
 }
 
-export async function getCachedEventos(range: EventosRange = {}): Promise<EventoCache[]> {
+export async function getCachedEventos(
+  usuarioId: number | null,
+  range: EventosRange = {}
+): Promise<EventoCache[]> {
   const db = await getDB()
   const todos: EventoCache[] = await db.getAll('eventos')
   const from = range.from ? new Date(range.from).getTime() : -Infinity
@@ -89,13 +111,19 @@ export async function getCachedEventos(range: EventosRange = {}): Promise<Evento
 
   return todos
     .filter((evento) => {
+      if (evento.usuarioId !== usuarioId) return false
       const t = new Date(evento.startsAt).getTime()
       return t >= from && t <= to
     })
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
 }
 
-export async function getCachedEvento(id: number): Promise<EventoCache | undefined> {
+export async function getCachedEvento(
+  usuarioId: number | null,
+  id: number
+): Promise<EventoCache | undefined> {
   const db = await getDB()
-  return db.get('eventos', id)
+  const evento = await db.get('eventos', id)
+  if (!evento || evento.usuarioId !== usuarioId) return undefined
+  return evento
 }

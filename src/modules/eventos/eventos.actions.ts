@@ -167,6 +167,7 @@ export async function criarEvento(dados: DadosEvento) {
       latitude,
       longitude,
       color,
+      usuarioId: usuario.id,
       reminders: {
         create: reminders,
       },
@@ -182,7 +183,7 @@ export async function editarEvento(id: number, dados: DadosEvento) {
   const usuario = await getUsuarioLogado()
   if (!usuario) return { error: 'Você precisa estar logado para editar uma nota' }
 
-  const evento = await prisma.event.findUnique({ where: { id } })
+  const evento = await prisma.event.findUnique({ where: { id, usuarioId: usuario.id } })
   if (!evento) return { error: 'Nota não encontrada' }
 
   const resultado = validarDados(dados)
@@ -192,7 +193,7 @@ export async function editarEvento(id: number, dados: DadosEvento) {
   const reminders = calcularReminders(startsAt, reminderOffsets)
 
   await prisma.event.update({
-    where: { id },
+    where: { id, usuarioId: usuario.id },
     data: {
       title,
       description,
@@ -221,10 +222,10 @@ export async function alternarConclusaoEvento(id: number, done: boolean) {
   const usuario = await getUsuarioLogado()
   if (!usuario) return { error: 'Você precisa estar logado' }
 
-  const evento = await prisma.event.findUnique({ where: { id } })
+  const evento = await prisma.event.findUnique({ where: { id, usuarioId: usuario.id } })
   if (!evento) return { error: 'Nota não encontrada' }
 
-  await prisma.event.update({ where: { id }, data: { done } })
+  await prisma.event.update({ where: { id, usuarioId: usuario.id }, data: { done } })
   revalidatePath('/eventos')
   revalidatePath('/')
   revalidatePath(`/eventos/${id}`)
@@ -235,10 +236,10 @@ export async function deletarEvento(id: number) {
   const usuario = await getUsuarioLogado()
   if (!usuario) return { error: 'Você precisa estar logado' }
 
-  const evento = await prisma.event.findUnique({ where: { id } })
+  const evento = await prisma.event.findUnique({ where: { id, usuarioId: usuario.id } })
   if (!evento) return { error: 'Nota não encontrada' }
 
-  await prisma.event.delete({ where: { id } })
+  await prisma.event.delete({ where: { id, usuarioId: usuario.id } })
   revalidatePath('/eventos')
   revalidatePath('/')
   return { success: true }
