@@ -124,6 +124,8 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
     const inicioChave = diasOrdem[0]
     const fimChave = diasOrdem[diasOrdem.length - 1]
 
+    const localParaISO = (local: string): string => new Date(local).toISOString()
+
     const startsAtLocal = allDay ? `${inicioChave}T00:00` : `${inicioChave}T${horaInicio || '00:00'}`
 
     let endsAtLocal: string | null = null
@@ -136,8 +138,8 @@ export default function EventoFormPage({ evento, error, dataInicial }: Props) {
     const dados: DadosEvento = {
       title,
       description: description || null,
-      startsAt: startsAtLocal,
-      endsAt: endsAtLocal,
+      startsAt: localParaISO(startsAtLocal),
+      endsAt: endsAtLocal ? localParaISO(endsAtLocal) : null,
       allDay,
       dias: diasOrdem,
       locationText: locationText || null,

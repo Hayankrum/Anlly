@@ -3,6 +3,8 @@ export function parseDateLocal(value: string): Date | null {
   return isNaN(d.getTime()) ? null : d
 }
 
+export type FormatoHora = '24h' | '12h'
+
 export function dataParaInputDate(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -79,7 +81,7 @@ export function formatarDataLonga(d: Date): string {
   })
 }
 
-export function formatarDataHoraLonga(d: Date): string {
+export function formatarDataHoraLonga(d: Date, formato: FormatoHora = '24h'): string {
   return d.toLocaleString('pt-BR', {
     weekday: 'long',
     day: '2-digit',
@@ -87,18 +89,24 @@ export function formatarDataHoraLonga(d: Date): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: formato === '12h',
   })
 }
 
-export function formatarHora(d: Date): string {
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+export function formatarHora(d: Date, formato: FormatoHora = '24h'): string {
+  return d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: formato === '12h',
+  })
 }
 
 export function formatarQuandoEvento(
   startsAt: Date,
   endsAt: Date | null,
   allDay: boolean,
-  dias: string[] | null
+  dias: string[] | null,
+  formato: FormatoHora = '24h'
 ): string {
   const marcados = diasDoEvento(startsAt, allDay ? endsAt : null, dias)
   if (marcados.length > 1) {
@@ -111,16 +119,16 @@ export function formatarQuandoEvento(
             .map(formatarDataCurta)
             .join(' · ')
     if (allDay) return rotuloDias
-    return `${formatarHora(startsAt)} · ${rotuloDias}`
+    return `${formatarHora(startsAt, formato)} · ${rotuloDias}`
   }
   if (allDay) return formatarDataLonga(startsAt)
   if (endsAt) {
     if (!ehMesmoDia(startsAt, endsAt)) {
-      return `${formatarDataHoraCurta(startsAt)} às ${formatarDataHoraCurta(endsAt)}`
+      return `${formatarDataHoraCurta(startsAt, formato)} às ${formatarDataHoraCurta(endsAt, formato)}`
     }
-    return `${formatarDataHoraCurta(startsAt)} às ${formatarHora(endsAt)}`
+    return `${formatarDataHoraCurta(startsAt, formato)} às ${formatarHora(endsAt, formato)}`
   }
-  return formatarDataHoraCurta(startsAt)
+  return formatarDataHoraCurta(startsAt, formato)
 }
 
 export function diasDoIntervalo(inicio: Date, fim: Date): Date[] {
@@ -144,13 +152,14 @@ export function diasDoEvento(inicio: Date, fim: Date | null, dias: string[] | nu
   return [inicio]
 }
 
-export function formatarDataHoraCurta(d: Date): string {
+export function formatarDataHoraCurta(d: Date, formato: FormatoHora = '24h'): string {
   return d.toLocaleString('pt-BR', {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: formato === '12h',
   })
 }
 

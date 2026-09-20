@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/ThemeProvider";
+import { HorarioProvider } from "@/lib/HorarioProvider";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import InstallPWMPopup from "@/components/InstallPWMPopup";
@@ -71,15 +72,17 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <ServiceWorkerRegister />
-          <Navbar usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
-          <MobileBottomNav usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
-          <div className="h-[76px] hidden md:block" />
-          <TermosChecker usuario={usuario}>
-            <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-6 pb-24 md:py-10 md:pb-10">
-              {children}
-            </main>
-          </TermosChecker>
+          <HorarioProvider>
+            <ServiceWorkerRegister />
+            <Navbar usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
+            <MobileBottomNav usuario={usuario ? { id: usuario.id, nome: usuario.nome } : null} />
+            <div className="h-[76px] hidden md:block" />
+            <TermosChecker usuario={usuario}>
+              <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-6 pb-24 md:py-10 md:pb-10">
+                {children}
+              </main>
+            </TermosChecker>
+          </HorarioProvider>
         </ThemeProvider>
         <InstallPWMPopup />
         <NotificationPermissionPopup usuarioId={usuario?.id} />

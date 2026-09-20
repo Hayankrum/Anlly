@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { formatarDataLonga, formatarHora } from '../dateUtils'
+import { useFormatoHora } from '@/lib/HorarioProvider'
 
 function subscribe(onChange: () => void) {
   const id = setInterval(onChange, 1000)
@@ -18,6 +19,7 @@ function getServerSnapshot(): number | null {
 
 export default function Relogio() {
   const segundos = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const { formato } = useFormatoHora()
 
   return (
     <div className="flex items-baseline gap-2 flex-wrap">
@@ -25,7 +27,7 @@ export default function Relogio() {
         className="text-3xl font-semibold tabular-nums"
         style={{ color: 'var(--text-primary)' }}
       >
-        {segundos == null ? '--:--' : formatarHora(new Date())}
+        {segundos == null ? '--:--' : formatarHora(new Date(), formato)}
       </span>
       <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         {segundos == null ? '' : formatarDataLonga(new Date())}

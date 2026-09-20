@@ -6,6 +6,8 @@ import { usePushSubscription } from '@/lib/usePushSubscription'
 import { toggleNotificacoes } from '@/modules/usuarios/usuarios.actions'
 import { ListaSkeleton } from '@/components/Skeletons'
 import PushTestPanel from '@/components/testes/PushTestPanel'
+import { formatarHora } from '@/modules/eventos/dateUtils'
+import { useFormatoHora } from '@/lib/HorarioProvider'
 
 interface NotificacaoHistorico {
   id: number
@@ -23,6 +25,7 @@ function notificarAtualizacao() {
 
 export default function NotificacoesPage() {
   const { isSubscribed, isSupported, isLoading, subscribe, unsubscribe } = usePushSubscription()
+  const { formato } = useFormatoHora()
   const [historico, setHistorico] = useState<NotificacaoHistorico[]>([])
   const [loadingHistorico, setLoadingHistorico] = useState(true)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -262,7 +265,7 @@ export default function NotificacoesPage() {
                     <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{notificacao.mensagem}</p>
                     <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-                        {new Date(notificacao.criadaEm).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {new Date(notificacao.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(notificacao.criadaEm).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} {formatarHora(new Date(notificacao.criadaEm), formato)}
                       </span>
                       {notificacao.url && (
                         <Link

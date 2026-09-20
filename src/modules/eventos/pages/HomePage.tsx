@@ -18,6 +18,8 @@ import { primeiroNome } from '@/lib/utils'
 import OfflineBanner from '@/components/OfflineBanner'
 import ItemEvento from '../components/ItemEvento'
 import Relogio from '../components/Relogio'
+import { useFormatoHora } from '@/lib/HorarioProvider'
+import type { FormatoHora } from '../dateUtils'
 
 const DIAS_ATRAS = 90
 const DIAS_FRENTE = 60
@@ -46,10 +48,10 @@ function ContadorCard({ rotulo, valor, cor }: { rotulo: string; valor: number; c
   )
 }
 
-function textoProximoEvento(evento: Evento): string {
+function textoProximoEvento(evento: Evento, formato: FormatoHora): string {
   const inicio = new Date(evento.startsAt)
   const diff = diasDeCalendarioAte(inicio, new Date())
-  if (diff <= 0) return `hoje às ${formatarHora(inicio)}`
+  if (diff <= 0) return `hoje às ${formatarHora(inicio, formato)}`
   if (diff === 1) return 'amanhã'
   return `em ${diff} dias`
 }
@@ -97,6 +99,7 @@ function Secao({
 export default function HomePage({ usuarioNome }: { usuarioNome?: string | null }) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [acaoError, setAcaoError] = useState('')
+  const { formato } = useFormatoHora()
 
   const range = useMemo(() => {
     const hoje = inicioDoDiaLocal(new Date())
@@ -224,7 +227,7 @@ export default function HomePage({ usuarioNome }: { usuarioNome?: string | null 
               <p className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{proximoEvento.title}</p>
             </div>
             <span className="text-lg font-semibold whitespace-nowrap" style={{ color: '#3b82f6' }}>
-              {textoProximoEvento(proximoEvento)}
+              {textoProximoEvento(proximoEvento, formato)}
             </span>
           </div>
         )}

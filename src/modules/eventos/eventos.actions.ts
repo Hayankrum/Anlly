@@ -41,6 +41,9 @@ function sanitize(value: string): string {
 }
 
 function parseDate(value: string): Date | null {
+  if (typeof value !== 'string') return null
+  const temFuso = /(?:[zZ]$)|(?:[+-]\d{2}:?\d{2}$)/.test(value.trim())
+  if (!temFuso) return null
   const d = new Date(value)
   return isNaN(d.getTime()) ? null : d
 }

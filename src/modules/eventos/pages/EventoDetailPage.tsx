@@ -15,9 +15,11 @@ import {
 } from '../dateUtils'
 import MapaPosteClient from '@/modules/mapa/components/MapaPosteClient'
 import OfflineBanner from '@/components/OfflineBanner'
+import { useFormatoHora } from '@/lib/HorarioProvider'
 
 export default function EventoDetailPage({ id }: { id: number }) {
   const router = useRouter()
+  const { formato } = useFormatoHora()
   const [refreshKey, setRefreshKey] = useState(0)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [mapaAberto, setMapaAberto] = useState(false)
@@ -64,13 +66,13 @@ export default function EventoDetailPage({ id }: { id: number }) {
               .map(formatarDataCurta)
               .join('  ·  ')
       if (e.allDay) return labelDias
-      return `${formatarHora(starts)} às ${formatarHora(ends ?? starts)} · ${labelDias}`
+      return `${formatarHora(starts, formato)} às ${formatarHora(ends ?? starts, formato)} · ${labelDias}`
     }
     if (e.allDay) return formatarDataLonga(starts)
     if (ends) {
-      return `${formatarDataCurta(starts)} às ${formatarHora(starts)} às ${formatarHora(ends)}`
+      return `${formatarDataCurta(starts)} às ${formatarHora(starts, formato)} às ${formatarHora(ends, formato)}`
     }
-    return `${formatarDataCurta(starts)} às ${formatarHora(starts)}`
+    return `${formatarDataCurta(starts)} às ${formatarHora(starts, formato)}`
   }
 
   async function handleToggleDone() {
@@ -208,7 +210,7 @@ export default function EventoDetailPage({ id }: { id: number }) {
                 >
                   <span style={{ color: 'var(--text-primary)' }}>{formatarOffset(r.offsetMinutes)}</span>
                   <span className="text-xs" style={{ color: enviado ? '#16a34a' : 'var(--text-tertiary)' }}>
-                    {enviado ? 'Enviado' : `em ${formatarDataHoraCurta(notifyAt)}`}
+                    {enviado ? 'Enviado' : `em ${formatarDataHoraCurta(notifyAt, formato)}`}
                   </span>
                 </div>
               )

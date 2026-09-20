@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { usePushSubscription } from '@/lib/usePushSubscription'
 import { toggleNotificacoes, atualizarPreferenciasNotificacao } from '@/modules/usuarios/usuarios.actions'
 import { useTheme } from '@/lib/ThemeProvider'
+import { useFormatoHora } from '@/lib/HorarioProvider'
+import { formatarHora } from '@/modules/eventos/dateUtils'
 import BotaoDeletarPerfil from '@/modules/usuarios/components/BotaoDeletarPerfil'
 import BotaoLogout from '@/modules/usuarios/components/BotaoLogout'
 import InstallPWAButton from '@/components/InstallPWAButton'
@@ -23,6 +25,7 @@ export default function ConfiguracoesPage() {
   const [toggling, setToggling] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const { theme, toggleTheme } = useTheme()
+  const { formato, setFormato } = useFormatoHora()
   const [user, setUser] = useState<UserInfo | null>(null)
   const [preferencias, setPreferencias] = useState({
     notificarSistema: true,
@@ -151,6 +154,38 @@ export default function ConfiguracoesPage() {
             >
               {theme === 'dark' ? 'Claro' : 'Escuro'}
             </button>
+          </div>
+        </section>
+
+        <section className="rounded-lg p-5" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <h2 className="font-medium mb-4" style={{ color: 'var(--text-primary)' }}>Data e hora</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Formato de hora</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                Exemplo: {formatarHora(new Date(), formato)}
+              </p>
+            </div>
+            <div
+              className="flex items-center gap-0.5 rounded-lg p-0.5"
+              style={{ backgroundColor: 'var(--btn-secondary-bg)' }}
+            >
+              {(['24h', '12h'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFormato(f)}
+                  aria-pressed={formato === f}
+                  className="h-7 px-2.5 rounded-md text-xs font-medium transition-colors"
+                  style={{
+                    backgroundColor: formato === f ? 'var(--btn-primary-bg)' : 'transparent',
+                    color: formato === f ? 'var(--btn-primary-text)' : 'var(--text-primary)',
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 

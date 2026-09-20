@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Evento } from '../types'
 import { formatarHora, formatarQuandoEvento } from '../dateUtils'
+import { useFormatoHora } from '@/lib/HorarioProvider'
 
 interface Props {
   evento: Evento
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ItemEvento({ evento, onToggle, mostrarData = true }: Props) {
+  const { formato } = useFormatoHora()
   const temLocal = !!evento.locationText || (evento.latitude != null && evento.longitude != null)
 
   let quando: string
@@ -19,15 +21,16 @@ export default function ItemEvento({ evento, onToggle, mostrarData = true }: Pro
       new Date(evento.startsAt),
       evento.endsAt ? new Date(evento.endsAt) : null,
       evento.allDay,
-      evento.dias ?? null
+      evento.dias ?? null,
+      formato
     )
   } else if (evento.allDay) {
     quando = 'Dia inteiro'
   } else {
     const starts = new Date(evento.startsAt)
     quando = evento.endsAt
-      ? `${formatarHora(starts)} – ${formatarHora(new Date(evento.endsAt))}`
-      : formatarHora(starts)
+      ? `${formatarHora(starts, formato)} – ${formatarHora(new Date(evento.endsAt), formato)}`
+      : formatarHora(starts, formato)
   }
 
   return (
