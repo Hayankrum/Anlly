@@ -10,7 +10,11 @@ import { prisma } from './prisma'
 import { exigirSessao } from './session'
 import { exigirTermosAceitos } from './termos'
 
-const JANELA_MS = 5 * 60 * 1000
+// Relógio do aparelho é só pista, não autoridade: limitamos o futuro (5 min)
+// e o passado (90 dias) para que um relógio absurdamente errado não vença o
+// LWW para sempre. Edições legítimas offline ficam sempre dentro da janela.
+const JANELA_FUTURO_MS = 5 * 60 * 1000
+const JANELA_PASSADO_MS = 90 * 24 * 60 * 60 * 1000
 
 type ItemTabela = {
   id: string
@@ -43,7 +47,8 @@ async function processarLote(
   resultados: ResultadoMutacao[],
 ): Promise<void> {
   const agoraMs = Date.now()
-  const limiteTs = agoraMs + JANELA_MS
+  const limiteTs = agoraMs + JANELA_FUTURO_MS
+  const pisoTs = agoraMs - JANELA_PASSADO_MS
 
   await prisma.$transaction(async (tx) => {
     // Primeira operação da transação: incrementa o contador do usuário.
@@ -73,6 +78,12 @@ async function processarLote(
 
     for (const mut of mutacoes) {
       if (mut.tabela !== TABELA_ITEMS) {
+        // Grava a idempotência também para rejeições: sem isso o replay
+        // reprocessaria para sempre e o cliente não tem como saber que a
+        // mutação foi descartada de vez.
+        await tx.syncMutation.create({
+          data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },
+        })
         resultados.push({ mutacaoId: mut.id, status: 'invalida' })
         continue
       }
@@ -95,11 +106,17 @@ async function processarLote(
 
       const existente = await tx.item.findUnique({ where: { id: mut.registroId } })
       if (existente && existente.userId !== userId) {
+        await tx.syncMutation.create({
+          data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },
+        })
         resultados.push({ mutacaoId: mut.id, status: 'invalida' })
         continue
       }
 
-      const updatedAt = Math.min(mut.payload.updatedAt, limiteTs)
+      // Relógio do cliente é limitado nos dois sentidos: um relógio no futuro
+      // não vence para sempre e um relógio atrasado demais não "repassa" uma
+      // edição antiga como se fosse nova.
+      const updatedAt = Math.min(Math.max(mut.payload.updatedAt, pisoTs), limiteTs)
       let deletedAt = mut.payload.deletedAt
       if (deletedAt !== undefined && deletedAt > updatedAt) deletedAt = updatedAt
 
@@ -122,18 +139,23 @@ async function processarLote(
         descricao: mut.payload.descricao,
         concluido: mut.payload.concluido,
         updatedAt: BigInt(updatedAt),
-        deletedAt: deletedAt === undefined ? null : BigInt(deletedAt),
         serverSeq: seq,
       }
+      // Tombstone só muda quando o payload declara deletedAt (criação ou
+      // exclusão). Um upsert sem o campo não ressuscita um item excluído —
+      // atualização antiga chegando depois do delete não traz o item de volta.
+      const dadosComTombstone =
+        deletedAt === undefined ? dadosItem : { ...dadosItem, deletedAt: BigInt(deletedAt) }
       const gravado = await tx.item.upsert({
         where: { id: mut.registroId },
         create: {
           id: mut.registroId,
           userId,
           criadoEm: BigInt(mut.payload.criadoEm),
-          ...dadosItem,
+          deletedAt: null,
+          ...dadosComTombstone,
         },
-        update: dadosItem,
+        update: dadosComTombstone,
       })
       await tx.syncMutation.create({
         data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },

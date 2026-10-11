@@ -4,6 +4,8 @@ import type { Mutacao } from '@shared/schemas/outbox'
 import { gerarId } from '../shared/lib/id'
 
 export const LIMITE_LOTE_PUSH = 100
+/** Depois de N rodadas sem resultado no push, a mutação é descartada. */
+export const LIMITE_TENTATIVAS = 10
 
 type ItemLegado = Item & { atualizadoEm?: number; deletadoEm?: number }
 
@@ -93,6 +95,30 @@ export async function compactarParaEnvio(
 
 export async function removerConfirmadas(ids: string[]): Promise<void> {
   if (ids.length > 0) await db.outbox.bulkDelete(ids)
+}
+
+/**
+ * Marca mutações que saíram no push mas não tiveram resultado — conta a
+ * tentativa e remove as que estouram o limite (não devem reenviar para sempre).
+ * Retorna as descartadas para o chamador avisar o usuário.
+ */
+export async function contarTentativaSemResultado(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return []
+  return db.transaction('rw', db.outbox, async () => {
+    const descartadas: string[] = []
+    for (const id of ids) {
+      const entrada = await db.outbox.get(id)
+      if (entrada === undefined) continue
+      const tentativas = entrada.tentativas + 1
+      if (tentativas >= LIMITE_TENTATIVAS) {
+        descartadas.push(id)
+      } else {
+        await db.outbox.update(id, { tentativas })
+      }
+    }
+    if (descartadas.length > 0) await db.outbox.bulkDelete(descartadas)
+    return descartadas
+  })
 }
 
 type Ouvinte = () => void

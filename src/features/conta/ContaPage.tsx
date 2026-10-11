@@ -305,6 +305,13 @@ export function ContaPage() {
             {status.ultimoErro}
           </p>
         ) : null}
+        {status.rejeitadas > 0 && status.fase !== 'erro' ? (
+          <p className="conta-erro" role="alert">
+            {pluralizar(status.rejeitadas, 'alteração foi rejeitada', 'alterações foram rejeitadas')}{' '}
+            pelo servidor e saiu da fila de envio. Os itens continuam neste aparelho — edite-os de
+            novo para reenviar.
+          </p>
+        ) : null}
         {pendentes > 0 && persistente === false ? (
           <p className="conta-erro" role="alert">
             {pluralizar(pendentes, 'alteração ainda não foi para a nuvem', 'alterações ainda não foram para a nuvem')}{' '}

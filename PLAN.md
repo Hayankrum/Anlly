@@ -42,6 +42,14 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
   navegadores reais, offline/modo avião e idempotência (a aproximação
   automatizada de dois "dispositivos" via harness Node já cobre sync em
   processos separados contra o mesmo servidor).
+- **Robustez do sync (2ª rodada)**: push com `invalida` descarta a mutação e
+  avisa (`status.rejeitadas` na tela de Conta); mutação sem resultado no push
+  conta tentativa e é descartada em `LIMITE_TENTATIVAS` (não reenvia para
+  sempre); `SyncMutation` gravada também para `invalida` (replay vira
+  resposta estável); relógio do cliente limitado a [−90d, +5min] no push (um
+  relógio absurdamente errado não vence LWW para sempre); upsert sem
+  `deletedAt` não ressuscita tombstone; rodadas de sync serializadas entre
+  abas via Web Locks (`navigator.locks`), com fallback sem trava.
 - Quando houver usuários reais, toda mudança de schema do Dexie exige nova
   `db.version(n)` com `.upgrade()` (o protótipo atual usa `version(1)` único e
   pode simplesmente recriar o IndexedDB).

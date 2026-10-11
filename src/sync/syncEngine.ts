@@ -9,6 +9,7 @@ import {
   LIMITE_LOTE_PUSH,
   compactarParaEnvio,
   contarPendentes,
+  contarTentativaSemResultado,
   paraWire,
   removerConfirmadas,
   aoMudarOutbox,
@@ -26,6 +27,8 @@ export interface StatusSync {
   ultimaSincronizacao: number | null
   ultimoErro: string | null
   proximaTentativaEm: number | null
+  /** Mutações descartadas por rejeição permanente do servidor nesta sessão. */
+  rejeitadas: number
 }
 
 const TIMEOUT_BACKOFF_BASE_MS = 2_000
@@ -41,6 +44,7 @@ let status: StatusSync = {
   ultimaSincronizacao: null,
   ultimoErro: null,
   proximaTentativaEm: null,
+  rejeitadas: 0,
 }
 
 const ouvintes = new Set<(status: StatusSync) => void>()
@@ -140,9 +144,23 @@ async function push(minhaGeracao: number): Promise<void> {
     const porId = new Map(resposta.resultados.map((resultado) => [resultado.mutacaoId, resultado]))
     const confirmados: string[] = [...descartaveis]
     const vencedoresRemotos: Item[] = []
+    const semResultado: string[] = []
+    let rejeitadasNesteLote = 0
     for (const entrada of envio) {
       const resultado = porId.get(entrada.id)
-      if (resultado === undefined) continue
+      if (resultado === undefined) {
+        // Servidor não respondeu sobre esta mutação: conta a tentativa e,
+        // se nunca responder, descarta em vez de reenviar para sempre.
+        semResultado.push(entrada.id)
+        continue
+      }
+      if (resultado.status === 'invalida') {
+        // Rejeição permanente (tabela errada, registro de outra conta):
+        // reenviar não resolve. Descarta e avisa — o item continua local.
+        confirmados.push(entrada.id)
+        rejeitadasNesteLote += 1
+        continue
+      }
       confirmados.push(entrada.id)
       // 'ignorada': servidor ficou com a versão mais nova → reconcilia local,
       // mas só se não houver edição local mais recente (aplicarRemoto decide).
@@ -151,6 +169,14 @@ async function push(minhaGeracao: number): Promise<void> {
       }
     }
     await removerConfirmadas(confirmados)
+    const descartadas = await contarTentativaSemResultado(semResultado)
+    if (rejeitadasNesteLote > 0 || descartadas.length > 0) {
+      publicar({
+        rejeitadas:
+          status.rejeitadas + rejeitadasNesteLote + descartadas.length,
+        ultimoErro: `${rejeitadasNesteLote + descartadas.length} alteração(ões) não puderam ser enviadas e foram descartadas do envio. Os itens continuam neste aparelho — edite-os de novo para reenviar.`,
+      })
+    }
     for (const vencedor of vencedoresRemotos) {
       await aplicarRemoto([vencedor])
     }
@@ -173,7 +199,21 @@ async function pull(minhaGeracao: number): Promise<void> {
   }
 }
 
-async function rodar(): Promise<void> {
+const TRAVA_SYNC = 'meu-app:sync'
+
+/**
+ * Executa `fn` segurando a trava cross-tab (Web Locks). Duas abas abertas
+ * não rodarão push/pull ao mesmo tempo; a segunda espera a primeira terminar.
+ * Em navegador sem suporte, roda sem trava (comportamento antigo).
+ */
+async function comTravaSync<T>(fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request(TRAVA_SYNC, fn)
+  }
+  return fn()
+}
+
+async function rodarInterno(): Promise<void> {
   if (rodando) {
     reexecutar = true
     return
@@ -283,6 +323,10 @@ async function rodar(): Promise<void> {
       if (status.fase === 'ocioso') void rodar()
     }
   }
+}
+
+async function rodar(): Promise<void> {
+  await comTravaSync(rodarInterno)
 }
 
 export async function sincronizarAgora(): Promise<void> {
