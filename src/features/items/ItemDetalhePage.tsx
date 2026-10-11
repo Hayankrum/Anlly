@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
 import { formatarDataHora } from '../../shared/lib/date'
+import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { useSessao } from '../conta/useSessao'
 import type { Item } from '../../db/schema'
@@ -43,24 +44,48 @@ export function ItemDetalhePage() {
   )
   const item = leitura.item
 
+  function avisarErro(erro: unknown) {
+    if (erro instanceof ErroCotaExcedida) {
+      mostrar(erro.message, {
+        tipo: 'erro',
+        duracao: 10000,
+        acao: { rotulo: 'Ver armazenamento', aoClicar: () => navigate('/config') },
+      })
+      return
+    }
+    mostrar('Não foi possível completar a operação', { tipo: 'erro' })
+  }
+
   async function salvar(entrada: EntradaItem) {
     if (!podeEditar || !item) return
-    await itemsRepo.atualizar(item.id, entrada)
-    setEditando(false)
-    mostrar('Item atualizado', { tipo: 'sucesso' })
+    try {
+      await itemsRepo.atualizar(item.id, entrada)
+      setEditando(false)
+      mostrar('Item atualizado', { tipo: 'sucesso' })
+    } catch (erro) {
+      avisarErro(erro)
+    }
   }
 
   async function alternar() {
     if (!podeEditar || !item) return
-    await itemsRepo.alternarConcluido(item)
+    try {
+      await itemsRepo.alternarConcluido(item)
+    } catch (erro) {
+      avisarErro(erro)
+    }
   }
 
   async function excluir() {
     if (!podeEditar || !item) return
-    await itemsRepo.excluir(item.id)
-    setConfirmandoExcluir(false)
-    mostrar('Item excluído', { tipo: 'info' })
-    navigate('/itens')
+    try {
+      await itemsRepo.excluir(item.id)
+      setConfirmandoExcluir(false)
+      mostrar('Item excluído', { tipo: 'info' })
+      navigate('/itens')
+    } catch (erro) {
+      avisarErro(erro)
+    }
   }
 
   if (!leitura.carregado) {

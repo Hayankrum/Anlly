@@ -106,6 +106,21 @@
   transition: width 0.3s ease;
 }
 
+.barra-preenchimento--alerta {
+  background: var(--cor-perigo);
+}
+
+.armazenamento-alerta {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--cor-aviso-borda);
+  border-radius: 8px;
+  background: var(--cor-aviso-fundo);
+  color: var(--cor-aviso-texto);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 .cartao--perigo {
   border-color: color-mix(in srgb, var(--cor-perigo) 35%, var(--cor-borda));
 }

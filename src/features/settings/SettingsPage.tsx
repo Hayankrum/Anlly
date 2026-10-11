@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Sun,
   Trash2,
+  Wifi,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -28,16 +29,22 @@ import {
 } from '../../shared/lib/backup'
 import { formatarBytes, formatarDataHora } from '../../shared/lib/date'
 import { pluralizar } from '../../shared/lib/texto'
+import { LIMITE_ALERTA_PERCENTUAL } from '../../shared/lib/cota'
 import {
   estimarArmazenamento,
   solicitarPersistencia,
   type InfoArmazenamento,
 } from '../../shared/lib/storage'
+import * as itemsRepo from '../items/items.repo'
+import * as syncState from '../../db/sync-state.repo'
+import { useSessao } from '../conta/useSessao'
 import { useInstallPrompt } from '../pwa/useInstallPrompt'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { pausarSync, sincronizarAgora } from '../../sync/syncEngine'
 import { useSettings } from './useSettings'
 import './settings.css'
+
+const IDADE_MINIMA_LIMPEZA_DIAS = 90
 
 interface OpcaoTema {
   valor: Tema
@@ -62,11 +69,13 @@ export function SettingsPage() {
   const { tema, ultimoBackupEm, definirTema } = useSettings()
   const { disponivel, isIOS, isInstalled, install } = useInstallPrompt()
   const podeEditar = usePodeEditar()
+  const sessao = useSessao()
 
   const arquivoRef = useRef<HTMLInputElement>(null)
   const [backupLido, setBackupLido] = useState<{ arquivo: File; backup: ArquivoBackup } | null>(null)
   const [etapaLimpar, setEtapaLimpar] = useState<0 | 1 | 2>(0)
   const [armazenamento, setArmazenamento] = useState<InfoArmazenamento | null>(null)
+  const [liberando, setLiberando] = useState(false)
 
   const carregarArmazenamento = useCallback(async () => {
     setArmazenamento(await estimarArmazenamento())
@@ -148,6 +157,47 @@ export function SettingsPage() {
     await carregarArmazenamento()
   }
 
+  /**
+   * Remove do aparelho o que já está seguro na nuvem: tombstones confirmados
+   * e itens sincronizados com mais de 90 dias. Voltam com "Baixar tudo de novo".
+   */
+  async function liberarEspacoLocal() {
+    setLiberando(true)
+    try {
+      const tombstones = await itemsRepo.removerTombstonesConfirmados()
+      const antigos = await itemsRepo.removerSincronizadosAntigos(IDADE_MINIMA_LIMPEZA_DIAS)
+      const total = tombstones + antigos
+      mostrar(
+        total === 0
+          ? 'Nada para liberar: tudo local já é o mais recente'
+          : `${pluralizar(total, 'registro liberado', 'registros liberados')} neste aparelho (continuam na conta)`,
+        { tipo: 'sucesso' },
+      )
+      await carregarArmazenamento()
+    } catch {
+      mostrar('Não foi possível liberar o espaço', { tipo: 'erro' })
+    } finally {
+      setLiberando(false)
+    }
+  }
+
+  /**
+   * Zera o cursor e baixa tudo da conta de novo — como em um aparelho novo.
+   * É a forma de recuperar itens antigos que foram removidos do aparelho
+   * pela limpeza de espaço.
+   */
+  async function baixarTudoDeNovo() {
+    const liberar = await pausarSync()
+    try {
+      await syncState.definirCursor('0')
+    } finally {
+      liberar()
+    }
+    await sincronizarAgora()
+    mostrar('Baixando os dados da conta de novo…', { tipo: 'info' })
+    await carregarArmazenamento()
+  }
+
   return (
     <div className="pagina">
       <div className="pagina-cabecalho">
@@ -202,7 +252,7 @@ export function SettingsPage() {
               {isInstalled
                 ? 'App instalado e abrindo como aplicativo.'
                 : isIOS
-                  ? 'No iPhone ou iPad, adicione pela tela de início usando o Safari.'
+                  ? 'No iPhone ou iPad, adicione pela tela de início usando o Safari — o app instalado também protege melhor seus dados contra limpeza automática pelo iOS.'
                   : 'Adicione à tela inicial para acesso rápido, mesmo offline.'}
             </p>
           </div>
@@ -284,6 +334,13 @@ export function SettingsPage() {
           <p className="pagina-subtitulo">Calculando uso do armazenamento…</p>
         ) : (
           <>
+            {armazenamento.percentual >= LIMITE_ALERTA_PERCENTUAL ? (
+              <p className="armazenamento-alerta" role="alert">
+                O espaço está quase cheio ({Math.round(armazenamento.percentual)}%). Quando a cota
+                acabar, novas alterações deixam de ser salvas. Libere espaço abaixo ou exporte um
+                backup.
+              </p>
+            ) : null}
             <div
               className="barra"
               role="progressbar"
@@ -293,7 +350,9 @@ export function SettingsPage() {
               aria-valuenow={Math.round(armazenamento.percentual)}
             >
               <div
-                className="barra-preenchimento"
+                className={`barra-preenchimento${
+                  armazenamento.percentual >= LIMITE_ALERTA_PERCENTUAL ? ' barra-preenchimento--alerta' : ''
+                }`}
                 style={{ width: `${Math.max(2, armazenamento.percentual)}%` }}
               />
             </div>
@@ -329,6 +388,54 @@ export function SettingsPage() {
             </div>
           </>
         )}
+        <p className="ajustes-descricao">
+          Fotos e arquivos grandes nunca devem ser guardados no aparelho: quando existirem, vão
+          direto para o armazenamento do servidor (S3/R2) e o app guarda só a referência. É o
+          que evita estourar a cota do navegador.
+        </p>
+      </section>
+
+      <section className="cartao" aria-labelledby="titulo-liberar">
+        <h2 className="cartao-titulo" id="titulo-liberar">
+          Liberar espaço local
+        </h2>
+        <div className="ajustes-linha">
+          <div className="ajustes-info">
+            <p className="ajustes-rotulo">Remover o que já está na nuvem</p>
+            <p className="ajustes-descricao">
+              Apaga do aparelho itens excluídos já confirmados e itens sincronizados com mais de{' '}
+              {IDADE_MINIMA_LIMPEZA_DIAS} dias. Nada se perde: tudo continua na conta.
+            </p>
+          </div>
+          <Button
+            variante="secundario"
+            tamanho="pequeno"
+            disabled={liberando}
+            onClick={() => void liberarEspacoLocal()}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            {liberando ? 'Liberando…' : 'Liberar espaço'}
+          </Button>
+        </div>
+        {sessao !== null ? (
+          <div className="ajustes-linha">
+            <div className="ajustes-info">
+              <p className="ajustes-rotulo">Baixar tudo de novo</p>
+              <p className="ajustes-descricao">
+                Recarrega a conta inteira neste aparelho — inclusive itens antigos que a limpeza
+                removeu. Útil se você sentiu falta de algo.
+              </p>
+            </div>
+            <Button
+              variante="secundario"
+              tamanho="pequeno"
+              onClick={() => void baixarTudoDeNovo()}
+            >
+              <Wifi size={16} aria-hidden="true" />
+              Baixar tudo
+            </Button>
+          </div>
+        ) : null}
       </section>
 
       <section className="cartao cartao--perigo" aria-labelledby="titulo-apagar">

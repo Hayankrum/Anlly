@@ -2,6 +2,7 @@ import db from '../../db/database'
 import { CHAVES, definir, obter, remover } from '../../db/config.repo'
 import { normalizarItem, novaMutacao } from '../../db/outbox.repo'
 import * as syncState from '../../db/sync-state.repo'
+import { executarComCota } from '../../shared/lib/cota'
 import type { SessaoLocal } from '@shared/schemas/usuario'
 
 const TABELA = 'items'
@@ -14,33 +15,35 @@ const TABELA = 'items'
  */
 export async function enfileirarItensParaSync(): Promise<number> {
   let enfileiradas = 0
-  await db.transaction('rw', db.items, db.outbox, async () => {
-    const pendentes = new Set(
-      (await db.outbox.toArray()).map((entrada) => `${entrada.tabela}:${entrada.registroId}`),
-    )
-    const agora = Date.now()
-    const itens = await db.items.toArray()
-    const normais = itens.map(normalizarItem)
-    const reparados = normais.filter(
-      (item, indice) =>
-        item.updatedAt !== itens[indice].updatedAt || item.deletedAt !== itens[indice].deletedAt,
-    )
-    if (reparados.length > 0) await db.items.bulkPut(reparados)
-    const mutacoes = normais
-      .filter((item) => !pendentes.has(`${TABELA}:${item.id}`))
-      .map((item) =>
-        novaMutacao(
-          TABELA,
-          item,
-          item.deletedAt !== undefined ? 'delete' : 'upsert',
-          agora,
-        ),
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const pendentes = new Set(
+        (await db.outbox.toArray()).map((entrada) => `${entrada.tabela}:${entrada.registroId}`),
       )
-    if (mutacoes.length > 0) {
-      await db.outbox.bulkAdd(mutacoes)
-      enfileiradas = mutacoes.length
-    }
-  })
+      const agora = Date.now()
+      const itens = await db.items.toArray()
+      const normais = itens.map(normalizarItem)
+      const reparados = normais.filter(
+        (item, indice) =>
+          item.updatedAt !== itens[indice].updatedAt || item.deletedAt !== itens[indice].deletedAt,
+      )
+      if (reparados.length > 0) await db.items.bulkPut(reparados)
+      const mutacoes = normais
+        .filter((item) => !pendentes.has(`${TABELA}:${item.id}`))
+        .map((item) =>
+          novaMutacao(
+            TABELA,
+            item,
+            item.deletedAt !== undefined ? 'delete' : 'upsert',
+            agora,
+          ),
+        )
+      if (mutacoes.length > 0) {
+        await db.outbox.bulkAdd(mutacoes)
+        enfileiradas = mutacoes.length
+      }
+    }),
+  )
   return enfileiradas
 }
 

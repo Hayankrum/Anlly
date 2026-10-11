@@ -46,6 +46,22 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
   `db.version(n)` com `.upgrade()` (o protótipo atual usa `version(1)` único e
   pode simplesmente recriar o IndexedDB).
 
+## Política de armazenamento local
+
+- **Cota do navegador**: escritas que estouram a cota viram `ErroCotaExcedida`
+  (mensagem clara + saída para Configurações); alerta automático aos 80% do
+  uso (`useAlertaCota`); contador de pendências do outbox na tela de Conta,
+  com aviso forte quando a persistência não foi concedida.
+- **Limpeza**: tombstones confirmados são apagados após o push; Ajustes →
+  "Liberar espaço local" remove itens sincronizados com mais de 90 dias
+  (continuam na conta) e "Baixar tudo de novo" zera o cursor para rebaixar.
+- **Fotos (quando existirem)**: vão para armazenamento de objetos do servidor
+  (S3/R2 ou similar) via upload direto; o IndexedDB guarda só a referência e,
+  se precisar de preview, uma miniatura pequena. Blob de foto cheia no
+  IndexedDB é o que estoura a cota — nunca fazer isso.
+- **iOS**: incentivar instalação na tela de início (modal e Ajustes): o PWA
+  instalado tem proteção bem melhor contra limpeza de dados pelo sistema.
+
 ## Aceitação
 
 **Automatizada (feita)** — harness em `/tmp/opencode/e2e` (fora do repo, sem

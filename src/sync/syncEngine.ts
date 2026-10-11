@@ -15,7 +15,7 @@ import {
 } from '../db/outbox.repo'
 import * as syncState from '../db/sync-state.repo'
 import type { Item } from '../db/schema'
-import { aplicarRemoto } from '../features/items/items.repo'
+import { aplicarRemoto, removerTombstonesConfirmados } from '../features/items/items.repo'
 import { alinharContaLocal, transicaoEmAndamento } from '../features/conta/conta.repo'
 
 export type FaseSync = 'parado' | 'ocioso' | 'sincronizando' | 'sem-sessao' | 'sem-conexao' | 'erro'
@@ -233,6 +233,14 @@ async function rodar(): Promise<void> {
 
     await push(minhaGeracao)
     await pull(minhaGeracao)
+
+    // Tombstones confirmados pelo push não precisam mais ficar no aparelho;
+    // a limpeza é best-effort e nunca derruba a rodada de sync por erro.
+    try {
+      await removerTombstonesConfirmados()
+    } catch {
+      /* tenta de novo na próxima rodada */
+    }
 
     const ultimaSincronizacao = Date.now()
     await syncState.marcarSincronizacao(ultimaSincronizacao)

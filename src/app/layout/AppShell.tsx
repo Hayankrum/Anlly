@@ -5,12 +5,14 @@ import { IOSInstallModal } from '../../features/pwa/IOSInstallModal'
 import { UpdateToast } from '../../features/pwa/UpdateToast'
 import { AvisoTermos } from '../../features/termos/AvisoTermos'
 import { soltarCampoFocado } from '../../shared/lib/dom'
+import { useAlertaCota } from '../../shared/lib/useAlertaCota'
 import { BottomNav } from './BottomNav'
 import { TopNav } from './TopNav'
 import './shell.css'
 
 export function AppShell() {
   const local = useLocation()
+  useAlertaCota()
 
   // Navegação: se um campo desmontou/perdeu o foco sem avisar, o teclado e a
   // barra de autocompletar do celular continuam na tela. Força a saída.

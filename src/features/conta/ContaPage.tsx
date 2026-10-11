@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, LogOut, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
@@ -6,6 +6,7 @@ import { Input } from '../../shared/ui/Input'
 import { useToast } from '../../shared/ui/Toast'
 import { tempoRelativo } from '../../shared/lib/date'
 import { pluralizar } from '../../shared/lib/texto'
+import { solicitarPersistencia, verificarPersistencia } from '../../shared/lib/storage'
 import { contarPendentes } from '../../db/outbox.repo'
 import { pausarSync, sincronizarAgora } from '../../sync/syncEngine'
 import { LIMITE_SENHA, criarConta, entrar, sair } from './conta.api'
@@ -33,6 +34,28 @@ export function ContaPage() {
   const sessao = useSessao()
   const status = useSyncStatus()
   const pendentes = useLiveQuery(() => contarPendentes(), [], 0)
+  const [persistente, setPersistente] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let ativo = true
+    void verificarPersistencia().then((valor) => {
+      if (ativo) setPersistente(valor)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [pendentes])
+
+  async function solicitarEspaco() {
+    const concedido = await solicitarPersistencia()
+    setPersistente(concedido)
+    mostrar(
+      concedido
+        ? 'Espaço permanente garantido para o app'
+        : 'O navegador não concedeu espaço permanente',
+      { tipo: concedido ? 'sucesso' : 'info' },
+    )
+  }
 
   const [modo, setModo] = useState<ModoConta>('entrar')
   const [email, setEmail] = useState('')
@@ -280,6 +303,16 @@ export function ContaPage() {
         {status.fase === 'erro' && status.ultimoErro ? (
           <p className="conta-erro" role="alert">
             {status.ultimoErro}
+          </p>
+        ) : null}
+        {pendentes > 0 && persistente === false ? (
+          <p className="conta-erro" role="alert">
+            {pluralizar(pendentes, 'alteração ainda não foi para a nuvem', 'alterações ainda não foram para a nuvem')}{' '}
+            e o espaço deste app não está garantido: se o navegador liberar memória, o que não
+            subiu pode ser apagado deste aparelho.{' '}
+            <button type="button" className="conta-erro-acao" onClick={() => void solicitarEspaco()}>
+              Garantir espaço permanente
+            </button>
           </p>
         ) : null}
         <p className="pagina-subtitulo conta-detalhes">

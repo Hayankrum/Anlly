@@ -304,6 +304,28 @@
   color: var(--cor-texto);
 }
 
+.toast-acao {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toast-acao:hover {
+  background: var(--cor-acento-fundo);
+  color: var(--cor-texto-contraste);
+}
+
+.toast-acao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
 .toast-fechar {
   display: inline-flex;
   align-items: center;

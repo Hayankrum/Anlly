@@ -33,7 +33,11 @@ export function IOSInstallModal() {
           Toque em <PlusCircle size={16} aria-hidden="true" /> <strong>Adicionar</strong>
         </li>
       </ol>
-      <p className="ios-nota">Depois disso o app abre sozinho e funciona sem internet.</p>
+      <p className="ios-nota">
+        Depois disso o app abre sozinho e funciona sem internet. No iPhone, instalar na tela de
+        início também protege melhor seus dados: o iOS guarda o app instalado com mais cuidado e é
+        bem menos provável que apague o que ainda não foi sincronizado.
+      </p>
     </Modal>
   )
 }

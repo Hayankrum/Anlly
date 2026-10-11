@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
+import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import type { FiltroItens, Item } from '../../db/schema'
 import * as itemsRepo from './items.repo'
@@ -24,6 +25,7 @@ type Edicao = { modo: 'criar' } | { modo: 'editar'; item: Item }
 
 export function ItemsPage() {
   const { mostrar } = useToast()
+  const navigate = useNavigate()
   const podeEditar = usePodeEditar()
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState<FiltroItens>('todos')
@@ -33,28 +35,52 @@ export function ItemsPage() {
   const itens = useItems({ busca, filtro })
   const filtrando = busca.trim() !== '' || filtro !== 'todos'
 
+  function avisarErro(erro: unknown) {
+    if (erro instanceof ErroCotaExcedida) {
+      mostrar(erro.message, {
+        tipo: 'erro',
+        duracao: 10000,
+        acao: { rotulo: 'Ver armazenamento', aoClicar: () => navigate('/config') },
+      })
+      return
+    }
+    mostrar('Não foi possível completar a operação', { tipo: 'erro' })
+  }
+
   async function salvar(entrada: EntradaItem) {
     if (!podeEditar) return
-    if (edicao?.modo === 'editar') {
-      await itemsRepo.atualizar(edicao.item.id, entrada)
-      mostrar('Item atualizado', { tipo: 'sucesso' })
-    } else {
-      await itemsRepo.criar(entrada)
-      mostrar('Item criado', { tipo: 'sucesso' })
+    try {
+      if (edicao?.modo === 'editar') {
+        await itemsRepo.atualizar(edicao.item.id, entrada)
+        mostrar('Item atualizado', { tipo: 'sucesso' })
+      } else {
+        await itemsRepo.criar(entrada)
+        mostrar('Item criado', { tipo: 'sucesso' })
+      }
+      setEdicao(null)
+    } catch (erro) {
+      avisarErro(erro)
     }
-    setEdicao(null)
   }
 
   async function alternar(item: Item) {
     if (!podeEditar) return
-    await itemsRepo.alternarConcluido(item)
+    try {
+      await itemsRepo.alternarConcluido(item)
+    } catch (erro) {
+      avisarErro(erro)
+    }
   }
 
   async function confirmarExclusao() {
     if (!podeEditar || !itemExcluir) return
-    await itemsRepo.excluir(itemExcluir.id)
-    setItemExcluir(null)
-    mostrar('Item excluído', { tipo: 'info' })
+    try {
+      await itemsRepo.excluir(itemExcluir.id)
+      setItemExcluir(null)
+      mostrar('Item excluído', { tipo: 'info' })
+    } catch (erro) {
+      avisarErro(erro)
+    }
   }
 
   if (!podeEditar) {
