@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Sprout, UserRound } from 'lucide-react'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
+import { formatarDataISO } from '../../shared/lib/date'
 import { useItems } from '../items/useItems'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import type { Item } from '../../db/schema'
 import * as itemsRepo from '../items/items.repo'
+import { todayStr } from '../calendario/datas'
 import { Trilha } from './Trilha'
 import './home.css'
 
@@ -65,9 +67,13 @@ export function HomePage() {
     }
   }
 
+  const hoje = todayStr(agora)
   const itens = useMemo(
-    () => (podeEditar ? ordenarTrilha(itensBrutos) : []),
-    [podeEditar, itensBrutos],
+    () =>
+      podeEditar
+        ? ordenarTrilha(itensBrutos.filter((item) => item.diasAgendamento?.includes(hoje)))
+        : [],
+    [podeEditar, itensBrutos, hoje],
   )
   const concluidos = itens.filter((item) => item.concluido).length
   const percentual = itens.length === 0 ? 0 : Math.round((concluidos / itens.length) * 100)
@@ -118,11 +124,25 @@ export function HomePage() {
               <span className="home-vazio-selo" aria-hidden="true">
                 <Sprout size={34} />
               </span>
-              <p className="home-vazio-titulo">Seu caminho ainda está vazio</p>
-              <p className="home-vazio-nota">Adicione o primeiro passo da sua jornada.</p>
-              <Link className="btn btn--primario" to="/itens">
-                Criar primeiro item
-              </Link>
+              {itensBrutos.length === 0 ? (
+                <>
+                  <p className="home-vazio-titulo">Seu caminho ainda está vazio</p>
+                  <p className="home-vazio-nota">Adicione o primeiro passo da sua jornada.</p>
+                  <Link className="btn btn--primario" to="/itens">
+                    Criar primeiro item
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="home-vazio-titulo">Nada agendado para hoje</p>
+                  <p className="home-vazio-nota">
+                    Agende um item para {formatarDataISO(hoje)} e ele aparece aqui.
+                  </p>
+                  <Link className="btn btn--primario" to="/itens">
+                    Ver itens
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             <Trilha
