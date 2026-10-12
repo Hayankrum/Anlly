@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, EyeOff, LogOut, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Eye, EyeOff, Info, LogOut, RefreshCw, Settings, ShieldCheck } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
 import { useToast } from '../../shared/ui/Toast'
@@ -159,15 +159,6 @@ export function ContaPage() {
   if (sessao === null) {
     return (
       <div className="pagina">
-        <div className="pagina-cabecalho">
-          <div>
-            <h1 className="pagina-titulo">Conta</h1>
-            <p className="pagina-subtitulo">
-              Entre ou crie uma conta para ver e criar seus itens.
-            </p>
-          </div>
-        </div>
-
         <section className="cartao" aria-labelledby="titulo-formulario">
           <h2 className="cartao-titulo" id="titulo-formulario">
             {modo === 'entrar' ? 'Entrar' : 'Criar conta'}
@@ -257,6 +248,24 @@ export function ContaPage() {
             <strong>outra conta</strong> apaga os dados locais para não misturar contas.
           </span>
         </div>
+
+        <section className="cartao" aria-labelledby="titulo-outros">
+          <h2 className="cartao-titulo" id="titulo-outros">
+            Mais
+          </h2>
+          <nav className="conta-links" aria-label="Outras páginas">
+            <Link className="conta-link" to="/config">
+              <Settings size={18} aria-hidden="true" />
+              <span>Ajustes</span>
+              <ChevronRight size={16} aria-hidden="true" className="conta-link-seta" />
+            </Link>
+            <Link className="conta-link" to="/sobre">
+              <Info size={18} aria-hidden="true" />
+              <span>Sobre</span>
+              <ChevronRight size={16} aria-hidden="true" className="conta-link-seta" />
+            </Link>
+          </nav>
+        </section>
       </div>
     )
   }
@@ -266,13 +275,6 @@ export function ContaPage() {
 
   return (
     <div className="pagina">
-      <div className="pagina-cabecalho">
-        <div>
-          <h1 className="pagina-titulo">Conta</h1>
-          <p className="pagina-subtitulo">Sincronização em segundo plano com a nuvem.</p>
-        </div>
-      </div>
-
       <section className="cartao" aria-labelledby="titulo-sua-conta">
         <h2 className="cartao-titulo" id="titulo-sua-conta">
           Sua conta
@@ -353,6 +355,24 @@ export function ContaPage() {
           mudou em outros aparelhos. Sem conta, os itens ficam guardados aqui e voltam a aparecer
           quando você entrar de novo.
         </p>
+      </section>
+
+      <section className="cartao" aria-labelledby="titulo-outros">
+        <h2 className="cartao-titulo" id="titulo-outros">
+          Mais
+        </h2>
+        <nav className="conta-links" aria-label="Outras páginas">
+          <Link className="conta-link" to="/config">
+            <Settings size={18} aria-hidden="true" />
+            <span>Ajustes</span>
+            <ChevronRight size={16} aria-hidden="true" className="conta-link-seta" />
+          </Link>
+          <Link className="conta-link" to="/sobre">
+            <Info size={18} aria-hidden="true" />
+            <span>Sobre</span>
+            <ChevronRight size={16} aria-hidden="true" className="conta-link-seta" />
+          </Link>
+        </nav>
       </section>
     </div>
   )

@@ -6,7 +6,7 @@ import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
-import { formatarDataHora } from '../../shared/lib/date'
+import { formatarDataHora, formatarDataISO } from '../../shared/lib/date'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { useSessao } from '../conta/useSessao'
@@ -175,6 +175,12 @@ export function ItemDetalhePage() {
         <p className={`item-situacao${item.concluido ? ' item-situacao--ok' : ''}`}>
           {item.concluido ? 'Concluído' : 'Pendente'}
         </p>
+        {item.diasAgendamento && item.diasAgendamento.length > 0 ? (
+          <p className="item-agendado">
+            Agendado para {item.diasAgendamento.map(formatarDataISO).join(', ')}
+            {item.horaAgendamento ? ` às ${item.horaAgendamento}` : ''}
+          </p>
+        ) : null}
         <p className="item-detalhe-descricao">
           {item.descricao ? item.descricao : 'Sem descrição.'}
         </p>

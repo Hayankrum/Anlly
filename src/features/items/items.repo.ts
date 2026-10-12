@@ -14,6 +14,10 @@ export interface OpcoesListagem {
 export interface EntradaItem {
   titulo: string
   descricao: string
+  /** Dias escolhidos no calendário (YYYY-MM-DD, opcional). Um item pode marcar vários. */
+  diasAgendamento?: string[]
+  /** HH:mm escolhido no formulário (opcional) — mesmo horário em todos os dias. */
+  horaAgendamento?: string
 }
 
 export async function listar({ busca = '', filtro = 'todos' }: OpcoesListagem = {}): Promise<Item[]> {
@@ -47,6 +51,10 @@ export async function criar(entrada: EntradaItem): Promise<string> {
     criadoEm: agora,
     updatedAt: agora,
   }
+  if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
+    item.diasAgendamento = entrada.diasAgendamento
+  }
+  if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
   await executarComCota(() =>
     db.transaction('rw', db.items, db.outbox, async () => {
       await db.items.add(item)
@@ -68,6 +76,14 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         descricao: entrada.descricao.trim(),
         updatedAt: agora,
       }
+      // Campo opcional: presente grava, ausente apaga (limpar no formulário funciona).
+      if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
+        item.diasAgendamento = entrada.diasAgendamento
+      } else {
+        delete item.diasAgendamento
+      }
+      if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
+      else delete item.horaAgendamento
       await db.items.put(item)
       await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
     }),

@@ -45,6 +45,22 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
     updatedAt: item.updatedAt,
   }
   if (typeof item.deletedAt === 'number') normalizado.deletedAt = item.deletedAt
+  // Dias: formato novo é array; backups antigos tinham um único "dataAgendamento".
+  const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
+  if (Array.isArray(item.diasAgendamento)) {
+    const dias = item.diasAgendamento.filter(
+      (dia): dia is string => typeof dia === 'string' && DATA_RE.test(dia),
+    )
+    if (dias.length > 0) normalizado.diasAgendamento = dias
+  } else {
+    const legado = (item as { dataAgendamento?: unknown }).dataAgendamento
+    if (typeof legado === 'string' && DATA_RE.test(legado)) {
+      normalizado.diasAgendamento = [legado]
+    }
+  }
+  if (typeof item.horaAgendamento === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.horaAgendamento)) {
+    normalizado.horaAgendamento = item.horaAgendamento
+  }
   return normalizado
 }
 

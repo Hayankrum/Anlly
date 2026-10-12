@@ -16,4 +16,18 @@ db.version(1).stores({
   syncState: 'chave',
 })
 
+// v2: agendamento de dia único (dataAgendamento) vira lista (diasAgendamento).
+db.version(2).upgrade((transacao) =>
+  transacao
+    .table('items')
+    .toCollection()
+    .modify((item) => {
+      const legado = (item as unknown as { dataAgendamento?: string }).dataAgendamento
+      if (typeof legado === 'string' && legado !== '') {
+        ;(item as unknown as { diasAgendamento?: string[] }).diasAgendamento = [legado]
+      }
+      delete (item as unknown as { dataAgendamento?: string }).dataAgendamento
+    }),
+)
+
 export default db

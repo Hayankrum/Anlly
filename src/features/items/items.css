@@ -104,6 +104,16 @@
   color: var(--cor-texto-terciario);
 }
 
+.item-agendado {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--cor-texto-suave);
+}
+
 .item-cartao--concluido .item-titulo {
   text-decoration: line-through;
   color: var(--cor-texto-suave);

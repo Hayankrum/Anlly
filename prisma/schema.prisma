@@ -91,6 +91,10 @@ model Item {
   titulo    String
   descricao String
   concluido Boolean  @default(false)
+  // Agendamento opcional: vários dias (YYYY-MM-DD) + um horário (HH:mm) que
+  // vale para todos eles.
+  diasAgendamento String[]
+  horaAgendamento String?
   criadoEm  BigInt
   updatedAt BigInt
   deletedAt BigInt?

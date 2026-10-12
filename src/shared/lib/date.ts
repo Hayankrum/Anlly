@@ -20,6 +20,13 @@ export function formatarDataHora(timestamp: number): string {
   return new Date(timestamp).toLocaleString('pt-BR', FORMATO_DATA_HORA)
 }
 
+/** "2026-10-14" → "14/10/2026" (data civil em string, sem fuso). */
+export function formatarDataISO(iso: string): string {
+  const [ano, mes, dia] = iso.split('-')
+  if (!ano || !mes || !dia) return iso
+  return `${dia}/${mes}/${ano}`
+}
+
 export function diasDesde(timestamp: number): number {
   const ms = Date.now() - timestamp
   return Math.floor(ms / 86_400_000)

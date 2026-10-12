@@ -22,6 +22,8 @@ type ItemTabela = {
   titulo: string
   descricao: string
   concluido: boolean
+  diasAgendamento: string[]
+  horaAgendamento: string | null
   criadoEm: bigint
   updatedAt: bigint
   deletedAt: bigint | null
@@ -34,6 +36,8 @@ function toWire(item: ItemTabela): Item {
     titulo: item.titulo,
     descricao: item.descricao,
     concluido: item.concluido,
+    ...(item.diasAgendamento.length === 0 ? {} : { diasAgendamento: item.diasAgendamento }),
+    ...(item.horaAgendamento === null ? {} : { horaAgendamento: item.horaAgendamento }),
     criadoEm: Number(item.criadoEm),
     updatedAt: Number(item.updatedAt),
     serverVersion: Number(item.serverSeq),
@@ -138,6 +142,8 @@ async function processarLote(
         titulo: mut.payload.titulo,
         descricao: mut.payload.descricao,
         concluido: mut.payload.concluido,
+        diasAgendamento: mut.payload.diasAgendamento ?? [],
+        horaAgendamento: mut.payload.horaAgendamento ?? null,
         updatedAt: BigInt(updatedAt),
         serverSeq: seq,
       }

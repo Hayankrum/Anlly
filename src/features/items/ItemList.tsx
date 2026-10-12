@@ -1,8 +1,8 @@
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, CalendarClock, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../shared/ui/Button'
 import type { Item } from '../../db/schema'
-import { formatarData } from '../../shared/lib/date'
+import { formatarData, formatarDataISO } from '../../shared/lib/date'
 
 export interface ItemListProps {
   itens: Item[]
@@ -72,6 +72,13 @@ export function ItemList({
               </Link>
             </p>
             {item.descricao ? <p className="item-descricao">{item.descricao}</p> : null}
+            {item.diasAgendamento && item.diasAgendamento.length > 0 ? (
+              <p className="item-agendado">
+                <CalendarClock size={13} aria-hidden="true" />
+                {item.diasAgendamento.map(formatarDataISO).join(', ')}
+                {item.horaAgendamento ? ` · ${item.horaAgendamento}` : ''}
+              </p>
+            ) : null}
             <p className="item-data">criado em {formatarData(item.criadoEm)}</p>
           </div>
 

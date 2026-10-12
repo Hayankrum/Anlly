@@ -1,0 +1,471 @@
+/* ---------- Calendário (Dia / Semana / Mês / Ano) ---------- */
+
+.month-calendar {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.calendar-title {
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.calendar-title:hover {
+  background: var(--cor-superficie);
+}
+
+.calendar-title:active {
+  background: var(--cor-superficie-2);
+}
+
+.nav-button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.nav-button:hover {
+  background: var(--cor-superficie);
+}
+
+.nav-button:active {
+  background: var(--cor-superficie-2);
+}
+
+.weekday-row,
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  padding: 4px 0;
+}
+
+.day-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  aspect-ratio: 1;
+  min-height: 40px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  padding: 0;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.day-cell.is-empty {
+  pointer-events: none;
+}
+
+.day-number {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.day-cell.has-events .day-dot {
+  background: var(--cor-acento);
+}
+
+.day-cell.is-today {
+  border-color: var(--cor-acento);
+}
+
+.day-cell.is-today .day-number {
+  color: var(--cor-acento);
+  font-weight: 700;
+}
+
+.day-cell.is-selected,
+.day-cell.is-selected:hover {
+  background: var(--cor-acento-fundo);
+  border-color: var(--cor-acento-fundo);
+  color: var(--cor-texto-contraste);
+}
+
+.day-cell.is-selected .day-number {
+  color: var(--cor-texto-contraste);
+  font-weight: 700;
+}
+
+.day-cell.is-selected .day-dot {
+  background: var(--cor-texto-contraste);
+}
+
+.day-cell:not(.is-empty):not(.is-selected):hover {
+  background: var(--cor-superficie);
+}
+
+/* ---------- Mapa de horas ---------- */
+
+.timeline-section {
+  margin-top: 2px;
+}
+
+.timeline-cabecalho {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.timeline-cabecalho .cartao-titulo {
+  margin-bottom: 0;
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: var(--cor-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-timeline {
+  border-radius: 10px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  padding: 16px 12px;
+}
+
+.timeline-viewport {
+  position: relative;
+  max-height: min(60vh, 520px);
+  overflow: auto;
+  /* Sem "contain": ao chegar no topo/fim a rolagem passa para a página. */
+  overscroll-behavior-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cor-borda) transparent;
+}
+
+.timeline-viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.timeline-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timeline-viewport::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--cor-borda);
+}
+
+.timeline-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--cor-texto-suave);
+}
+
+.timeline-scroll {
+  position: relative;
+  display: grid;
+  /* sem rolagem horizontal: a faixa acompanha a tela */
+  grid-template-columns: 64px minmax(0, 1fr);
+  /* folga para o rótulo da primeira hora não ser cortado */
+  padding: 12px 0;
+}
+
+.timeline-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: var(--cor-superficie);
+  box-shadow: 8px 0 10px -8px rgb(0 0 0 / 0.25);
+}
+
+.timeline-hour {
+  position: absolute;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.timeline-track {
+  position: relative;
+}
+
+.timeline-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--cor-borda);
+}
+
+.timeline-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cor-perigo);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.timeline-now-dot {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--cor-perigo);
+}
+
+.timeline-event {
+  position: absolute;
+  /* colunas: itens do mesmo horário dividem a faixa lado a lado */
+  left: calc(8px + (100% - 20px) * var(--col, 0) / var(--cols, 1));
+  width: calc((100% - 20px) / var(--cols, 1) - var(--gap, 0px));
+  max-width: var(--timeline-block-max, 380px);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cor-acento) 14%, var(--cor-superficie));
+  color: var(--cor-texto);
+  text-align: left;
+  overflow: hidden;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.timeline-event:hover {
+  filter: brightness(1.04);
+}
+
+.timeline-event.is-done {
+  opacity: 0.55;
+}
+
+.timeline-event.is-done .timeline-event-title {
+  text-decoration: line-through;
+}
+
+.timeline-event-icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--cor-texto-suave);
+}
+
+.timeline-event.is-done .timeline-event-icon {
+  color: var(--cor-sucesso);
+}
+
+.timeline-event-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.timeline-event-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-event-time {
+  font-size: 11.5px;
+  color: var(--cor-texto-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Colunas estreitas: o ícone sai para o texto não virar bagunça. */
+.timeline-event.is-narrow .timeline-event-icon {
+  display: none;
+}
+
+.timeline-empty {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--cor-texto-suave);
+  font-size: 13.5px;
+}
+
+/* Itens do dia sem horário — listados acima da régua. */
+.timeline-sem-hora {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline-sem-hora-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.timeline-sem-hora-item:hover {
+  background: var(--cor-superficie-2);
+}
+
+.timeline-sem-hora-item.is-done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* ---------- Mapa do ano ---------- */
+
+.year-view {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mini-month {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  padding: 6px 5px 7px;
+}
+
+.mini-month.is-current {
+  border-color: var(--cor-acento);
+}
+
+.mini-month-name {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cor-texto);
+}
+
+.mini-month.is-current .mini-month-name {
+  color: var(--cor-acento);
+}
+
+.mini-weekdays,
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mini-weekday {
+  text-align: center;
+  font-size: 8px;
+  color: var(--cor-texto-suave);
+}
+
+.mini-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 15px;
+  aspect-ratio: 1;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  padding: 0;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.mini-day.is-empty {
+  pointer-events: none;
+}
+
+.mini-dot {
+  width: 3px;
+  height: 3px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.mini-dot[data-tem-item] {
+  background: var(--cor-acento);
+}
+
+.mini-day.is-today {
+  border-color: var(--cor-acento);
+  color: var(--cor-acento);
+  font-weight: 700;
+}
+
+.mini-day.is-selected,
+.mini-day.is-selected:hover {
+  background: var(--cor-acento-fundo);
+  border-color: var(--cor-acento-fundo);
+  color: var(--cor-texto-contraste);
+  font-weight: 700;
+}
+
+.mini-day:not(.is-empty):not(.is-selected):hover {
+  background: var(--cor-fundo);
+}

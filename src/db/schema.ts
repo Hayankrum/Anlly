@@ -27,6 +27,6 @@ export type Tema = 'claro' | 'escuro' | 'sistema'
 
 export type FiltroItens = 'todos' | 'pendentes' | 'concluidos'
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const CHAVE_SYNC_GLOBAL = 'global'

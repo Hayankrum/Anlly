@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
@@ -86,13 +85,6 @@ export function ItemsPage() {
   if (!podeEditar) {
     return (
       <div className="pagina">
-        <div className="pagina-cabecalho">
-          <div>
-            <h1 className="pagina-titulo">Itens</h1>
-            <p className="pagina-subtitulo">Entre na sua conta para ver e criar itens.</p>
-          </div>
-        </div>
-
         <div className="lista-vazia">
           <p className="lista-vazia-titulo">Sua lista está protegida</p>
           <p>
@@ -108,24 +100,8 @@ export function ItemsPage() {
 
   return (
     <div className="pagina">
-      <div className="pagina-cabecalho">
-        <div>
-          <h1 className="pagina-titulo">Itens</h1>
-          <p className="pagina-subtitulo">
-            {itens.length === 1 ? '1 item listado' : `${itens.length} itens listados`}
-          </p>
-        </div>
-        <Button tamanho="pequeno" onClick={() => setEdicao({ modo: 'criar' })}>
-          <Plus size={16} aria-hidden="true" />
-          Novo item
-        </Button>
-      </div>
-
       <div className="itens-toolbar">
         <div className="campo">
-          <label className="campo-label" htmlFor="busca-itens">
-            Buscar itens
-          </label>
           <div className="busca">
             <Search className="busca-icone" size={18} aria-hidden="true" />
             <input
@@ -133,6 +109,7 @@ export function ItemsPage() {
               className="campo-controle busca-input"
               type="search"
               placeholder="Título ou descrição"
+              aria-label="Buscar itens"
               value={busca}
               onChange={(evento) => setBusca(evento.target.value)}
             />
@@ -162,6 +139,17 @@ export function ItemsPage() {
         aoExcluir={(item) => setItemExcluir(item)}
         aoCriar={() => setEdicao({ modo: 'criar' })}
       />
+
+      {edicao === null ? (
+        <button
+          type="button"
+          className="fab"
+          aria-label="Novo item"
+          onClick={() => setEdicao({ modo: 'criar' })}
+        >
+          <Plus size={26} aria-hidden="true" />
+        </button>
+      ) : null}
 
       <Modal
         aberto={edicao !== null}
