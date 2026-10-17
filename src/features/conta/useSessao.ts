@@ -9,11 +9,17 @@ const ESTADO_PADRAO: EstadoSync = {
   sessao: null,
 }
 
-export function useSessao(): SessaoLocal | null {
-  const estado = useLiveQuery(() => syncState.obter(), [], ESTADO_PADRAO)
-  return estado.sessao
-}
+// A leitura do IndexedDB é assíncrona: ao montar cada página o `useLiveQuery`
+// devolve o padrão (`sessao: null`) por um instante e a UI de "sem conta"
+// pisca. Guardar o último estado conhecido evita o flash na troca de páginas.
+let estadoCache: EstadoSync = ESTADO_PADRAO
 
 export function useEstadoSync(): EstadoSync {
-  return useLiveQuery(() => syncState.obter(), [], ESTADO_PADRAO)
+  const estado = useLiveQuery(() => syncState.obter(), [], estadoCache)
+  estadoCache = estado
+  return estado
+}
+
+export function useSessao(): SessaoLocal | null {
+  return useEstadoSync().sessao
 }

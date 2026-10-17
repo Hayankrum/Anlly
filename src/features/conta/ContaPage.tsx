@@ -78,6 +78,10 @@ export function ContaPage() {
       setErroForm(`A senha precisa de pelo menos ${LIMITE_SENHA} caracteres.`)
       return
     }
+    if (modo === 'criar' && nome.trim() === '') {
+      setErroForm('Informe seu nome.')
+      return
+    }
     if (modo === 'criar' && !aceitouTermos) {
       setErroForm('Para criar a conta, aceite os Termos de uso e a Política de privacidade.')
       return
@@ -204,11 +208,12 @@ export function ContaPage() {
             />
             {modo === 'criar' ? (
               <Input
-                label="Nome (opcional)"
+                label="Nome"
                 value={nome}
                 onChange={(evento) => setNome(evento.target.value)}
                 autoComplete="name"
                 placeholder="Como devemos te chamar"
+                required
               />
             ) : null}
             {modo === 'criar' ? (

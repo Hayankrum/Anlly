@@ -28,7 +28,7 @@ export const SECOES_TERMOS: SecaoTermos[] = [
     id: 'dados',
     titulo: '3. Quais dados são coletados',
     paragrafos: [
-      'Conta: e-mail, nome (opcional) e a senha, que é guardada apenas na forma de hash ilegível (não armazenamos a senha em texto puro).',
+      'Conta: e-mail, nome e a senha, que é guardada apenas na forma de hash ilegível (não armazenamos a senha em texto puro).',
       'Sincronização: os itens que você cria, edita ou exclui, com data e hora das alterações, além do contador técnico usado para ordenar as mudanças.',
       'Sessão: data de criação e expiração, endereço IP e identificação do navegador/navegação, usados para manter a sessão segura e permitir o logout.',
       'Nada além disso é coletado: não há anúncios, rastreamento, analytics de terceiros, geolocalização, contatos ou câmera.',
