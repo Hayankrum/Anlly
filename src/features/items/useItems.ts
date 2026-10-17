@@ -7,8 +7,20 @@ export interface OpcoesItens {
   filtro?: FiltroItens
 }
 
+// A leitura do IndexedDB é assíncrona: ao montar cada página o `useLiveQuery`
+// devolve `[]` por um instante e o estado vazio pisca. Guardar o último
+// resultado por filtro evita o flash na troca de páginas.
+const cacheItens = new Map<string, Item[]>()
+
 export function useItems({ busca = '', filtro = 'todos' }: OpcoesItens = {}): Item[] {
-  return useLiveQuery(() => itemsRepo.listar({ busca, filtro }), [busca, filtro], [] as Item[])
+  const chave = `${busca}\u0000${filtro}`
+  const resultado = useLiveQuery(
+    () => itemsRepo.listar({ busca, filtro }),
+    [busca, filtro],
+    cacheItens.get(chave) ?? ([] as Item[]),
+  )
+  cacheItens.set(chave, resultado)
+  return resultado
 }
 
 interface Estatisticas {
