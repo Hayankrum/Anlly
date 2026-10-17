@@ -1,22 +1,22 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import type { FiltroItens, Item } from '../../db/schema'
+import type { Item, PeriodoItens } from '../../db/schema'
 import * as itemsRepo from './items.repo'
 
 export interface OpcoesItens {
   busca?: string
-  filtro?: FiltroItens
+  periodo?: PeriodoItens
 }
 
 // A leitura do IndexedDB é assíncrona: ao montar cada página o `useLiveQuery`
 // devolve `[]` por um instante e o estado vazio pisca. Guardar o último
-// resultado por filtro evita o flash na troca de páginas.
+// resultado por consulta evita o flash na troca de páginas.
 const cacheItens = new Map<string, Item[]>()
 
-export function useItems({ busca = '', filtro = 'todos' }: OpcoesItens = {}): Item[] {
-  const chave = `${busca}\u0000${filtro}`
+export function useItems({ busca = '', periodo }: OpcoesItens = {}): Item[] {
+  const chave = `${busca}\u0000${periodo ?? ''}`
   const resultado = useLiveQuery(
-    () => itemsRepo.listar({ busca, filtro }),
-    [busca, filtro],
+    () => itemsRepo.listar({ busca, periodo }),
+    [busca, periodo],
     cacheItens.get(chave) ?? ([] as Item[]),
   )
   cacheItens.set(chave, resultado)

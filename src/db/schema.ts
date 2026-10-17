@@ -25,7 +25,7 @@ export interface EstadoSync {
 
 export type Tema = 'claro' | 'escuro' | 'sistema'
 
-export type FiltroItens = 'todos' | 'pendentes' | 'concluidos'
+export type PeriodoItens = 'dia' | 'semana' | 'mes'
 
 export const SCHEMA_VERSION = 2
 

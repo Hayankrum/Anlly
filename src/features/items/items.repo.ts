@@ -1,14 +1,28 @@
 import db from '../../db/database'
 import { novaMutacao } from '../../db/outbox.repo'
-import type { EntradaOutbox, FiltroItens, Item } from '../../db/schema'
+import type { EntradaOutbox, Item, PeriodoItens } from '../../db/schema'
 import { executarComCota } from '../../shared/lib/cota'
 import { gerarId } from '../../shared/lib/id'
+import { todayStr, weekOf } from '../calendario/datas'
 
 const TABELA = 'items'
 
 export interface OpcoesListagem {
   busca?: string
-  filtro?: FiltroItens
+  periodo?: PeriodoItens
+}
+
+/** Item agendado para o dia, a semana (seg–dom) ou o mês de `hoje`. */
+function pertenceAoPeriodo(item: Item, periodo: PeriodoItens, hoje: string): boolean {
+  const dias = item.diasAgendamento
+  if (dias === undefined || dias.length === 0) return false
+  if (periodo === 'dia') return dias.includes(hoje)
+  if (periodo === 'mes') {
+    const mes = hoje.slice(0, 7)
+    return dias.some((dia) => dia.startsWith(mes))
+  }
+  const semana = new Set(weekOf(hoje))
+  return dias.some((dia) => semana.has(dia))
 }
 
 export interface EntradaItem {
@@ -20,13 +34,15 @@ export interface EntradaItem {
   horaAgendamento?: string
 }
 
-export async function listar({ busca = '', filtro = 'todos' }: OpcoesListagem = {}): Promise<Item[]> {
+export async function listar({ busca = '', periodo }: OpcoesListagem = {}): Promise<Item[]> {
   const termo = busca.trim().toLowerCase()
+  const hoje = periodo === undefined ? null : todayStr()
   const itens = await db.items.orderBy('criadoEm').reverse().toArray()
   return itens.filter((item) => {
     if (item.deletedAt !== undefined) return false
-    if (filtro === 'pendentes' && item.concluido) return false
-    if (filtro === 'concluidos' && !item.concluido) return false
+    if (periodo !== undefined && hoje !== null && !pertenceAoPeriodo(item, periodo, hoje)) {
+      return false
+    }
     if (termo === '') return true
     return `${item.titulo} ${item.descricao}`.toLowerCase().includes(termo)
   })

@@ -6,18 +6,18 @@ import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { usePodeEditar } from '../conta/usePodeEditar'
-import type { FiltroItens, Item } from '../../db/schema'
+import type { Item, PeriodoItens } from '../../db/schema'
 import * as itemsRepo from './items.repo'
 import type { EntradaItem } from './items.repo'
 import { ItemForm } from './ItemForm'
 import { ItemList } from './ItemList'
-import { useItems } from './useItems'
+import { useItems, useItemsStats } from './useItems'
 import './items.css'
 
-const ROTULOS_FILTRO: Record<FiltroItens, string> = {
-  todos: 'Todos',
-  pendentes: 'Pendentes',
-  concluidos: 'Concluídos',
+const ROTULOS_PERIODO: Record<PeriodoItens, string> = {
+  dia: 'Dia',
+  semana: 'Semana',
+  mes: 'Mês',
 }
 
 type Edicao = { modo: 'criar' } | { modo: 'editar'; item: Item }
@@ -27,12 +27,12 @@ export function ItemsPage() {
   const navigate = useNavigate()
   const podeEditar = usePodeEditar()
   const [busca, setBusca] = useState('')
-  const [filtro, setFiltro] = useState<FiltroItens>('todos')
+  const [periodo, setPeriodo] = useState<PeriodoItens>('mes')
   const [edicao, setEdicao] = useState<Edicao | null>(null)
   const [itemExcluir, setItemExcluir] = useState<Item | null>(null)
 
-  const itens = useItems({ busca, filtro })
-  const filtrando = busca.trim() !== '' || filtro !== 'todos'
+  const itens = useItems({ busca, periodo })
+  const { total } = useItemsStats()
 
   function avisarErro(erro: unknown) {
     if (erro instanceof ErroCotaExcedida) {
@@ -116,15 +116,15 @@ export function ItemsPage() {
           </div>
         </div>
 
-        <div className="segmentado" role="group" aria-label="Filtrar por situação">
-          {(Object.keys(ROTULOS_FILTRO) as FiltroItens[]).map((valor) => (
+        <div className="segmentado" role="group" aria-label="Filtrar por período">
+          {(Object.keys(ROTULOS_PERIODO) as PeriodoItens[]).map((valor) => (
             <button
               key={valor}
               type="button"
-              aria-pressed={filtro === valor}
-              onClick={() => setFiltro(valor)}
+              aria-pressed={periodo === valor}
+              onClick={() => setPeriodo(valor)}
             >
-              {ROTULOS_FILTRO[valor]}
+              {ROTULOS_PERIODO[valor]}
             </button>
           ))}
         </div>
@@ -132,7 +132,7 @@ export function ItemsPage() {
 
       <ItemList
         itens={itens}
-        filtrando={filtrando}
+        temItens={total > 0}
         podeEditar={podeEditar}
         aoAlternar={(item) => void alternar(item)}
         aoEditar={(item) => setEdicao({ modo: 'editar', item })}

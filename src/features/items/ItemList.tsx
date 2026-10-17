@@ -6,7 +6,7 @@ import { formatarData, formatarDataISO } from '../../shared/lib/date'
 
 export interface ItemListProps {
   itens: Item[]
-  filtrando: boolean
+  temItens: boolean
   podeEditar: boolean
   aoAlternar: (item: Item) => void
   aoEditar: (item: Item) => void
@@ -16,7 +16,7 @@ export interface ItemListProps {
 
 export function ItemList({
   itens,
-  filtrando,
+  temItens,
   podeEditar,
   aoAlternar,
   aoEditar,
@@ -26,10 +26,10 @@ export function ItemList({
   if (itens.length === 0) {
     return (
       <div className="lista-vazia">
-        {filtrando ? (
+        {temItens ? (
           <>
-            <p className="lista-vazia-titulo">Nenhum item encontrado</p>
-            <p>Tente outro termo ou troque o filtro.</p>
+            <p className="lista-vazia-titulo">Nenhum item no período</p>
+            <p>Tente outro termo, outro período ou crie um item.</p>
           </>
         ) : (
           <>
