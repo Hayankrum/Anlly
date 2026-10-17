@@ -388,11 +388,7 @@ export function SettingsPage() {
             </div>
           </>
         )}
-        <p className="ajustes-descricao">
-          Fotos e arquivos grandes nunca devem ser guardados no aparelho: quando existirem, vão
-          direto para o armazenamento do servidor (S3/R2) e o app guarda só a referência. É o
-          que evita estourar a cota do navegador.
-        </p>
+
       </section>
 
       <section className="cartao" aria-labelledby="titulo-liberar">

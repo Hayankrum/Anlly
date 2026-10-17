@@ -117,3 +117,6 @@ SVGs em `public/icons/`; PNGs gerados — regenere com `npm run icons` (requer
 - O Service Worker só roda em contexto seguro (HTTPS ou `localhost`).
 - Protótipo: sem `.upgrade()` no Dexie — mudanças de schema podem recriar o
   banco (ver PLAN.md).
+- Sync: ao baixar dados da conta, o app verifica espaço antes de gravar
+  (margem conservadora) e, se faltar, não avança o cursor nem faz retry
+  automático — ver instruções na tela de Conta/Ajustes.

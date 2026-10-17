@@ -12,25 +12,15 @@ import { todayStr } from '../calendario/datas'
 import { Trilha } from './Trilha'
 import './home.css'
 
-function saudacao(de: Date): string {
-  const hora = de.getHours()
-  if (hora < 12) return 'Bom dia'
-  if (hora < 18) return 'Boa tarde'
-  return 'Boa noite'
-}
-
 function primeiraMaiuscula(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
-function dataLonga(de: Date): string {
-  const diaSemana = de.toLocaleDateString('pt-BR', { weekday: 'long' })
-  const data = de.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })
-  return `${primeiraMaiuscula(diaSemana)}, ${data}`
-}
-
-function relogio(de: Date): string {
-  return de.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+function dataCompacta(de: Date): string {
+  const diaSemana = de.toLocaleDateString('pt-BR', { weekday: 'short' }).replace(/\./g, '')
+  const dia = de.toLocaleDateString('pt-BR', { day: 'numeric' })
+  const mes = de.toLocaleDateString('pt-BR', { month: 'short' }).replace(/\./g, '')
+  return `${primeiraMaiuscula(diaSemana)}, ${dia} ${mes}`
 }
 
 /** Concluídos primeiro, depois pendentes — ambos na ordem em que foram criados. */
@@ -48,9 +38,9 @@ export function HomePage() {
   const navegar = useNavigate()
   const [agora, setAgora] = useState(() => new Date())
 
-  // O relógio da home acompanha o minuto sem re-renderizar o app inteiro.
+  // Mantém a data da home virando o dia sem re-renderizar o app inteiro.
   useEffect(() => {
-    const id = window.setInterval(() => setAgora(new Date()), 10_000)
+    const id = window.setInterval(() => setAgora(new Date()), 60_000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -80,13 +70,11 @@ export function HomePage() {
 
   return (
     <div className="pagina home">
-      <header className="home-hero" aria-labelledby="home-saudacao">
+      <header className="home-hero" aria-labelledby="home-data">
         <div className="home-hero-texto">
-          <p className="home-saudacao" id="home-saudacao">
-            {saudacao(agora)}
-          </p>
-          <h1 className="home-data">{dataLonga(agora)}</h1>
-          <p className="home-relogio">{relogio(agora)}</p>
+          <h1 className="home-data" id="home-data">
+            {dataCompacta(agora)}
+          </h1>
         </div>
 
         {itens.length > 0 && (

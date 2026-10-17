@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, FileText, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { TERMOS_VERSAO } from '@shared/termos'
 import { Button } from '../../shared/ui/Button'
 import { formatarData } from '../../shared/lib/date'
@@ -26,14 +26,6 @@ export function TermosPage() {
             Versão {TERMOS_VERSAO} · publicado em {formatarData(TERMOS_PUBLICADO_EM)}
           </p>
         </div>
-      </div>
-
-      <div className="aviso" role="note">
-        <FileText size={16} aria-hidden="true" />
-        <span>
-          Este é um rascunho de termo para uso neste app. Para publicar, revise o texto e ajuste
-          o canal de contato.
-        </span>
       </div>
 
       {pendente ? (

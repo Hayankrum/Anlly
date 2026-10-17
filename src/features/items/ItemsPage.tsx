@@ -91,7 +91,7 @@ export function ItemsPage() {
             Os itens deste aparelho só aparecem com uma conta conectada — nada é apagado ao sair.
           </p>
           <Link className="btn btn--primario" to="/conta">
-            Entrar ou criar conta
+            Entrar / Criar conta
           </Link>
         </div>
       </div>

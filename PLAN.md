@@ -60,6 +60,9 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
   (mensagem clara + saída para Configurações); alerta automático aos 80% do
   uso (`useAlertaCota`); contador de pendências do outbox na tela de Conta,
   com aviso forte quando a persistência não foi concedida.
+- **Proteção no pull**: o sync checa se há espaço antes de baixar uma página
+  (~2KB por item + 5MB de margem) e, se falhar por quota, não avança o cursor,
+  não reenvia em loop e mostra orientação para liberar espaço.
 - **Limpeza**: tombstones confirmados são apagados após o push; Ajustes →
   "Liberar espaço local" remove itens sincronizados com mais de 90 dias
   (continuam na conta) e "Baixar tudo de novo" zera o cursor para rebaixar.

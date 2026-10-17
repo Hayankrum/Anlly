@@ -117,7 +117,7 @@ export function ItemDetalhePage() {
           )}
           {podeEditar ? null : (
             <Link className="btn btn--primario" to="/conta">
-              Entrar ou criar conta
+              Entrar / Criar conta
             </Link>
           )}
           <Link className="btn btn--secundario" to="/itens">

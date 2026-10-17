@@ -9,14 +9,20 @@ const CHAVE_ULTIMO_ALERTA = 'meu-app:cota-alerta-em'
  * simplesmente não foi salva e o usuário precisa saber.
  */
 export class ErroCotaExcedida extends Error {
-  constructor() {
+  constructor(mensagem?: string) {
     super(
-      'Sem espaço livre no aparelho: a alteração não foi salva. ' +
-        'Exporte um backup ou libere espaço em Configurações.',
+      mensagem ??
+        'Sem espaço livre no aparelho: a alteração não foi salva. ' +
+          'Exporte um backup ou libere espaço em Configurações.',
     )
     this.name = 'ErroCotaExcedida'
   }
 }
+
+/** Mensagem para quando o aparelho não tem espaço para baixar dados da conta. */
+export const MENSAGEM_SEM_ESPACO_SYNC =
+  'Sem espaço livre no aparelho: não foi possível baixar tudo da conta. ' +
+  'Libere espaço em Configurações (ou remova itens antigos já sincronizados) e sincronize de novo.'
 
 export function ehQuotaExcedida(erro: unknown): boolean {
   if (erro instanceof DOMException) {

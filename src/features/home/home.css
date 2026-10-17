@@ -35,28 +35,11 @@
   min-width: 0;
 }
 
-.home-saudacao {
-  color: var(--home-acento);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
 .home-data {
-  margin-top: 3px;
   color: var(--cor-texto);
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.03px;
-}
-
-.home-relogio {
-  margin-top: 2px;
-  color: var(--cor-texto-suave);
-  font-size: 1rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .home-hero-progresso {

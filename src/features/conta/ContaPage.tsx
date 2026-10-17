@@ -242,9 +242,8 @@ export function ContaPage() {
         <div className="aviso" role="status">
           <ShieldCheck size={16} aria-hidden="true" />
           <span>
-            Criar, editar e excluir itens só funciona com a conta conectada. Enquanto estiver
-            fora, seus itens ficam guardados neste aparelho — ao entrar, tudo é enviado para a
-            conta — inclusive o que foi feito offline. Entrar com{' '}
+            Com conta conectada você pode editar e sincronizar. Fora da conta, itens ficam neste
+            aparelho. Ao entrar, o que foi feito offline é enviado. Entrar com{' '}
             <strong>outra conta</strong> apaga os dados locais para não misturar contas.
           </span>
         </div>
@@ -343,18 +342,6 @@ export function ContaPage() {
             {status.fase === 'sincronizando' ? 'Sincronizando…' : 'Sincronizar agora'}
           </Button>
         </div>
-      </section>
-
-      <section className="cartao" aria-labelledby="titulo-como-funciona">
-        <h2 className="cartao-titulo" id="titulo-como-funciona">
-          Como funciona
-        </h2>
-        <p className="pagina-subtitulo">
-          O app continua offline: tudo é salvo primeiro neste aparelho. Com a conta conectada,
-          você cria e edita itens e o sync envia suas alterações em segundo plano, baixando o que
-          mudou em outros aparelhos. Sem conta, os itens ficam guardados aqui e voltam a aparecer
-          quando você entrar de novo.
-        </p>
       </section>
 
       <section className="cartao" aria-labelledby="titulo-outros">

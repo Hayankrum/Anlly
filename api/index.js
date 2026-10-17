@@ -98,7 +98,9 @@ var origensDev = [
   .../* @__PURE__ */ new Set([
     new URL(env.APP_URL).origin,
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174"
   ])
 ];
 var auth = betterAuth({

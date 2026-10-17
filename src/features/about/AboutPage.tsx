@@ -5,7 +5,6 @@ import {
   Download,
   ExternalLink,
   HardDrive,
-  Moon,
   Palette,
   ShieldCheck,
   Smartphone,
@@ -26,8 +25,6 @@ const FUNCIONALIDADES = [
   { icone: ShieldCheck, texto: 'Sem rastreamento' },
   { icone: Database, texto: 'Dados salvos primeiro no dispositivo' },
 ] as const
-
-const TECNOLOGIAS = ['Vite', 'React', 'TypeScript', 'Dexie (IndexedDB)', 'Workbox', 'PWA']
 
 export function AboutPage() {
   const { canInstall, isIOS, install } = useInstallPrompt()
@@ -61,23 +58,12 @@ export function AboutPage() {
         </ul>
       </section>
 
-      <section className="cartao">
-        <h2 className="cartao-titulo">100% offline</h2>
-        <p className="sobre-texto">
-          A internet é usada uma única vez, para baixar o app. Depois da primeira abertura, tudo
-          funciona sem rede: código, telas e dados ficam no seu dispositivo. Criar e editar itens
-          exige a conta conectada — que também segue funcionando offline — e a sincronização com
-          a nuvem acontece em segundo plano, sem bloquear o uso.
-        </p>
-      </section>
+
 
       <section className="cartao">
         <h2 className="cartao-titulo">Onde ficam os dados</h2>
         <p className="sobre-texto">
-          Seus itens ficam no banco <strong>IndexedDB</strong> deste navegador, neste dispositivo.
-          Nada sai daqui sem uma conta conectada, e a lista fica oculta enquanto você estiver
-          fora da conta. Se você apagar os dados do navegador ou desinstalar o app, os itens vão
-          junto — por isso exporte um backup de vez em quando.
+          Seus itens ficam salvos neste dispositivo. Nada sai sem conta conectada; a lista fica oculta fora da conta. Se os dados do navegador forem apagados ou o app desinstalado, os itens vão junto — exporte um backup periodicamente.
         </p>
         <Link className="sobre-link" to="/termos">
           Termos de uso e privacidade
@@ -127,28 +113,6 @@ export function AboutPage() {
             </p>
           </div>
         </div>
-      </section>
-
-      <section className="cartao">
-        <h2 className="cartao-titulo">Tecnologias</h2>
-        <div className="sobre-tags">
-          {TECNOLOGIAS.map((tech) => (
-            <span key={tech} className="sobre-tag">
-              {tech}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="cartao">
-        <h2 className="cartao-titulo sobre-titulo-icone">
-          <Moon size={18} aria-hidden="true" />
-          Tema claro e escuro
-        </h2>
-        <p className="sobre-texto">
-          A aparência segue o tema escolhido em Configurações e é aplicada antes mesmo do app
-          carregar, sem clarão na primeira abertura.
-        </p>
       </section>
 
       <ShareSection />

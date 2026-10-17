@@ -18,6 +18,8 @@ import * as syncState from '../db/sync-state.repo'
 import type { Item } from '../db/schema'
 import { aplicarRemoto, removerTombstonesConfirmados } from '../features/items/items.repo'
 import { alinharContaLocal, transicaoEmAndamento } from '../features/conta/conta.repo'
+import { ErroCotaExcedida, MENSAGEM_SEM_ESPACO_SYNC } from '../shared/lib/cota'
+import { estimarArmazenamento } from '../shared/lib/storage'
 
 export type FaseSync = 'parado' | 'ocioso' | 'sincronizando' | 'sem-sessao' | 'sem-conexao' | 'erro'
 
@@ -192,7 +194,27 @@ async function pull(minhaGeracao: number): Promise<void> {
     // Resposta da conta antiga nunca é gravada depois de uma troca.
     if (await devoParar(minhaGeracao)) return
     if (resposta.registros.length > 0) {
-      await aplicarRemoto(resposta.registros)
+      try {
+        const { quota, uso } = await estimarArmazenamento()
+        if (quota > 0) {
+          // Estimativa conservadora: ~2KB por item + 5MB de margem para estruturas do IndexedDB/outbox
+          const estimadoBytes = resposta.registros.length * 2048
+          const margemSeguranca = 5 * 1024 * 1024
+          if (uso + estimadoBytes > quota - margemSeguranca) {
+            throw new ErroCotaExcedida(MENSAGEM_SEM_ESPACO_SYNC)
+          }
+        }
+      } catch (erro) {
+        if (erro instanceof ErroCotaExcedida) throw erro
+        // Se não conseguir estimar, segue e deixa o bulkPut falhar (tratado depois)
+      }
+      try {
+        await aplicarRemoto(resposta.registros)
+      } catch (erro) {
+        // O bulkPut pode estourar entre a checagem e a escrita: mensagem do sync.
+        if (erro instanceof ErroCotaExcedida) throw new ErroCotaExcedida(MENSAGEM_SEM_ESPACO_SYNC)
+        throw erro
+      }
     }
     await syncState.definirCursor(resposta.proximoCursor)
     if (!resposta.temMais) return
@@ -301,6 +323,17 @@ async function rodarInterno(): Promise<void> {
     if (ehApi401) {
       await syncState.definirSessao(null)
       publicar({ fase: 'sem-sessao', pendentes })
+      return
+    }
+    if (erro instanceof ErroCotaExcedida) {
+      // Sem espaço: não avança cursor, não faz backoff automático pesado — orienta o usuário
+      publicar({
+        fase: 'erro',
+        pendentes,
+        ultimoErro: erro.message,
+        proximaTentativaEm: null,
+      })
+      tentativas = 0
       return
     }
     const ehRede = erro instanceof ErroRede

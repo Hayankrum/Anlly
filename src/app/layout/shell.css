@@ -153,8 +153,7 @@
 }
 
 .shell-conteudo:focus-visible {
-  outline: 2px solid var(--cor-foco);
-  outline-offset: -2px;
+  outline: none;
 }
 
 /* Bottom nav flutuante em pílula — apenas mobile (< 768px) */
