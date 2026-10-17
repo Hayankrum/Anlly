@@ -12,10 +12,13 @@ export interface OpcoesListagem {
   periodo?: PeriodoItens
 }
 
-/** Item agendado para o dia, a semana (seg–dom) ou o mês de `hoje`. */
+/**
+ * Item agendado para o dia, a semana (seg–dom) ou o mês de `hoje`.
+ * Item sem nenhum dia agendado aparece em todos os períodos.
+ */
 function pertenceAoPeriodo(item: Item, periodo: PeriodoItens, hoje: string): boolean {
   const dias = item.diasAgendamento
-  if (dias === undefined || dias.length === 0) return false
+  if (dias === undefined || dias.length === 0) return true
   if (periodo === 'dia') return dias.includes(hoje)
   if (periodo === 'mes') {
     const mes = hoje.slice(0, 7)

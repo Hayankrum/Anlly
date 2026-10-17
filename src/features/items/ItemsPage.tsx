@@ -27,7 +27,7 @@ export function ItemsPage() {
   const navigate = useNavigate()
   const podeEditar = usePodeEditar()
   const [busca, setBusca] = useState('')
-  const [periodo, setPeriodo] = useState<PeriodoItens>('mes')
+  const [periodo, setPeriodo] = useState<PeriodoItens>('dia')
   const [edicao, setEdicao] = useState<Edicao | null>(null)
   const [itemExcluir, setItemExcluir] = useState<Item | null>(null)
 
