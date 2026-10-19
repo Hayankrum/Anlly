@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
 import { formatarDataHora, formatarDataISO } from '../../shared/lib/date'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
+import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { useSessao } from '../conta/useSessao'
 import type { Item } from '../../db/schema'
@@ -43,6 +44,14 @@ export function ItemDetalhePage() {
     LEITURA_INICIAL,
   )
   const item = leitura.item
+
+  const { progresso, segurando, propsSegurar } = useSegurarParaConcluir({
+    aoConcluir: () => void alternar(),
+    aoTocar: (evento) => {
+      // Toque curto com o dedo não conclui; clique de teclado (Enter/Espaço) conclui na hora.
+      if (evento.detail === 0) void alternar()
+    },
+  })
 
   function avisarErro(erro: unknown) {
     if (erro instanceof ErroCotaExcedida) {
@@ -142,15 +151,6 @@ export function ItemDetalhePage() {
           <h1 className="pagina-titulo">{item.titulo}</h1>
         </div>
         <div className="item-detalhe-acoes">
-          <Button
-            variante="secundario"
-            tamanho="pequeno"
-            onClick={() => void alternar()}
-            aria-pressed={item.concluido}
-          >
-            <Check size={16} aria-hidden="true" />
-            {item.concluido ? 'Reabrir' : 'Concluir'}
-          </Button>
           <Button variante="secundario" tamanho="pequeno" onClick={() => setEditando(true)}>
             <Pencil size={16} aria-hidden="true" />
             Editar
@@ -189,6 +189,32 @@ export function ItemDetalhePage() {
           <p className="item-data">atualizado em {formatarDataHora(item.updatedAt)}</p>
         ) : null}
       </section>
+
+      {item.concluido ? (
+        <button
+          type="button"
+          className="item-reabrir"
+          aria-pressed="true"
+          onClick={() => void alternar()}
+        >
+          <RotateCcw size={18} aria-hidden="true" />
+          Reabrir
+        </button>
+      ) : (
+        <button
+          type="button"
+          className={`item-segurar${segurando ? ' item-segurar--segurando' : ''}`}
+          style={{ '--hold': progresso } as CSSProperties}
+          aria-label="Segure para concluir"
+          {...propsSegurar}
+        >
+          <span className="item-segurar-preenchimento" aria-hidden="true" />
+          <span className="item-segurar-rotulo">
+            <Check size={18} aria-hidden="true" />
+            {segurando ? 'Segure…' : 'Segure para concluir'}
+          </span>
+        </button>
+      )}
 
       <Modal aberto={editando} titulo="Editar item" onFechar={() => setEditando(false)} largura="estreito">
         <ItemForm item={item} aoCancelar={() => setEditando(false)} aoSalvar={salvar} />

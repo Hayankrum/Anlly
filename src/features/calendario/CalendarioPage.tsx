@@ -5,22 +5,12 @@ import { usePodeEditar } from '../conta/usePodeEditar'
 import { buildItemDia } from './itens-dia'
 import { useCalendar } from './useCalendar'
 import { MesCalendario } from './MesCalendario'
-import { SemanaCalendario } from './SemanaCalendario'
-import { NavegadorDia } from './NavegadorDia'
 import { VistaAno } from './VistaAno'
 import { MapaHoras } from './MapaHoras'
 import { formatarDataISO } from '../../shared/lib/date'
 import './calendario.css'
 
-type VistaCalendario = 'dia' | 'semana' | 'mes'
-
-const VISTAS: { id: VistaCalendario; label: string }[] = [
-  { id: 'dia', label: 'Dia' },
-  { id: 'semana', label: 'Semana' },
-  { id: 'mes', label: 'Mês' },
-]
-
-/** Navegação por dia: Dia / Semana / Mês / Ano mais o mapa de horas do dia. */
+/** Calendário mensal com vista por ano e o mapa de horas do dia selecionado. */
 export function CalendarioPage() {
   const navigate = useNavigate()
   const podeEditar = usePodeEditar()
@@ -29,7 +19,6 @@ export function CalendarioPage() {
   const itensDia = useMemo(() => buildItemDia(itens), [itens])
   const calendar = useCalendar(itensDia)
 
-  const [vista, setVista] = useState<VistaCalendario>('mes')
   const [vistaAno, setVistaAno] = useState(false)
 
   const dayItems = calendar.dayItems
@@ -57,22 +46,6 @@ export function CalendarioPage() {
 
   return (
     <div className="pagina">
-      {!vistaAno && (
-        <div className="segmentado" role="radiogroup" aria-label="visualização do calendário">
-          {VISTAS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              role="radio"
-              aria-checked={vista === option.id}
-              onClick={() => setVista(option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {vistaAno ? (
         <VistaAno
           year={calendar.year}
@@ -87,7 +60,7 @@ export function CalendarioPage() {
           onNextYear={calendar.goToNextYear}
           onClose={() => setVistaAno(false)}
         />
-      ) : vista === 'mes' ? (
+      ) : (
         <MesCalendario
           year={calendar.year}
           month={calendar.month}
@@ -98,25 +71,6 @@ export function CalendarioPage() {
           onSelectDate={calendar.selectDate}
           onPrevMonth={calendar.goToPrevMonth}
           onNextMonth={calendar.goToNextMonth}
-          onOpenYear={() => setVistaAno(true)}
-        />
-      ) : vista === 'semana' ? (
-        <SemanaCalendario
-          label={calendar.weekLabel}
-          weekDays={calendar.weekDays}
-          selectedDate={calendar.selectedDate}
-          today={calendar.today}
-          diasComItens={calendar.diasComItens}
-          onSelectDate={calendar.selectDate}
-          onPrevWeek={calendar.goToPrevWeek}
-          onNextWeek={calendar.goToNextWeek}
-          onOpenYear={() => setVistaAno(true)}
-        />
-      ) : (
-        <NavegadorDia
-          date={calendar.selectedDate}
-          onPrevDay={calendar.goToPrevDay}
-          onNextDay={calendar.goToNextDay}
           onOpenYear={() => setVistaAno(true)}
         />
       )}

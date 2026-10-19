@@ -102,19 +102,6 @@ export function weekOf(date: DateStr): DateStr[] {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i))
 }
 
-/** "21 – 27 de Setembro", ou "28 Set – 3 Out" quando cruza meses. */
-export function formatWeekRange(first: DateStr, last: DateStr): string {
-  const a = parseDate(first)
-  const b = parseDate(last)
-  if (!a || !b) return ''
-  const short = (month: number) => MONTH_NAMES[month - 1].slice(0, 3)
-  if (a.year === b.year && a.month === b.month) {
-    return `${a.day} – ${b.day} de ${MONTH_NAMES[a.month - 1]}`
-  }
-  if (a.year === b.year) return `${a.day} ${short(a.month)} – ${b.day} ${short(b.month)}`
-  return `${a.day}/${a.month}/${a.year} – ${b.day}/${b.month}/${b.year}`
-}
-
 /** Células vazias antes do dia 1 na grade 6x7 (segunda-first). */
 export function monthLeadingBlanks(year: number, month: number): number {
   return weekOffset(makeDate(year, month, 1))

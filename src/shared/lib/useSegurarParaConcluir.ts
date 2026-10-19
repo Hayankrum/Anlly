@@ -59,7 +59,7 @@ interface EstadoEspera {
 export function useSegurarParaConcluir({
   aoConcluir,
   aoTocar,
-  duracaoMs = 3000,
+  duracaoMs = 2000,
 }: OpcoesSegurar): SegurarParaConcluir {
   const [progresso, setProgresso] = useState(0)
   const [segurando, setSegurando] = useState(false)

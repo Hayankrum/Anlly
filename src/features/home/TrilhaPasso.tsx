@@ -40,7 +40,7 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
     item.titulo,
     metaDoItem(item),
     concluido ? 'concluído' : 'pendente',
-    concluido ? 'segure para desfazer a conclusão' : 'toque para ver detalhes, segure 3s para concluir',
+    concluido ? 'segure para desfazer a conclusão' : 'toque para ver detalhes, segure 2s para concluir',
   ]
     .filter(Boolean)
     .join(', ')
