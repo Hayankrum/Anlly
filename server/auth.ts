@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { env } from './env'
 import { prisma } from './prisma'
+import { enviarEmailRedefinicao, smtpConfigurado } from './email'
 
 const origensDev = [
   ...new Set([
@@ -20,6 +21,14 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
   emailAndPassword: {
     enabled: true,
+    ...(smtpConfigurado()
+      ? {
+          sendResetPassword: async (data: { user: { email: string }; url: string }) => {
+            await enviarEmailRedefinicao(data.user.email, data.url)
+          },
+          resetPasswordTokenExpiresIn: 60 * 60, // 1 hora
+        }
+      : {}),
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,

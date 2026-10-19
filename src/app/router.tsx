@@ -7,6 +7,7 @@ import { CalendarioPage } from '../features/calendario/CalendarioPage'
 import { AboutPage } from '../features/about/AboutPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { ContaPage } from '../features/conta/ContaPage'
+import { RedefinirSenhaPage } from '../features/conta/RedefinirSenhaPage'
 import { TermosPage } from '../features/termos/TermosPage'
 
 export const router = createHashRouter([
@@ -19,6 +20,7 @@ export const router = createHashRouter([
       { path: 'itens/:id', element: <ItemDetalhePage /> },
       { path: 'calendario', element: <CalendarioPage /> },
       { path: 'conta', element: <ContaPage /> },
+      { path: 'redefinir-senha', element: <RedefinirSenhaPage /> },
       { path: 'sobre', element: <AboutPage /> },
       { path: 'termos', element: <TermosPage /> },
       { path: 'config', element: <SettingsPage /> },

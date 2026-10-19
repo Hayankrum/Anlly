@@ -1,8 +1,8 @@
-# Plano — base Vite fullstack (protótipo)
+# Plano — Anlly (app de acompanhamento do dia a dia)
 
 Um repo, um package.json, um deploy. Cliente offline-first (Dexie como fonte da
-verdade local), nuvem como réplica sincronizada. Protótipo: sem dados a preservar —
-mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
+verdade local), nuvem como réplica sincronizada. Dexie usa `version(2)` com
+`.upgrade()` para migrações de schema.
 
 | Etapa | Descrição | Status |
 |---|---|---|
@@ -38,10 +38,8 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
   Rate-limit (produção): 120/min geral **mais** a regra especial do better-auth
   de 3 sign-in/sign-up a cada 10s de silêncio (anti brute-force; por isso o
   harness de aceitação ritma os logins).
-- **Falta (passo final, após G)**: teste de aceitação completo — dois
-  navegadores reais, offline/modo avião e idempotência (a aproximação
-  automatizada de dois "dispositivos" via harness Node já cobre sync em
-  processos separados contra o mesmo servidor).
+- **Falta**: testes automatizados no repo (hoje: typecheck + CI). O harness
+  manual de aceitação em `/tmp` não foi versionado.
 - **Robustez do sync (2ª rodada)**: push com `invalida` descarta a mutação e
   avisa (`status.rejeitadas` na tela de Conta); mutação sem resultado no push
   conta tentativa e é descartada em `LIMITE_TENTATIVAS` (não reenvia para
@@ -50,9 +48,15 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
   relógio absurdamente errado não vence LWW para sempre); upsert sem
   `deletedAt` não ressuscita tombstone; rodadas de sync serializadas entre
   abas via Web Locks (`navigator.locks`), com fallback sem trava.
-- Quando houver usuários reais, toda mudança de schema do Dexie exige nova
-  `db.version(n)` com `.upgrade()` (o protótipo atual usa `version(1)` único e
-  pode simplesmente recriar o IndexedDB).
+- **Branding**: app renomeado de "Meu App" para **Anlly** (título, manifest,
+  package.json, health check, share). Chaves internas de `localStorage`
+  (`meu-app:*`) mantidas por compatibilidade com dados existentes.
+- **Recuperação de senha**: fluxo "Esqueci minha senha" via better-auth +
+  nodemailer (SMTP). Requer `SMTP_HOST` etc. no `.env`; sem SMTP, retorna
+  erro de indisponibilidade.
+- **api/index.js**: não é mais versionado (o Vercel regenera via
+  `installCommand`); `dist/`, `dist-server/` e `server/generated/` seguem
+  gitignored. Sempre rodar `npm run build` após mudanças de schema Prisma.
 
 ## Política de armazenamento local
 
@@ -75,15 +79,8 @@ mudanças de schema do Dexie podem recriar o banco (sem `.upgrade()`).
 
 ## Aceitação
 
-**Automatizada (feita)** — harness em `/tmp/opencode/e2e` (fora do repo, sem
-deps novas): `node entry.mjs` roda 55 verificações do SyncEngine+conta contra
-o servidor real; `node aceitacao.mjs <papel> <email> <senha>` simula
-dispositivos em processos separados (IndexedDB isolado), ritmados com
-≥12s entre logins (regra do better-auth: 3 sign-in a cada 10s de silêncio):
-`criar-conta` → `segundo-dispositivo` → `volta-dispositivo-a` →
-`offline-depois` → `conferir-final`. Cobre: nuvem como réplica (pull nos dois
-aparelhos), idempotência (re-sync não avança cursor), edição offline
-enviada depois, convergência final (9 itens nos dois lados).
+**Automatizada**: `npm run typecheck` + CI GitHub Actions (typecheck em Node 22).
+Testes de unidade/integração (Vitest) planejados como próxima etapa.
 
 **Manual (resta ao humano, precisa de navegador real)**:
 

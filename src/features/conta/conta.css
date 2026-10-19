@@ -145,3 +145,36 @@
   color: var(--cor-texto);
   font-weight: 600;
 }
+
+/* Esqueci minha senha */
+.conta-esqueci-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cor-texto-suave);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.conta-esqueci-botao:hover {
+  color: var(--cor-texto);
+}
+
+.conta-esqueci {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  background: var(--cor-superficie-2);
+}
+
+.conta-esqueci-acoes {
+  display: flex;
+  gap: 8px;
+}

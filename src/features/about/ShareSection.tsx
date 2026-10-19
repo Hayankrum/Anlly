@@ -44,8 +44,8 @@ export function ShareSection() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Meu App',
-          text: 'Confira o Meu App — funciona 100% offline!',
+          title: 'Anlly',
+          text: 'Confira o Anlly — organize seu dia a dia, funciona 100% offline!',
           url,
         })
         return

@@ -1,9 +1,9 @@
-# Base app — Vite fullstack offline-first
+# Anlly — organize seu dia a dia
 
-Base reutilizável "um repo, um deploy": **Vite + React 19 + Dexie** no cliente
-(100% offline, a UI lê e escreve só no IndexedDB) e **Hono + Prisma + Postgres +
-better-auth** no servidor (mesma origem, sem CORS). A nuvem é uma réplica
-sincronizada em segundo plano via outbox.
+App pessoal offline-first para acompanhar o dia a dia: **Vite + React 19 + Dexie**
+no cliente (100% offline, a UI lê e escreve só no IndexedDB) e **Hono + Prisma +
+Postgres + better-auth** no servidor (mesma origem, sem CORS). A nuvem é uma
+réplica sincronizada em segundo plano via outbox.
 
 O plano de evolução e as notas de cada etapa estão em [PLAN.md](./PLAN.md).
 
@@ -62,6 +62,10 @@ Ver [`.env.example`](./.env.example): `DATABASE_URL`, `AUTH_SECRET` (≥32 chars
 `localhost:5173` como `trustedOrigins` somente em `NODE_ENV=development`),
 `PORT`, `NODE_ENV`. Validadas com Zod em `server/env.ts`.
 
+Para recuperação de senha ("Esqueci minha senha"), configure as variáveis SMTP
+(`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`). Sem elas o
+fluxo retorna erro — o app continua funcional, apenas sem essa feature.
+
 ## Segurança
 
 - **Headers** (todos os caminhos, `server/app.ts`): CSP estrita
@@ -115,8 +119,8 @@ SVGs em `public/icons/`; PNGs gerados — regenere com `npm run icons` (requer
 - iOS/Safari: sem `beforeinstallprompt` (modal manual) e sem
   `storage.persist()`; sem push notifications e sem background sync.
 - O Service Worker só roda em contexto seguro (HTTPS ou `localhost`).
-- Protótipo: sem `.upgrade()` no Dexie — mudanças de schema podem recriar o
-  banco (ver PLAN.md).
 - Sync: ao baixar dados da conta, o app verifica espaço antes de gravar
   (margem conservadora) e, se faltar, não avança o cursor nem faz retry
   automático — ver instruções na tela de Conta/Ajustes.
+- Recuperação de senha requer SMTP configurado; sem ele, o botão "Esqueci
+  minha senha" retorna erro de indisponibilidade.

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
@@ -90,9 +90,6 @@ export function ItemsPage() {
           <p>
             Os itens deste aparelho só aparecem com uma conta conectada — nada é apagado ao sair.
           </p>
-          <Link className="btn btn--primario" to="/conta">
-            Entrar / Criar conta
-          </Link>
         </div>
       </div>
     )

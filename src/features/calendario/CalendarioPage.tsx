@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useItems } from '../items/useItems'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { buildItemDia } from './itens-dia'
@@ -36,9 +36,6 @@ export function CalendarioPage() {
         <div className="lista-vazia">
           <p className="lista-vazia-titulo">Seu calendário está protegido</p>
           <p>Os itens deste aparelho só aparecem com uma conta conectada — nada é apagado ao sair.</p>
-          <Link className="btn btn--primario" to="/conta">
-            Entrar / Criar conta
-          </Link>
         </div>
       </div>
     )

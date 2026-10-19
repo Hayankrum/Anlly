@@ -62,7 +62,7 @@ export function createApp(): Hono {
 
   app.use('/api/*', bodyLimit({ maxSize: LIMITE_CORPO_API }))
 
-  app.get('/api/health', (c) => c.json({ ok: true, servico: 'base-app' }))
+  app.get('/api/health', (c) => c.json({ ok: true, servico: 'anlly' }))
 
   app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 

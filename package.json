@@ -1,5 +1,5 @@
 {
-  "name": "meu-app",
+  "name": "anlly",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "start": "node --env-file-if-exists=.env dist-server/index.js",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "test": "vitest run",
     "db:migrate": "prisma migrate dev --config prisma7.config.ts",
     "db:deploy": "prisma migrate deploy --config prisma7.config.ts",
     "db:studio": "prisma studio --config prisma7.config.ts",
@@ -28,6 +29,7 @@
     "dexie-react-hooks": "^1.1.7",
     "hono": "^4.13.13",
     "lucide-react": "^0.544.0",
+    "nodemailer": "^10.1.7",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "@types/nodemailer": "^8.0.2",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
@@ -47,7 +50,8 @@
     "tsx": "^4.23.15",
     "typescript": "~5.9.2",
     "vite": "^7.1.5",
-    "vite-plugin-pwa": "^1.0.2"
+    "vite-plugin-pwa": "^1.0.2",
+    "vitest": "^5.0.5"
   },
   "allowScripts": {
     "esbuild@0.28.2": true

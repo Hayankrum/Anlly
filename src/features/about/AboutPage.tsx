@@ -58,8 +58,6 @@ export function AboutPage() {
         </ul>
       </section>
 
-
-
       <section className="cartao">
         <h2 className="cartao-titulo">Onde ficam os dados</h2>
         <p className="sobre-texto">

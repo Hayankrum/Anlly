@@ -9,6 +9,8 @@ const MENSAGENS_CODIGO: Record<string, string> = {
   WEAK_PASSWORD: `A senha é fraca. Use pelo menos ${LIMITE_SENHA} caracteres.`,
   INVALID_EMAIL: 'Informe um e-mail válido.',
   MISSING_PASSWORD: 'Informe a senha.',
+  INVALID_TOKEN: 'O link de recuperação é inválido ou expirou. Solicite um novo.',
+  EXPIRED_TOKEN: 'O link de recuperação expirou. Solicite um novo.',
 }
 
 async function erroDeResposta(resposta: Response): Promise<ErroApi> {
@@ -75,4 +77,35 @@ export async function sair(): Promise<void> {
     body: '{}',
   })
   if (!resposta.ok && resposta.status !== 401) throw await erroDeResposta(resposta)
+}
+
+export async function solicitarRedefinicao(email: string): Promise<void> {
+  const resposta = await fetchComTimeout('/api/auth/forget-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, redirectTo: '/#/redefinir-senha' }),
+  })
+  // 200 sempre (não revela se o e-mail existe); 404 = SMTP não configurado
+  if (resposta.status === 404) {
+    throw new ErroApi(404, 'Recuperação de senha indisponível. Contate o suporte.')
+  }
+  if (!resposta.ok) throw await erroDeResposta(resposta)
+}
+
+export async function redefinirSenha(token: string, novaSenha: string): Promise<void> {
+  const resposta = await fetchComTimeout('/api/auth/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword: novaSenha }),
+  })
+  if (!resposta.ok) throw await erroDeResposta(resposta)
+}
+
+export async function trocarSenha(senhaAtual: string, novaSenha: string): Promise<void> {
+  const resposta = await fetchComTimeout('/api/auth/change-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword: senhaAtual, newPassword: novaSenha }),
+  })
+  if (!resposta.ok) throw await erroDeResposta(resposta)
 }

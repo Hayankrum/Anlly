@@ -3,6 +3,7 @@ dist/
 dev-dist/
 dist-server/
 server/generated/
+api/index.js
 .env
 *.local
 .DS_Store

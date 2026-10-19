@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Eye, EyeOff, Info, LogOut, RefreshCw, Settings, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Eye, EyeOff, Info, LogOut, RefreshCw, Settings, ShieldCheck, KeyRound } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
 import { useToast } from '../../shared/ui/Toast'
@@ -9,7 +9,7 @@ import { pluralizar } from '../../shared/lib/texto'
 import { solicitarPersistencia, verificarPersistencia } from '../../shared/lib/storage'
 import { contarPendentes } from '../../db/outbox.repo'
 import { pausarSync, sincronizarAgora } from '../../sync/syncEngine'
-import { LIMITE_SENHA, criarConta, entrar, sair } from './conta.api'
+import { LIMITE_SENHA, criarConta, entrar, sair, solicitarRedefinicao, trocarSenha } from './conta.api'
 import { aceitarTermos } from './termos.api'
 import { soltarCampoFocado } from '../../shared/lib/dom'
 import {
@@ -35,6 +35,16 @@ export function ContaPage() {
   const status = useSyncStatus()
   const pendentes = useLiveQuery(() => contarPendentes(), [], 0)
   const [persistente, setPersistente] = useState<boolean | null>(null)
+  const [esqueciSenha, setEsqueciSenha] = useState(false)
+  const [emailEsqueci, setEmailEsqueci] = useState('')
+  const [enviandoEsqueci, setEnviandoEsqueci] = useState(false)
+  const [mostrarTrocarSenha, setMostrarTrocarSenha] = useState(false)
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('')
+  const [erroTrocarSenha, setErroTrocarSenha] = useState<string | null>(null)
+  const [enviandoTrocarSenha, setEnviandoTrocarSenha] = useState(false)
+  const [verSenhaTrocar, setVerSenhaTrocar] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -136,6 +146,55 @@ export function ContaPage() {
     }
   }
 
+  async function solicitarEsqueciSenha() {
+    const emailLimpo = emailEsqueci.trim()
+    if (!EMAIL_RE.test(emailLimpo)) {
+      mostrar('Informe um e-mail válido.', { tipo: 'erro' })
+      return
+    }
+    setEnviandoEsqueci(true)
+    try {
+      await solicitarRedefinicao(emailLimpo)
+      mostrar('Se o e-mail existir, você receberá um link de recuperação.', { tipo: 'sucesso' })
+      setEsqueciSenha(false)
+      setEmailEsqueci('')
+    } catch (e) {
+      mostrar(e instanceof Error ? e.message : 'Não foi possível enviar o link.', { tipo: 'erro' })
+    } finally {
+      setEnviandoEsqueci(false)
+    }
+  }
+
+  async function aoTrocarSenha(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+    if (senhaAtual.length < LIMITE_SENHA) {
+      setErroTrocarSenha('Informe sua senha atual.')
+      return
+    }
+    if (novaSenha.length < LIMITE_SENHA) {
+      setErroTrocarSenha(`A nova senha precisa de pelo menos ${LIMITE_SENHA} caracteres.`)
+      return
+    }
+    if (novaSenha !== confirmarNovaSenha) {
+      setErroTrocarSenha('As senhas não coincidem.')
+      return
+    }
+    setErroTrocarSenha(null)
+    setEnviandoTrocarSenha(true)
+    try {
+      await trocarSenha(senhaAtual, novaSenha)
+      setMostrarTrocarSenha(false)
+      setSenhaAtual('')
+      setNovaSenha('')
+      setConfirmarNovaSenha('')
+      mostrar('Senha alterada com sucesso.', { tipo: 'sucesso' })
+    } catch (e) {
+      setErroTrocarSenha(e instanceof Error ? e.message : 'Não foi possível alterar a senha.')
+    } finally {
+      setEnviandoTrocarSenha(false)
+    }
+  }
+
   async function aoSair() {
     setSaindo(true)
     const liberar = await pausarSync()
@@ -206,6 +265,48 @@ export function ContaPage() {
                 </button>
               }
             />
+            {modo === 'entrar' ? (
+              esqueciSenha ? (
+                <div className="conta-esqueci">
+                  <Input
+                    label="E-mail para recuperação"
+                    type="email"
+                    value={emailEsqueci}
+                    onChange={(evento) => setEmailEsqueci(evento.target.value)}
+                    autoComplete="email"
+                    placeholder="voce@exemplo.com"
+                    required
+                  />
+                  <div className="conta-esqueci-acoes">
+                    <Button
+                      type="button"
+                      variante="primario"
+                      onClick={() => void solicitarEsqueciSenha()}
+                      disabled={enviandoEsqueci}
+                    >
+                      {enviandoEsqueci ? 'Enviando…' : 'Enviar link'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variante="secundario"
+                      onClick={() => setEsqueciSenha(false)}
+                      disabled={enviandoEsqueci}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="conta-esqueci-botao"
+                  onClick={() => setEsqueciSenha(true)}
+                >
+                  <KeyRound size={14} aria-hidden="true" />
+                  Esqueci minha senha
+                </button>
+              )
+            ) : null}
             {modo === 'criar' ? (
               <Input
                 label="Nome"
@@ -290,7 +391,95 @@ export function ContaPage() {
             <LogOut size={16} aria-hidden="true" />
             {saindo ? 'Saindo…' : 'Sair da conta'}
           </Button>
+          <Button
+            variante="secundario"
+            onClick={() => {
+              setMostrarTrocarSenha((v) => !v)
+              setErroTrocarSenha(null)
+              setSenhaAtual('')
+              setNovaSenha('')
+              setConfirmarNovaSenha('')
+            }}
+          >
+            <KeyRound size={16} aria-hidden="true" />
+            {mostrarTrocarSenha ? 'Cancelar' : 'Trocar senha'}
+          </Button>
         </div>
+        {mostrarTrocarSenha ? (
+          <form className="conta-formulario" onSubmit={(evento) => void aoTrocarSenha(evento)} noValidate>
+            <Input
+              label="Senha atual"
+              type={verSenhaTrocar ? 'text' : 'password'}
+              value={senhaAtual}
+              onChange={(evento) => setSenhaAtual(evento.target.value)}
+              autoComplete="current-password"
+              minLength={LIMITE_SENHA}
+              required
+              sufixo={
+                <button
+                  type="button"
+                  className="campo-sufixo"
+                  onClick={() => setVerSenhaTrocar((v) => !v)}
+                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={verSenhaTrocar}
+                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+            />
+            <Input
+              label="Nova senha"
+              type={verSenhaTrocar ? 'text' : 'password'}
+              value={novaSenha}
+              onChange={(evento) => setNovaSenha(evento.target.value)}
+              autoComplete="new-password"
+              minLength={LIMITE_SENHA}
+              required
+              sufixo={
+                <button
+                  type="button"
+                  className="campo-sufixo"
+                  onClick={() => setVerSenhaTrocar((v) => !v)}
+                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={verSenhaTrocar}
+                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+            />
+            <Input
+              label="Confirmar nova senha"
+              type={verSenhaTrocar ? 'text' : 'password'}
+              value={confirmarNovaSenha}
+              onChange={(evento) => setConfirmarNovaSenha(evento.target.value)}
+              autoComplete="new-password"
+              minLength={LIMITE_SENHA}
+              required
+              sufixo={
+                <button
+                  type="button"
+                  className="campo-sufixo"
+                  onClick={() => setVerSenhaTrocar((v) => !v)}
+                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={verSenhaTrocar}
+                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+            />
+            {erroTrocarSenha ? (
+              <p className="conta-erro" role="alert">
+                {erroTrocarSenha}
+              </p>
+            ) : null}
+            <Button type="submit" block disabled={enviandoTrocarSenha}>
+              {enviandoTrocarSenha ? 'Aguarde…' : 'Salvar nova senha'}
+            </Button>
+          </form>
+        ) : null}
       </section>
 
       <section className="cartao" aria-labelledby="titulo-sincronizacao">
