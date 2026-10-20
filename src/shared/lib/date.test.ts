@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatarDataISO, formatarBytes, diasDesde, tempoRelativo } from './date'
+import { formatarDataISO, formatarBytes, formatarDuracao, diasDesde, tempoRelativo } from './date'
 
 describe('formatarDataISO', () => {
   it('converte YYYY-MM-DD para DD/MM/YYYY', () => {
@@ -56,5 +56,26 @@ describe('tempoRelativo', () => {
   it('retorna texto para tempo futuro', () => {
     const resultado = tempoRelativo(Date.now() + 3_600_000)
     expect(resultado).toBeTruthy()
+  })
+})
+
+describe('formatarDuracao', () => {
+  it('retorna 0s para valores vazios ou inválidos', () => {
+    expect(formatarDuracao(0)).toBe('0s')
+    expect(formatarDuracao(-10)).toBe('0s')
+    expect(formatarDuracao(Number.NaN)).toBe('0s')
+  })
+
+  it('formata segundos', () => {
+    expect(formatarDuracao(5_000)).toBe('5s')
+  })
+
+  it('formata minutos com segundos', () => {
+    expect(formatarDuracao(90_000)).toBe('1min 30s')
+  })
+
+  it('formata horas sem segundos', () => {
+    expect(formatarDuracao(3_600_000)).toBe('1h')
+    expect(formatarDuracao(4_500_000)).toBe('1h 15min')
   })
 })

@@ -289,6 +289,30 @@
   color: var(--cor-texto-suave);
 }
 
+/* Selo do tipo no canto do nó — identifica itens de outro mecanismo (ex.: cronômetro). */
+.trilha-no-selo {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--cor-superficie);
+  border-radius: 50%;
+  background: var(--cor-acento);
+  color: var(--cor-texto-contraste);
+}
+
+.trilha-passo--cronometro .trilha-no {
+  border: 2px solid color-mix(in srgb, var(--cor-acento) 55%, transparent);
+}
+
+.trilha-passo--cronometro .trilha-no-selo {
+  background: var(--cor-acento);
+  color: var(--cor-texto-contraste);
+}
+
 .trilha-chegada--alcancada .trilha-no--meta {
   background: var(--home-ouro);
   color: #4a2f00;

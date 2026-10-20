@@ -1,8 +1,8 @@
-import { Check, CalendarClock, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, CalendarClock, Pencil, Plus, Timer, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../shared/ui/Button'
 import type { Item } from '../../db/schema'
-import { formatarData, formatarDataISO } from '../../shared/lib/date'
+import { formatarData, formatarDataISO, formatarDuracao } from '../../shared/lib/date'
 
 export interface ItemListProps {
   itens: Item[]
@@ -77,6 +77,18 @@ export function ItemList({
                 <CalendarClock size={13} aria-hidden="true" />
                 {item.diasAgendamento.map(formatarDataISO).join(', ')}
                 {item.horaAgendamento ? ` · ${item.horaAgendamento}` : ''}
+              </p>
+            ) : null}
+            {item.tipo === 'cronometro' && item.timerIniciadoEm !== undefined ? (
+              <p className="item-agendado item-agendado--cronometro">
+                <Timer size={13} aria-hidden="true" />
+                Cronômetro em andamento
+              </p>
+            ) : item.tipo === 'cronometro' && (item.tempoDecorridoMs ?? 0) > 0 ? (
+              <p className="item-agendado item-agendado--cronometro">
+                <Timer size={13} aria-hidden="true" />
+                {item.concluido ? 'Levou ' : 'Parado em '}
+                {formatarDuracao(item.tempoDecorridoMs ?? 0)}
               </p>
             ) : null}
             <p className="item-data">criado em {formatarData(item.criadoEm)}</p>

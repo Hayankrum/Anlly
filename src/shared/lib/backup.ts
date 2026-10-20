@@ -2,6 +2,7 @@ import appConfig from '../../app/app.config.json'
 import { CHAVES, limparExceto, definir as definirConfig } from '../../db/config.repo'
 import * as syncState from '../../db/sync-state.repo'
 import { SCHEMA_VERSION, type Item } from '../../db/schema'
+import { TIPOS_ITEM, type TipoItem } from '@shared/schemas/item'
 import * as itemsRepo from '../../features/items/items.repo'
 
 export interface ArquivoBackup {
@@ -44,6 +45,9 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
     criadoEm: item.criadoEm,
     updatedAt: item.updatedAt,
   }
+  normalizado.tipo = (TIPOS_ITEM as readonly string[]).includes(item.tipo as string)
+    ? (item.tipo as TipoItem)
+    : 'padrao'
   if (typeof item.deletedAt === 'number') normalizado.deletedAt = item.deletedAt
   // Dias: formato novo é array; backups antigos tinham um único "dataAgendamento".
   const DATA_RE = /^\d{4}-\d{2}-\d{2}$/
@@ -60,6 +64,12 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
   }
   if (typeof item.horaAgendamento === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(item.horaAgendamento)) {
     normalizado.horaAgendamento = item.horaAgendamento
+  }
+  if (typeof item.timerIniciadoEm === 'number' && Number.isInteger(item.timerIniciadoEm) && item.timerIniciadoEm >= 0) {
+    normalizado.timerIniciadoEm = item.timerIniciadoEm
+  }
+  if (typeof item.tempoDecorridoMs === 'number' && Number.isInteger(item.tempoDecorridoMs) && item.tempoDecorridoMs >= 0) {
+    normalizado.tempoDecorridoMs = item.tempoDecorridoMs
   }
   return normalizado
 }

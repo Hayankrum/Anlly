@@ -114,6 +114,10 @@
   color: var(--cor-texto-suave);
 }
 
+.item-agendado--cronometro {
+  color: var(--cor-acento);
+}
+
 .item-cartao--concluido .item-titulo {
   text-decoration: line-through;
   color: var(--cor-texto-suave);
@@ -178,6 +182,93 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.item-cronometro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-cronometro-tempo {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--cor-texto);
+}
+
+.item-cronometro-tempo--rodando {
+  color: var(--cor-acento);
+}
+
+.item-cronometro-estado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-terciario);
+}
+
+.item-cronometro-acoes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.item-cronometro-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 2px solid var(--cor-borda-forte);
+  border-radius: var(--raio);
+  background: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.item-cronometro-btn:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.item-cronometro-btn:only-child {
+  grid-column: 1 / -1;
+}
+
+.item-cronometro-btn--iniciar {
+  border-color: var(--cor-acento);
+  background: color-mix(in srgb, var(--cor-acento) 14%, transparent);
+  color: var(--cor-acento);
+}
+
+.item-cronometro-btn--iniciar:hover {
+  background: color-mix(in srgb, var(--cor-acento) 22%, transparent);
+}
+
+.item-cronometro-btn--pausar:hover {
+  background: var(--cor-superficie-2);
+}
+
+.item-cronometro-btn--finalizar {
+  grid-column: 1 / -1;
+  border-color: color-mix(in srgb, var(--cor-sucesso) 55%, transparent);
+  background: color-mix(in srgb, var(--cor-sucesso) 14%, transparent);
+  color: var(--cor-sucesso);
+}
+
+.item-cronometro-btn--finalizar:hover {
+  background: color-mix(in srgb, var(--cor-sucesso) 22%, transparent);
 }
 
 .item-segurar {

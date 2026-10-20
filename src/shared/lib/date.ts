@@ -55,6 +55,20 @@ export function tempoRelativo(timestamp: number): string {
   return formatador.format(Math.round(decorrido / escala), unidade)
 }
 
+/** 5000 → "5s"; 90000 → "1min 30s"; 3_600_000 → "1h"; 4_500_000 → "1h 15min". */
+export function formatarDuracao(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return '0s'
+  const totalSegundos = Math.floor(ms / 1000)
+  const horas = Math.floor(totalSegundos / 3600)
+  const minutos = Math.floor((totalSegundos % 3600) / 60)
+  const segundos = totalSegundos % 60
+  const partes: string[] = []
+  if (horas > 0) partes.push(`${horas}h`)
+  if (minutos > 0) partes.push(`${minutos}min`)
+  if (segundos > 0 && horas === 0) partes.push(`${segundos}s`)
+  return partes.join(' ')
+}
+
 export function formatarBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
   const unidades = ['B', 'KB', 'MB', 'GB', 'TB']

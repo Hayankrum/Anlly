@@ -64,4 +64,36 @@ describe('itemSchema', () => {
   it('rejeita serverVersion não inteiro', () => {
     expect(itemSchema.safeParse(itemBase({ serverVersion: 1.5 })).success).toBe(false)
   })
+
+  it('aceita item com campos do cronômetro', () => {
+    const resultado = itemSchema.safeParse(
+      itemBase({ timerIniciadoEm: 1_700_000_000_000, tempoDecorridoMs: 90_000 }),
+    )
+    expect(resultado.success).toBe(true)
+  })
+
+  it('aceita cronômetro parado (só tempoDecorridoMs)', () => {
+    expect(itemSchema.safeParse(itemBase({ tempoDecorridoMs: 5_000 })).success).toBe(true)
+  })
+
+  it('rejeita timerIniciadoEm negativo', () => {
+    expect(itemSchema.safeParse(itemBase({ timerIniciadoEm: -1 })).success).toBe(false)
+  })
+
+  it('rejeita tempoDecorridoMs não inteiro', () => {
+    expect(itemSchema.safeParse(itemBase({ tempoDecorridoMs: 1.5 })).success).toBe(false)
+  })
+
+  it('aceita tipo padrao e cronometro', () => {
+    expect(itemSchema.safeParse(itemBase({ tipo: 'padrao' })).success).toBe(true)
+    expect(itemSchema.safeParse(itemBase({ tipo: 'cronometro' })).success).toBe(true)
+  })
+
+  it('aceita item sem tipo (antigo = padrao)', () => {
+    expect(itemSchema.safeParse(itemBase()).success).toBe(true)
+  })
+
+  it('rejeita tipo desconhecido', () => {
+    expect(itemSchema.safeParse(itemBase({ tipo: 'kanban' })).success).toBe(false)
+  })
 })

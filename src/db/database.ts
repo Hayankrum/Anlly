@@ -30,4 +30,13 @@ db.version(2).upgrade((transacao) =>
     }),
 )
 
+// v3: cronômetro do item (timerIniciadoEm + tempoDecorridoMs). Os campos são
+// opcionais — itens legados simplesmente não os têm; só adiciona o índice.
+db.version(3).stores({
+  items: 'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+})
+
 export default db

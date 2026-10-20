@@ -91,10 +91,16 @@ model Item {
   titulo    String
   descricao String
   concluido Boolean  @default(false)
+  // Variante de conclusão: 'padrao' (segurar p/ concluir) ou 'cronometro'.
+  tipo      String   @default("padrao")
   // Agendamento opcional: vários dias (YYYY-MM-DD) + um horário (HH:mm) que
   // vale para todos eles.
   diasAgendamento String[]
   horaAgendamento String?
+  // Cronômetro do item: epoch ms da sessão em curso (null = parado) e a soma
+  // das sessões já encerradas, em milissegundos.
+  timerIniciadoEm BigInt?
+  tempoDecorridoMs BigInt?
   criadoEm  BigInt
   updatedAt BigInt
   deletedAt BigInt?

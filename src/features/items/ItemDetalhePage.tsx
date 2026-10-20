@@ -1,13 +1,14 @@
 import { useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, Pencil, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Pause, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
-import { formatarDataHora, formatarDataISO } from '../../shared/lib/date'
+import { formatarDataHora, formatarDataISO, formatarDuracao } from '../../shared/lib/date'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
+import { useCronometro } from '../../shared/lib/useCronometro'
 import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
 import { usePodeEditar } from '../conta/usePodeEditar'
 import { useSessao } from '../conta/useSessao'
@@ -34,6 +35,7 @@ export function ItemDetalhePage() {
 
   const [editando, setEditando] = useState(false)
   const [confirmandoExcluir, setConfirmandoExcluir] = useState(false)
+  const [confirmandoReset, setConfirmandoReset] = useState(false)
 
   const leitura = useLiveQuery(
     async (): Promise<LeituraItem> => ({
@@ -44,7 +46,22 @@ export function ItemDetalhePage() {
     LEITURA_INICIAL,
   )
   const item = leitura.item
+  const ehCronometro = item?.tipo === 'cronometro'
 
+  // Tica a cada segundo enquanto o cronômetro estiver rodando.
+  const tempoMs = useCronometro(item?.tempoDecorridoMs, item?.timerIniciadoEm)
+  const cronometroRodando = item?.timerIniciadoEm !== undefined
+
+  async function alternar() {
+    if (!podeEditar || !item) return
+    try {
+      await itemsRepo.alternarConcluido(item)
+    } catch (erro) {
+      avisarErro(erro)
+    }
+  }
+
+  // Gesto "segure para concluir" — mecanismo padrão (tipo `padrao`).
   const { progresso, segurando, propsSegurar } = useSegurarParaConcluir({
     aoConcluir: () => void alternar(),
     aoTocar: (evento) => {
@@ -76,10 +93,23 @@ export function ItemDetalhePage() {
     }
   }
 
-  async function alternar() {
+  async function reabrir() {
     if (!podeEditar || !item) return
     try {
       await itemsRepo.alternarConcluido(item)
+    } catch (erro) {
+      avisarErro(erro)
+    }
+  }
+
+  async function acaoTimer(
+    operacao: () => Promise<void>,
+    feedback?: { mensagem: string; tipo: 'sucesso' | 'info' },
+  ) {
+    if (!podeEditar || !item) return
+    try {
+      await operacao()
+      if (feedback) mostrar(feedback.mensagem, { tipo: feedback.tipo })
     } catch (erro) {
       avisarErro(erro)
     }
@@ -92,6 +122,17 @@ export function ItemDetalhePage() {
       setConfirmandoExcluir(false)
       mostrar('Item excluído', { tipo: 'info' })
       navigate('/itens')
+    } catch (erro) {
+      avisarErro(erro)
+    }
+  }
+
+  async function confirmarReset() {
+    if (!podeEditar || !item) return
+    try {
+      await itemsRepo.resetarTimer(item.id)
+      setConfirmandoReset(false)
+      mostrar('Cronômetro zerado', { tipo: 'info' })
     } catch (erro) {
       avisarErro(erro)
     }
@@ -137,6 +178,26 @@ export function ItemDetalhePage() {
       </div>
     )
   }
+
+  const conteudoConcluido = (
+    <>
+      {ehCronometro && tempoMs > 0 ? (
+        <p className="item-cronometro-tempo">
+          {formatarDuracao(tempoMs)}
+          <span className="item-cronometro-estado">Tempo dedicado</span>
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className="item-reabrir"
+        aria-pressed="true"
+        onClick={() => void reabrir()}
+      >
+        <RotateCcw size={18} aria-hidden="true" />
+        Reabrir
+      </button>
+    </>
+  )
 
   return (
     <div className="pagina">
@@ -191,15 +252,88 @@ export function ItemDetalhePage() {
       </section>
 
       {item.concluido ? (
-        <button
-          type="button"
-          className="item-reabrir"
-          aria-pressed="true"
-          onClick={() => void alternar()}
-        >
-          <RotateCcw size={18} aria-hidden="true" />
-          Reabrir
-        </button>
+        conteudoConcluido
+      ) : ehCronometro ? (
+        <div className="item-cronometro">
+          <p className={`item-cronometro-tempo${cronometroRodando ? ' item-cronometro-tempo--rodando' : ''}`} aria-live="polite">
+            {formatarDuracao(tempoMs)}
+            <span className="item-cronometro-estado">
+              {cronometroRodando ? 'em andamento' : tempoMs > 0 ? 'pausado' : 'pronto'}
+            </span>
+          </p>
+
+          <div className="item-cronometro-acoes">
+            {cronometroRodando ? (
+              <>
+                <button
+                  type="button"
+                  className="item-cronometro-btn item-cronometro-btn--pausar"
+                  onClick={() => void acaoTimer(() => itemsRepo.pausarTimer(item.id))}
+                >
+                  <Pause size={18} aria-hidden="true" />
+                  Pausar
+                </button>
+                <button
+                  type="button"
+                  className="item-cronometro-btn item-cronometro-btn--resetar"
+                  onClick={() => setConfirmandoReset(true)}
+                >
+                  <RotateCcw size={18} aria-hidden="true" />
+                  Zerar
+                </button>
+                <button
+                  type="button"
+                  className="item-cronometro-btn item-cronometro-btn--finalizar"
+                  onClick={() =>
+                    void acaoTimer(() => itemsRepo.finalizarTimer(item.id), {
+                      mensagem: 'Item concluído',
+                      tipo: 'sucesso',
+                    })
+                  }
+                >
+                  <Check size={18} aria-hidden="true" />
+                  Finalizar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="item-cronometro-btn item-cronometro-btn--iniciar"
+                  onClick={() => void acaoTimer(() => itemsRepo.iniciarTimer(item.id))}
+                >
+                  <Play size={18} aria-hidden="true" />
+                  {tempoMs > 0 ? 'Continuar' : 'Iniciar'}
+                </button>
+                {tempoMs > 0 ? (
+                  <>
+                    <button
+                      type="button"
+                      className="item-cronometro-btn item-cronometro-btn--resetar"
+                      onClick={() => setConfirmandoReset(true)}
+                    >
+                      <RotateCcw size={18} aria-hidden="true" />
+                      Zerar
+                    </button>
+                    <button
+                      type="button"
+                      className="item-cronometro-btn item-cronometro-btn--finalizar"
+                      onClick={() =>
+                        void acaoTimer(() => itemsRepo.finalizarTimer(item.id), {
+                          mensagem: 'Item concluído',
+                          tipo: 'sucesso',
+                        })
+                      }
+                    >
+                      <Check size={18} aria-hidden="true" />
+                      Finalizar
+                    </button>
+                  </>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
       ) : (
         <button
           type="button"
@@ -228,6 +362,16 @@ export function ItemDetalhePage() {
         perigo
         aoConfirmar={() => void excluir()}
         aoCancelar={() => setConfirmandoExcluir(false)}
+      />
+
+      <ConfirmDialog
+        aberto={confirmandoReset}
+        titulo="Zerar cronômetro"
+        mensagem={`O tempo de "${item.titulo}" será zerado. Esta ação não pode ser desfeita.`}
+        textoConfirmar="Zerar"
+        perigo
+        aoConfirmar={() => void confirmarReset()}
+        aoCancelar={() => setConfirmandoReset(false)}
       />
     </div>
   )

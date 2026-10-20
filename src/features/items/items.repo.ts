@@ -1,6 +1,7 @@
 import db from '../../db/database'
 import { novaMutacao } from '../../db/outbox.repo'
 import type { EntradaOutbox, Item, PeriodoItens } from '../../db/schema'
+import type { TipoItem } from '@shared/schemas/item'
 import { executarComCota } from '../../shared/lib/cota'
 import { gerarId } from '../../shared/lib/id'
 import { todayStr, weekOf } from '../calendario/datas'
@@ -31,6 +32,8 @@ function pertenceAoPeriodo(item: Item, periodo: PeriodoItens, hoje: string): boo
 export interface EntradaItem {
   titulo: string
   descricao: string
+  /** Variante de conclusão. Ausente = `padrao` (segurar para concluir). */
+  tipo?: TipoItem
   /** Dias escolhidos no calendário (YYYY-MM-DD, opcional). Um item pode marcar vários. */
   diasAgendamento?: string[]
   /** HH:mm escolhido no formulário (opcional) — mesmo horário em todos os dias. */
@@ -67,6 +70,7 @@ export async function criar(entrada: EntradaItem): Promise<string> {
     titulo: entrada.titulo.trim(),
     descricao: entrada.descricao.trim(),
     concluido: false,
+    tipo: entrada.tipo ?? 'padrao',
     criadoEm: agora,
     updatedAt: agora,
   }
@@ -93,7 +97,14 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         ...atual,
         titulo: entrada.titulo.trim(),
         descricao: entrada.descricao.trim(),
+        tipo: entrada.tipo ?? atual.tipo ?? 'padrao',
         updatedAt: agora,
+      }
+      // Só um item que já era `cronometro` mantém o acumulado. Qualquer troca
+      // de tipo limpa o cronômetro para não exibir tempo órfão em outro mecanismo.
+      if (item.tipo !== 'cronometro' || atual.tipo !== 'cronometro') {
+        delete item.timerIniciadoEm
+        delete item.tempoDecorridoMs
       }
       // Campo opcional: presente grava, ausente apaga (limpar no formulário funciona).
       if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
@@ -116,6 +127,77 @@ export async function alternarConcluido(item: Item): Promise<void> {
       const atual = await db.items.get(item.id)
       if (atual === undefined) return
       const atualizado: Item = { ...atual, concluido: !atual.concluido, updatedAt: agora }
+      // Concluindo direto (sem passar pelo "Finalizar"), ainda assim encerra a
+      // sessão em curso para o tempo não se perder.
+      if (atualizado.concluido) encerrarSessao(atualizado, agora)
+      await db.items.put(atualizado)
+      await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
+/** Soma a sessão em curso em `tempoDecorridoMs` e limpa `timerIniciadoEm`. */
+function encerrarSessao(item: Item, agora: number): void {
+  if (item.timerIniciadoEm === undefined) return
+  const sessao = Math.max(0, agora - item.timerIniciadoEm)
+  item.tempoDecorridoMs = (item.tempoDecorridoMs ?? 0) + sessao
+  delete item.timerIniciadoEm
+}
+
+/** Começa a cronometrar: só funciona em item pendente com o cronômetro parado. */
+export async function iniciarTimer(id: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.concluido || atual.timerIniciadoEm !== undefined) return
+      const atualizado: Item = { ...atual, timerIniciadoEm: agora, updatedAt: agora }
+      await db.items.put(atualizado)
+      await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
+/** Para a sessão em curso somando o tempo, sem concluir o item. */
+export async function pausarTimer(id: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.timerIniciadoEm === undefined) return
+      const atualizado: Item = { ...atual, updatedAt: agora }
+      encerrarSessao(atualizado, agora)
+      await db.items.put(atualizado)
+      await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
+/** Encerra a sessão em curso somando o tempo e conclui o item. */
+export async function finalizarTimer(id: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined) return
+      const atualizado: Item = { ...atual, concluido: true, updatedAt: agora }
+      encerrarSessao(atualizado, agora)
+      await db.items.put(atualizado)
+      await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
+/** Zera o cronômetro: encerra a sessão em curso (se houver) e zera o acumulado. */
+export async function resetarTimer(id: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.concluido) return
+      const atualizado: Item = { ...atual, updatedAt: agora }
+      delete atualizado.timerIniciadoEm
+      delete atualizado.tempoDecorridoMs
       await db.items.put(atualizado)
       await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
     }),

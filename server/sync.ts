@@ -5,7 +5,7 @@ import {
   TABELA_ITEMS,
   type ResultadoMutacao,
 } from '@shared/schemas/sync'
-import type { Item } from '@shared/schemas/item'
+import type { Item, TipoItem } from '@shared/schemas/item'
 import { prisma } from './prisma'
 import { exigirSessao } from './session'
 import { exigirTermosAceitos } from './termos'
@@ -22,8 +22,11 @@ type ItemTabela = {
   titulo: string
   descricao: string
   concluido: boolean
+  tipo: string
   diasAgendamento: string[]
   horaAgendamento: string | null
+  timerIniciadoEm: bigint | null
+  tempoDecorridoMs: bigint | null
   criadoEm: bigint
   updatedAt: bigint
   deletedAt: bigint | null
@@ -36,8 +39,12 @@ function toWire(item: ItemTabela): Item {
     titulo: item.titulo,
     descricao: item.descricao,
     concluido: item.concluido,
+    // Itens antigos no banco podem ter valor fora do enum (default 'padrao').
+    tipo: (item.tipo === 'cronometro' ? 'cronometro' : 'padrao') as TipoItem,
     ...(item.diasAgendamento.length === 0 ? {} : { diasAgendamento: item.diasAgendamento }),
     ...(item.horaAgendamento === null ? {} : { horaAgendamento: item.horaAgendamento }),
+    ...(item.timerIniciadoEm === null ? {} : { timerIniciadoEm: Number(item.timerIniciadoEm) }),
+    ...(item.tempoDecorridoMs === null ? {} : { tempoDecorridoMs: Number(item.tempoDecorridoMs) }),
     criadoEm: Number(item.criadoEm),
     updatedAt: Number(item.updatedAt),
     serverVersion: Number(item.serverSeq),
@@ -142,8 +149,13 @@ async function processarLote(
         titulo: mut.payload.titulo,
         descricao: mut.payload.descricao,
         concluido: mut.payload.concluido,
+        tipo: mut.payload.tipo ?? 'padrao',
         diasAgendamento: mut.payload.diasAgendamento ?? [],
         horaAgendamento: mut.payload.horaAgendamento ?? null,
+        timerIniciadoEm:
+          mut.payload.timerIniciadoEm === undefined ? null : BigInt(mut.payload.timerIniciadoEm),
+        tempoDecorridoMs:
+          mut.payload.tempoDecorridoMs === undefined ? null : BigInt(mut.payload.tempoDecorridoMs),
         updatedAt: BigInt(updatedAt),
         serverSeq: seq,
       }

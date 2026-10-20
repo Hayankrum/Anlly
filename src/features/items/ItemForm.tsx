@@ -3,6 +3,7 @@ import { Button } from '../../shared/ui/Button'
 import { Input, TextArea } from '../../shared/ui/Input'
 import { CalendarioMulti } from '../../shared/ui/CalendarioMulti'
 import type { Item } from '../../db/schema'
+import { TIPOS_ITEM, type TipoItem } from '@shared/schemas/item'
 import type { EntradaItem } from './items.repo'
 
 export interface ItemFormProps {
@@ -13,6 +14,11 @@ export interface ItemFormProps {
 
 const LIMITE_TITULO = 120
 const LIMITE_DESCRICAO = 2000
+
+const ROTULOS_TIPO: Record<TipoItem, string> = {
+  padrao: 'Segurar',
+  cronometro: 'Cronômetro',
+}
 
 /** Entende "17", "1705", "17:20", "17h20" e devolve HH:mm (ou null). */
 function normalizarHora(bruto: string): string | null {
@@ -43,11 +49,13 @@ function normalizarHora(bruto: string): string | null {
 export function ItemForm({ item, aoCancelar, aoSalvar }: ItemFormProps) {
   const [titulo, setTitulo] = useState(item?.titulo ?? '')
   const [descricao, setDescricao] = useState(item?.descricao ?? '')
+  const [tipo, setTipo] = useState<TipoItem>(item?.tipo ?? 'padrao')
   const [dias, setDias] = useState<string[]>(item?.diasAgendamento ?? [])
   const [horaBruta, setHoraBruta] = useState(item?.horaAgendamento ?? '')
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const idDias = useId()
+  const idTipo = useId()
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
@@ -79,6 +87,7 @@ export function ItemForm({ item, aoCancelar, aoSalvar }: ItemFormProps) {
       await aoSalvar({
         titulo: tituloLimpo,
         descricao: descricao.trim(),
+        tipo,
         diasAgendamento: dias.length > 0 ? [...dias].sort() : undefined,
         horaAgendamento: hora ?? undefined,
       })
@@ -105,6 +114,23 @@ export function ItemForm({ item, aoCancelar, aoSalvar }: ItemFormProps) {
         placeholder="Detalhes opcionais (fica salvo só no seu dispositivo)"
         maxLength={LIMITE_DESCRICAO}
       />
+      <div className="campo">
+        <span className="campo-label" id={idTipo}>
+          Concluir com
+        </span>
+        <div className="segmentado" role="group" aria-labelledby={idTipo}>
+          {TIPOS_ITEM.map((valor) => (
+            <button
+              key={valor}
+              type="button"
+              aria-pressed={tipo === valor}
+              onClick={() => setTipo(valor)}
+            >
+              {ROTULOS_TIPO[valor]}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="campo">
         <span className="campo-label" id={idDias}>
           Dias (pode marcar vários)
