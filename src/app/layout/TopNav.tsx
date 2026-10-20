@@ -43,7 +43,7 @@ export function TopNav() {
       <div className="top-nav-interno">
         <NavLink to="/" className="top-nav-marca" title={appConfig.name}>
           <img
-            src={`${import.meta.env.BASE_URL}icons/icon.svg`}
+            src={`${import.meta.env.BASE_URL}icons/logo-nav.png`}
             alt=""
             aria-hidden="true"
           />

@@ -38,6 +38,12 @@ export function AboutPage() {
       </div>
 
       <section className="cartao">
+        <img
+          className="sobre-mascote"
+          src={`${import.meta.env.BASE_URL}mascote.png`}
+          alt=""
+          aria-hidden="true"
+        />
         <h2 className="cartao-titulo">{appConfig.name}</h2>
         <p className="sobre-texto">{appConfig.description}</p>
         <div className="sobre-versao">

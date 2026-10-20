@@ -1,4 +1,4 @@
-import { Check, CalendarClock, Pencil, Plus, Timer, Trash2 } from 'lucide-react'
+import { Check, CalendarClock, Columns3, Pencil, Plus, Timer, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../shared/ui/Button'
 import type { Item } from '../../db/schema'
@@ -8,6 +8,8 @@ export interface ItemListProps {
   itens: Item[]
   temItens: boolean
   podeEditar: boolean
+  /** Progresso dos projetos kanban (total/feitos) por id. */
+  progressoProjetos?: Map<string, { total: number; feitos: number }>
   aoAlternar: (item: Item) => void
   aoEditar: (item: Item) => void
   aoExcluir: (item: Item) => void
@@ -18,6 +20,7 @@ export function ItemList({
   itens,
   temItens,
   podeEditar,
+  progressoProjetos,
   aoAlternar,
   aoEditar,
   aoExcluir,
@@ -47,23 +50,41 @@ export function ItemList({
 
   return (
     <ul className="itens-lista">
-      {itens.map((item) => (
+      {itens.map((item) => {
+        const ehProjeto = item.tipo === 'kanban' && item.parentId === undefined
+        const progresso = ehProjeto ? progressoProjetos?.get(item.id) : undefined
+        return (
         <li key={item.id} className={`item-cartao${item.concluido ? ' item-cartao--concluido' : ''}`}>
-          <button
-            type="button"
-            className="item-concluir"
-            role="checkbox"
-            aria-checked={item.concluido}
-            disabled={!podeEditar}
-            aria-label={
-              item.concluido
-                ? `Reabrir item ${item.titulo}`
-                : `Concluir item ${item.titulo}`
-            }
-            onClick={() => aoAlternar(item)}
-          >
-            <Check size={16} aria-hidden="true" />
-          </button>
+          {ehProjeto ? (
+            // Projeto kanban conclui pelo quadro — sem checkbox manual.
+            <span
+              className="item-concluir item-concluir--quadro"
+              aria-label={
+                progresso
+                  ? `Quadro: ${progresso.feitos} de ${progresso.total} cartões concluídos`
+                  : 'Quadro kanban'
+              }
+              title={progresso ? `${progresso.feitos}/${progresso.total} em Feito` : 'Quadro kanban'}
+            >
+              <Columns3 size={16} aria-hidden="true" />
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="item-concluir"
+              role="checkbox"
+              aria-checked={item.concluido}
+              disabled={!podeEditar}
+              aria-label={
+                item.concluido
+                  ? `Reabrir item ${item.titulo}`
+                  : `Concluir item ${item.titulo}`
+              }
+              onClick={() => aoAlternar(item)}
+            >
+              <Check size={16} aria-hidden="true" />
+            </button>
+          )}
 
           <div className="item-corpo">
             <p className="item-titulo">
@@ -115,7 +136,8 @@ export function ItemList({
             </div>
           ) : null}
         </li>
-      ))}
+        )
+      })}
     </ul>
   )
 }

@@ -6,16 +6,21 @@ import { fileURLToPath } from 'node:url'
 
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..')
 const pastaIcones = join(raiz, 'public', 'icons')
+const origemLogo = join(raiz, 'public', 'logo.png')
 
 const alvos = [
-  { origem: join(pastaIcones, 'icon.svg'), destino: join(pastaIcones, 'icon-192.png'), tamanho: 192 },
-  { origem: join(pastaIcones, 'icon.svg'), destino: join(pastaIcones, 'icon-512.png'), tamanho: 512 },
+  { origem: origemLogo, destino: join(pastaIcones, 'logo-nav.png'), tamanho: 96 },
+  { origem: origemLogo, destino: join(pastaIcones, 'icon-192.png'), tamanho: 192 },
+  { origem: origemLogo, destino: join(pastaIcones, 'icon-512.png'), tamanho: 512 },
   {
-    origem: join(pastaIcones, 'icon-maskable.svg'),
+    origem: origemLogo,
     destino: join(pastaIcones, 'icon-maskable-512.png'),
     tamanho: 512,
+    // deixa margem para a área segura do ícone mascarável
+    filtro: (tamanho) => `scale=${Math.round(tamanho * 0.75)}:${Math.round(tamanho * 0.75)},pad=${tamanho}:${tamanho}:(ow-iw)/2:(oh-ih)/2:color=0xF5C400`,
   },
-  { origem: join(pastaIcones, 'icon.svg'), destino: join(raiz, 'public', 'apple-touch-icon.png'), tamanho: 180 },
+  { origem: origemLogo, destino: join(raiz, 'public', 'apple-touch-icon.png'), tamanho: 180 },
+  { origem: origemLogo, destino: join(raiz, 'public', 'favicon.png'), tamanho: 48 },
 ]
 
 mkdirSync(pastaIcones, { recursive: true })
@@ -25,11 +30,24 @@ function converter(comando, argumentos) {
 }
 
 function tentarConversao(alvo) {
+  const escala = alvo.filtro
+    ? alvo.filtro(alvo.tamanho)
+    : `scale=${alvo.tamanho}:${alvo.tamanho}`
   const tentativas = [
-    () => converter('rsvg-convert', ['-w', String(alvo.tamanho), '-h', String(alvo.tamanho), '-o', alvo.destino, alvo.origem]),
+    () =>
+      converter('ffmpeg', [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-i',
+        alvo.origem,
+        '-vf',
+        escala,
+        '-y',
+        alvo.destino,
+      ]),
     () => converter('magick', ['-background', 'none', alvo.origem, '-resize', `${alvo.tamanho}x${alvo.tamanho}`, alvo.destino]),
     () => converter('convert', ['-background', 'none', alvo.origem, '-resize', `${alvo.tamanho}x${alvo.tamanho}`, alvo.destino]),
-    () => converter('inkscape', [alvo.origem, `--export-width=${alvo.tamanho}`, `--export-filename=${alvo.destino}`]),
   ]
   for (const tentativa of tentativas) {
     try {
@@ -52,7 +70,7 @@ for (const alvo of alvos) {
   if (tentarConversao(alvo)) {
     console.log(`OK  ${alvo.destino}`)
   } else {
-    console.error(`FALHOU ${alvo.destino} (instale rsvg-convert, ImageMagick ou Inkscape)`)
+    console.error(`FALHOU ${alvo.destino} (instale ffmpeg, ImageMagick ou Inkscape)`)
     falhas += 1
   }
 }

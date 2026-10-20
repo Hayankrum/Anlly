@@ -5,7 +5,8 @@ import {
   TABELA_ITEMS,
   type ResultadoMutacao,
 } from '@shared/schemas/sync'
-import type { Item, TipoItem } from '@shared/schemas/item'
+import type { ColunaKanban, Item, TipoItem } from '@shared/schemas/item'
+import { COLUNAS_KANBAN, TIPOS_ITEM } from '@shared/schemas/item'
 import { prisma } from './prisma'
 import { exigirSessao } from './session'
 import { exigirTermosAceitos } from './termos'
@@ -23,6 +24,9 @@ type ItemTabela = {
   descricao: string
   concluido: boolean
   tipo: string
+  parentId: string | null
+  coluna: string | null
+  ordem: number | null
   diasAgendamento: string[]
   horaAgendamento: string | null
   timerIniciadoEm: bigint | null
@@ -40,7 +44,14 @@ function toWire(item: ItemTabela): Item {
     descricao: item.descricao,
     concluido: item.concluido,
     // Itens antigos no banco podem ter valor fora do enum (default 'padrao').
-    tipo: (item.tipo === 'cronometro' ? 'cronometro' : 'padrao') as TipoItem,
+    tipo: (TIPOS_ITEM as readonly string[]).includes(item.tipo)
+      ? (item.tipo as TipoItem)
+      : ('padrao' as TipoItem),
+    ...(item.parentId === null ? {} : { parentId: item.parentId }),
+    ...(item.coluna !== null && (COLUNAS_KANBAN as readonly string[]).includes(item.coluna)
+      ? { coluna: item.coluna as ColunaKanban }
+      : {}),
+    ...(item.ordem === null ? {} : { ordem: item.ordem }),
     ...(item.diasAgendamento.length === 0 ? {} : { diasAgendamento: item.diasAgendamento }),
     ...(item.horaAgendamento === null ? {} : { horaAgendamento: item.horaAgendamento }),
     ...(item.timerIniciadoEm === null ? {} : { timerIniciadoEm: Number(item.timerIniciadoEm) }),
@@ -150,6 +161,9 @@ async function processarLote(
         descricao: mut.payload.descricao,
         concluido: mut.payload.concluido,
         tipo: mut.payload.tipo ?? 'padrao',
+        parentId: mut.payload.parentId ?? null,
+        coluna: mut.payload.coluna ?? null,
+        ordem: mut.payload.ordem ?? null,
         diasAgendamento: mut.payload.diasAgendamento ?? [],
         horaAgendamento: mut.payload.horaAgendamento ?? null,
         timerIniciadoEm:

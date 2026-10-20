@@ -91,8 +91,17 @@ model Item {
   titulo    String
   descricao String
   concluido Boolean  @default(false)
-  // Variante de conclusão: 'padrao' (segurar p/ concluir) ou 'cronometro'.
+  // Variante de conclusão: 'padrao' (segurar p/ concluir), 'cronometro' ou
+  // 'kanban' (projeto com quadro embutido no detalhe).
   tipo      String   @default("padrao")
+  // Kanban: id do projeto dono quando o item é um cartão do quadro (null =
+  // item normal ou o próprio projeto). Projetos concluem quando todos os
+  // cartões estão na coluna 'feito'.
+  parentId  String?
+  // Kanban (cartão): coluna fixa do quadro ('afazer' | 'fazendo' | 'feito') e a
+  // posição dentro dela (menor = mais ao topo). Null em itens sem quadro.
+  coluna    String?
+  ordem     Int?
   // Agendamento opcional: vários dias (YYYY-MM-DD) + um horário (HH:mm) que
   // vale para todos eles.
   diasAgendamento String[]
@@ -108,6 +117,7 @@ model Item {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, serverSeq])
+  @@index([parentId])
   @@map("item")
 }
 

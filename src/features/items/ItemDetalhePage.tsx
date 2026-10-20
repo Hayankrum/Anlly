@@ -16,6 +16,8 @@ import type { Item } from '../../db/schema'
 import * as itemsRepo from './items.repo'
 import type { EntradaItem } from './items.repo'
 import { ItemForm } from './ItemForm'
+import { useCartoes } from './useItems'
+import { QuadroProjeto } from '../quadro/QuadroProjeto'
 import './items.css'
 
 interface LeituraItem {
@@ -47,6 +49,12 @@ export function ItemDetalhePage() {
   )
   const item = leitura.item
   const ehCronometro = item?.tipo === 'cronometro'
+  const ehKanban = item?.tipo === 'kanban' && item.parentId === undefined
+
+  // Quadro do projeto: cartões vivem no detalhe (só projetos têm quadro).
+  const cartoes = useCartoes(ehKanban ? item.id : '')
+  const totalCartoes = cartoes.length
+  const cartoesFeitos = cartoes.filter((cartao) => cartao.coluna === 'feito').length
 
   // Tica a cada segundo enquanto o cronômetro estiver rodando.
   const tempoMs = useCronometro(item?.tempoDecorridoMs, item?.timerIniciadoEm)
@@ -97,6 +105,17 @@ export function ItemDetalhePage() {
     if (!podeEditar || !item) return
     try {
       await itemsRepo.alternarConcluido(item)
+    } catch (erro) {
+      avisarErro(erro)
+    }
+  }
+
+  /** Projeto kanban: todos os cartões de Feito voltam pra A Fazer. */
+  async function reabrirQuadro() {
+    if (!podeEditar || !item) return
+    try {
+      await itemsRepo.reabrirQuadro(item.id)
+      mostrar('Quadro reaberto', { tipo: 'info' })
     } catch (erro) {
       avisarErro(erro)
     }
@@ -236,6 +255,11 @@ export function ItemDetalhePage() {
         <p className={`item-situacao${item.concluido ? ' item-situacao--ok' : ''}`}>
           {item.concluido ? 'Concluído' : 'Pendente'}
         </p>
+        {ehKanban ? (
+          <p className="item-agendado">
+            Quadro · {cartoesFeitos} de {totalCartoes} cartões em Feito
+          </p>
+        ) : null}
         {item.diasAgendamento && item.diasAgendamento.length > 0 ? (
           <p className="item-agendado">
             Agendado para {item.diasAgendamento.map(formatarDataISO).join(', ')}
@@ -251,7 +275,17 @@ export function ItemDetalhePage() {
         ) : null}
       </section>
 
-      {item.concluido ? (
+      {ehKanban ? (
+        <>
+          {item.concluido ? (
+            <button type="button" className="item-reabrir" onClick={() => void reabrirQuadro()}>
+              <RotateCcw size={18} aria-hidden="true" />
+              Reabrir quadro
+            </button>
+          ) : null}
+          <QuadroProjeto projetoId={item.id} podeEditar={podeEditar} />
+        </>
+      ) : item.concluido ? (
         conteudoConcluido
       ) : ehCronometro ? (
         <div className="item-cronometro">

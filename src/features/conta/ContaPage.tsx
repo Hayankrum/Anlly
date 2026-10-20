@@ -223,6 +223,12 @@ export function ContaPage() {
     return (
       <div className="pagina">
         <section className="cartao" aria-labelledby="titulo-formulario">
+          <img
+            className="conta-mascote"
+            src={`${import.meta.env.BASE_URL}mascote.png`}
+            alt=""
+            aria-hidden="true"
+          />
           <h2 className="cartao-titulo" id="titulo-formulario">
             {modo === 'entrar' ? 'Entrar' : 'Criar conta'}
           </h2>

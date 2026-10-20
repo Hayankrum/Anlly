@@ -38,3 +38,25 @@ export function useItemsStats(): Estatisticas {
     return { total: itens.length, concluidos, pendentes: itens.length - concluidos }
   }, [], ESTATISTICAS_VAZIA)
 }
+
+/** Cartões do quadro de um projeto, reativos (atualizam ao arrastar/salvar). */
+export function useCartoes(projetoId: string): Item[] {
+  const chave = `cartoes:${projetoId}`
+  const resultado = useLiveQuery(
+    () => itemsRepo.listarCartoes(projetoId),
+    [projetoId],
+    cacheItens.get(chave) ?? ([] as Item[]),
+  )
+  cacheItens.set(chave, resultado)
+  return resultado
+}
+
+/** Progresso (total/feitos) dos projetos kanban da lista — reativo. */
+export function useProgressoProjetos(ids: string[]): Map<string, { total: number; feitos: number }> {
+  const chave = `progresso:${ids.join(',')}`
+  return useLiveQuery(
+    () => itemsRepo.progressoProjetos(ids),
+    [chave],
+    new Map<string, { total: number; feitos: number }>(),
+  )
+}

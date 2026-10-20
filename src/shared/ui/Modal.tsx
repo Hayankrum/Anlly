@@ -18,6 +18,10 @@ export function Modal({ aberto, titulo, onFechar, children, rodape, largura = 'p
   const tituloId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   const focoAnterior = useRef<HTMLElement | null>(null)
+  // Mantém a referência mais recente sem re-renderizar o effect a cada tecla
+  // (onFechar costuma ser uma arrow nova a cada render do pai).
+  const aoFecharRef = useRef(onFechar)
+  aoFecharRef.current = onFechar
 
   useEffect(() => {
     if (!aberto) return undefined
@@ -32,7 +36,7 @@ export function Modal({ aberto, titulo, onFechar, children, rodape, largura = 'p
     const aoTeclar = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') {
         evento.preventDefault()
-        onFechar()
+        aoFecharRef.current()
         return
       }
       if (evento.key !== 'Tab' || !dialogRef.current) return
@@ -62,7 +66,7 @@ export function Modal({ aberto, titulo, onFechar, children, rodape, largura = 'p
       document.body.style.overflow = overflowAnterior
       focoAnterior.current?.focus()
     }
-  }, [aberto, onFechar])
+  }, [aberto])
 
   if (!aberto) return null
 

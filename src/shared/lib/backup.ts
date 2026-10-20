@@ -2,7 +2,12 @@ import appConfig from '../../app/app.config.json'
 import { CHAVES, limparExceto, definir as definirConfig } from '../../db/config.repo'
 import * as syncState from '../../db/sync-state.repo'
 import { SCHEMA_VERSION, type Item } from '../../db/schema'
-import { TIPOS_ITEM, type TipoItem } from '@shared/schemas/item'
+import {
+  COLUNAS_KANBAN,
+  TIPOS_ITEM,
+  type ColunaKanban,
+  type TipoItem,
+} from '@shared/schemas/item'
 import * as itemsRepo from '../../features/items/items.repo'
 
 export interface ArquivoBackup {
@@ -70,6 +75,16 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
   }
   if (typeof item.tempoDecorridoMs === 'number' && Number.isInteger(item.tempoDecorridoMs) && item.tempoDecorridoMs >= 0) {
     normalizado.tempoDecorridoMs = item.tempoDecorridoMs
+  }
+  // Cartão kanban: projeto dono. Sem ele o item volta pra lista geral.
+  if (typeof item.parentId === 'string' && item.parentId !== '') {
+    normalizado.parentId = item.parentId
+  }
+  if ((COLUNAS_KANBAN as readonly string[]).includes(item.coluna as string)) {
+    normalizado.coluna = item.coluna as ColunaKanban
+    if (typeof item.ordem === 'number' && Number.isFinite(item.ordem)) {
+      normalizado.ordem = item.ordem
+    }
   }
   return normalizado
 }

@@ -18,6 +18,7 @@ const LIMITE_DESCRICAO = 2000
 const ROTULOS_TIPO: Record<TipoItem, string> = {
   padrao: 'Segurar',
   cronometro: 'Cronômetro',
+  kanban: 'Quadro',
 }
 
 /** Entende "17", "1705", "17:20", "17h20" e devolve HH:mm (ou null). */

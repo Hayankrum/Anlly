@@ -114,12 +114,15 @@
 .home-vazio-selo {
   display: grid;
   place-items: center;
-  width: 66px;
-  height: 66px;
+  width: 96px;
+  height: 96px;
   margin-bottom: 6px;
-  border-radius: 22px;
-  background: var(--home-feito-suave);
-  color: var(--home-feito);
+}
+
+.home-vazio-selo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .home-vazio-titulo {
@@ -311,6 +314,15 @@
 .trilha-passo--cronometro .trilha-no-selo {
   background: var(--cor-acento);
   color: var(--cor-texto-contraste);
+}
+
+.trilha-passo--projeto .trilha-no {
+  border: 2px solid color-mix(in srgb, var(--home-ouro) 65%, transparent);
+}
+
+.trilha-no-selo--projeto {
+  background: var(--home-ouro);
+  color: #4a2f00;
 }
 
 .trilha-chegada--alcancada .trilha-no--meta {

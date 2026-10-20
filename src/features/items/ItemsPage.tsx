@@ -11,7 +11,7 @@ import * as itemsRepo from './items.repo'
 import type { EntradaItem } from './items.repo'
 import { ItemForm } from './ItemForm'
 import { ItemList } from './ItemList'
-import { useItems, useItemsStats } from './useItems'
+import { useItems, useItemsStats, useProgressoProjetos } from './useItems'
 import './items.css'
 
 const ROTULOS_PERIODO: Record<PeriodoItens, string> = {
@@ -33,6 +33,9 @@ export function ItemsPage() {
 
   const itens = useItems({ busca, periodo })
   const { total } = useItemsStats()
+  const progresso = useProgressoProjetos(
+    itens.filter((item) => item.tipo === 'kanban').map((item) => item.id),
+  )
 
   function avisarErro(erro: unknown) {
     if (erro instanceof ErroCotaExcedida) {
@@ -131,6 +134,7 @@ export function ItemsPage() {
         itens={itens}
         temItens={total > 0}
         podeEditar={podeEditar}
+        progressoProjetos={progresso}
         aoAlternar={(item) => void alternar(item)}
         aoEditar={(item) => setEdicao({ modo: 'editar', item })}
         aoExcluir={(item) => setItemExcluir(item)}

@@ -1,3 +1,11 @@
+.sobre-mascote {
+  display: block;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+
 .sobre-texto {
   color: var(--cor-texto-suave);
   font-size: 0.875rem;

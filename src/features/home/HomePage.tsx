@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Sprout, UserRound } from 'lucide-react'
+import { UserRound } from 'lucide-react'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { formatarDataISO } from '../../shared/lib/date'
@@ -110,7 +110,7 @@ export function HomePage() {
           {itens.length === 0 ? (
             <div className="home-vazio">
               <span className="home-vazio-selo" aria-hidden="true">
-                <Sprout size={34} />
+                <img src={`${import.meta.env.BASE_URL}mascote.png`} alt="" />
               </span>
               {itensBrutos.length === 0 ? (
                 <>
@@ -126,9 +126,6 @@ export function HomePage() {
                   <p className="home-vazio-nota">
                     Agende um item para {formatarDataISO(hoje)} e ele aparece aqui.
                   </p>
-                  <Link className="btn btn--primario" to="/itens">
-                    Ver itens
-                  </Link>
                 </>
               )}
             </div>

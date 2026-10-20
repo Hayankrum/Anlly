@@ -39,4 +39,23 @@ db.version(3).stores({
   syncState: 'chave',
 })
 
+// v4: quadro Kanban (tipo 'kanban' + coluna/ordem). Índice em tipo para o
+// quadro listar só os cartões sem varrer a tabela inteira.
+db.version(4).stores({
+  items: 'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm, tipo',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+})
+
+// v5: quadro embutido no projeto — cartão é item filho (parentId). Índice em
+// parentId para o detalhe listar os cartões do projeto sem varrer a tabela.
+db.version(5).stores({
+  items:
+    'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm, tipo, parentId',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+})
+
 export default db

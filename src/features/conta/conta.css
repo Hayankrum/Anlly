@@ -1,3 +1,11 @@
+.conta-mascote {
+  display: block;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 8px;
+  object-fit: contain;
+}
+
 .conta-formulario {
   margin-top: 16px;
 }

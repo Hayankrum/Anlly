@@ -12,10 +12,23 @@ export const LIMITE_DIAS_AGENDAMENTO = 400
  * Tipo de conclusão do item:
  * - `padrao` (default): gesto "segure para concluir" — o mecanismo original.
  * - `cronometro`: cronômetro — Iniciar/Pausar/Finalizar, acumulando o tempo.
+ * - `kanban`: projeto com quadro embutido no detalhe — conclui quando todos os
+ *   seus cartões (itens com `parentId` deste item) estão na coluna "Feito".
  */
-export const TIPOS_ITEM = ['padrao', 'cronometro'] as const
+export const TIPOS_ITEM = ['padrao', 'cronometro', 'kanban'] as const
 export const tipoItemSchema = z.enum(TIPOS_ITEM)
 export type TipoItem = z.infer<typeof tipoItemSchema>
+
+/** Colunas fixas do quadro Kanban, na ordem em que aparecem. */
+export const COLUNAS_KANBAN = ['afazer', 'fazendo', 'feito'] as const
+export const colunaKanbanSchema = z.enum(COLUNAS_KANBAN)
+export type ColunaKanban = z.infer<typeof colunaKanbanSchema>
+
+export const ROTULOS_COLUNA: Record<ColunaKanban, string> = {
+  afazer: 'A Fazer',
+  fazendo: 'Fazendo',
+  feito: 'Feito',
+}
 
 export const itemSchema = z.object({
   id: z.string().min(1),
@@ -24,6 +37,15 @@ export const itemSchema = z.object({
   concluido: z.boolean(),
   /** Variante de conclusão. Ausente em itens antigos = `padrao`. */
   tipo: tipoItemSchema.optional(),
+  /**
+   * Item é cartão de um projeto Kanban quando presente: id do projeto dono.
+   * Cartões só existem dentro do quadro do projeto — nunca em listas gerais.
+   */
+  parentId: z.string().min(1).optional(),
+  /** Kanban (cartão): coluna atual do quadro. Ausente = `afazer`. */
+  coluna: colunaKanbanSchema.optional(),
+  /** Kanban (cartão): posição dentro da coluna (menor = mais ao topo). */
+  ordem: z.number().int().nonnegative().optional(),
   /** Opcional: dias do agendamento (YYYY-MM-DD, sem fuso). Um item pode marcar vários. */
   diasAgendamento: z
     .array(z.string().regex(DATA_AGENDAMENTO_RE))
@@ -45,3 +67,8 @@ export const itemSchema = z.object({
 })
 
 export type Item = z.infer<typeof itemSchema>
+
+/** Item é cartão do quadro de um projeto Kanban (tem projeto dono). */
+export function ehCartao(item: Pick<Item, 'parentId'>): boolean {
+  return item.parentId !== undefined
+}

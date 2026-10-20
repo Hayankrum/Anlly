@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { itemSchema, LIMITE_DIAS_AGENDAMENTO } from './item'
+import { itemSchema, LIMITE_DIAS_AGENDAMENTO, COLUNAS_KANBAN } from './item'
 
 function itemBase(overrides: Record<string, unknown> = {}) {
   return {
@@ -84,9 +84,10 @@ describe('itemSchema', () => {
     expect(itemSchema.safeParse(itemBase({ tempoDecorridoMs: 1.5 })).success).toBe(false)
   })
 
-  it('aceita tipo padrao e cronometro', () => {
+  it('aceita tipo padrao, cronometro e kanban', () => {
     expect(itemSchema.safeParse(itemBase({ tipo: 'padrao' })).success).toBe(true)
     expect(itemSchema.safeParse(itemBase({ tipo: 'cronometro' })).success).toBe(true)
+    expect(itemSchema.safeParse(itemBase({ tipo: 'kanban' })).success).toBe(true)
   })
 
   it('aceita item sem tipo (antigo = padrao)', () => {
@@ -94,6 +95,32 @@ describe('itemSchema', () => {
   })
 
   it('rejeita tipo desconhecido', () => {
-    expect(itemSchema.safeParse(itemBase({ tipo: 'kanban' })).success).toBe(false)
+    expect(itemSchema.safeParse(itemBase({ tipo: 'quadro' })).success).toBe(false)
+  })
+
+  it('aceita as colunas do quadro (afazer, fazendo, feito)', () => {
+    for (const coluna of COLUNAS_KANBAN) {
+      expect(itemSchema.safeParse(itemBase({ tipo: 'kanban', coluna })).success).toBe(true)
+    }
+  })
+
+  it('rejeita coluna desconhecida', () => {
+    expect(
+      itemSchema.safeParse(itemBase({ tipo: 'kanban', coluna: 'concluido' })).success,
+    ).toBe(false)
+  })
+
+  it('rejeita ordem não inteira ou negativa', () => {
+    expect(itemSchema.safeParse(itemBase({ tipo: 'kanban', ordem: 1.5 })).success).toBe(false)
+    expect(itemSchema.safeParse(itemBase({ tipo: 'kanban', ordem: -1 })).success).toBe(false)
+  })
+
+  it('aceita parentId (cartão de projeto kanban)', () => {
+    const resultado = itemSchema.safeParse(itemBase({ parentId: 'projeto1', coluna: 'afazer' }))
+    expect(resultado.success).toBe(true)
+  })
+
+  it('rejeita parentId vazio', () => {
+    expect(itemSchema.safeParse(itemBase({ parentId: '' })).success).toBe(false)
   })
 })

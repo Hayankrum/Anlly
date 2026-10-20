@@ -27,7 +27,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png', 'mascote.png'],
       manifest: {
         lang: 'pt-BR',
         name: appConfig.name,

@@ -1,7 +1,7 @@
 import db from '../../db/database'
 import { novaMutacao } from '../../db/outbox.repo'
 import type { EntradaOutbox, Item, PeriodoItens } from '../../db/schema'
-import type { TipoItem } from '@shared/schemas/item'
+import { COLUNAS_KANBAN, type ColunaKanban, type TipoItem } from '@shared/schemas/item'
 import { executarComCota } from '../../shared/lib/cota'
 import { gerarId } from '../../shared/lib/id'
 import { todayStr, weekOf } from '../calendario/datas'
@@ -46,6 +46,9 @@ export async function listar({ busca = '', periodo }: OpcoesListagem = {}): Prom
   const itens = await db.items.orderBy('criadoEm').reverse().toArray()
   return itens.filter((item) => {
     if (item.deletedAt !== undefined) return false
+    // Cartão de quadro kanban só existe dentro do projeto — nunca nas listas
+    // gerais (Itens, Home, agenda).
+    if (item.parentId !== undefined) return false
     if (periodo !== undefined && hoje !== null && !pertenceAoPeriodo(item, periodo, hoje)) {
       return false
     }
@@ -58,33 +61,167 @@ export async function obter(id: string): Promise<Item | undefined> {
   return db.items.get(id)
 }
 
+/** Cartões do quadro de um projeto, ordenados por coluna e depois por `ordem`. */
+export async function listarCartoes(projetoId: string): Promise<Item[]> {
+  const itens = await db.items.where('parentId').equals(projetoId).toArray()
+  return itens
+    .filter((item) => item.deletedAt === undefined)
+    .sort((a, b) => {
+      const colunaA = COLUNAS_KANBAN.indexOf(a.coluna ?? 'afazer')
+      const colunaB = COLUNAS_KANBAN.indexOf(b.coluna ?? 'afazer')
+      if (colunaA !== colunaB) return colunaA - colunaB
+      return (a.ordem ?? 0) - (b.ordem ?? 0)
+    })
+}
+
+/** Progresso dos projetos kanban: quantos cartões e quantos em Feito. */
+export async function progressoProjetos(
+  ids: string[],
+): Promise<Map<string, { total: number; feitos: number }>> {
+  const mapa = new Map<string, { total: number; feitos: number }>()
+  for (const id of ids) {
+    const filhos = (await db.items.where('parentId').equals(id).toArray()).filter(
+      (item) => item.deletedAt === undefined,
+    )
+    mapa.set(id, {
+      total: filhos.length,
+      feitos: filhos.filter((item) => item.coluna === 'feito').length,
+    })
+  }
+  return mapa
+}
+
 export async function listarParaBackup(): Promise<Item[]> {
   return db.items.orderBy('criadoEm').toArray()
+}
+
+/**
+ * Próxima `ordem` livre na coluna do quadro de um projeto (cartões ordenados
+ * por `ordem` crescente; o novo entra no fim). Chamada dentro da transação.
+ */
+async function proximaOrdem(coluna: ColunaKanban, projetoId: string): Promise<number> {
+  const daColuna = await db.items.where('parentId').equals(projetoId).toArray()
+  const ordens = daColuna
+    .filter((item) => item.coluna === coluna && item.deletedAt === undefined)
+    .map((item) => item.ordem ?? 0)
+  return ordens.length === 0 ? 0 : Math.max(...ordens) + 1
+}
+
+/**
+ * Recalcula a conclusão do projeto: concluído quando tem ao menos um cartão e
+ * todos estão em Feito. Projeto vazio nunca conclui. Só grava se mudou.
+ * Deve rodar dentro de uma transação (chamada por criar/mover/excluir cartão).
+ */
+async function recalcularConclusaoProjetoTx(projetoId: string, agora: number): Promise<void> {
+  const projeto = await db.items.get(projetoId)
+  if (projeto === undefined || projeto.deletedAt !== undefined) return
+  const filhos = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
+    (item) => item.deletedAt === undefined,
+  )
+  const concluido = filhos.length > 0 && filhos.every((item) => item.coluna === 'feito')
+  if (projeto.concluido === concluido) return
+  const atualizado: Item = { ...projeto, concluido, updatedAt: agora }
+  await db.items.put(atualizado)
+  await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
 }
 
 export async function criar(entrada: EntradaItem): Promise<string> {
   const agora = Date.now()
   const id = gerarId()
-  const item: Item = {
-    id,
-    titulo: entrada.titulo.trim(),
-    descricao: entrada.descricao.trim(),
-    concluido: false,
-    tipo: entrada.tipo ?? 'padrao',
-    criadoEm: agora,
-    updatedAt: agora,
-  }
-  if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
-    item.diasAgendamento = entrada.diasAgendamento
-  }
-  if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
+  const tipo = entrada.tipo ?? 'padrao'
   await executarComCota(() =>
     db.transaction('rw', db.items, db.outbox, async () => {
+      // Projeto kanban não tem coluna/ordem — o quadro é dos cartões filhos.
+      const item: Item = {
+        id,
+        titulo: entrada.titulo.trim(),
+        descricao: entrada.descricao.trim(),
+        concluido: false,
+        tipo,
+        criadoEm: agora,
+        updatedAt: agora,
+      }
+      if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
+        item.diasAgendamento = entrada.diasAgendamento
+      }
+      if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
       await db.items.add(item)
       await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
     }),
   )
   return id
+}
+
+/** Cria um cartão no quadro do projeto, na coluna escolhida (fim da coluna). */
+export async function criarCartao(
+  projetoId: string,
+  coluna: ColunaKanban,
+  titulo: string,
+  descricao = '',
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const item: Item = {
+        id: gerarId(),
+        parentId: projetoId,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        concluido: coluna === 'feito',
+        coluna,
+        ordem: await proximaOrdem(coluna, projetoId),
+        criadoEm: agora,
+        updatedAt: agora,
+      }
+      await db.items.add(item)
+      await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
+      await recalcularConclusaoProjetoTx(projetoId, agora)
+    }),
+  )
+}
+
+/** Edita título/descrição de um cartão (o modal do quadro). */
+export async function atualizarCartao(
+  id: string,
+  titulo: string,
+  descricao: string,
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.parentId === undefined) return
+      const item: Item = { ...atual, titulo: titulo.trim(), descricao: descricao.trim(), updatedAt: agora }
+      await db.items.put(item)
+      await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
+    }),
+  )
+}
+
+/** Reabre o quadro: todos os cartões de Feito voltam pra A Fazer (topo). */
+export async function reabrirQuadro(projetoId: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const emFeito = (await db.items.where('parentId').equals(projetoId).toArray())
+        .filter((item) => item.deletedAt === undefined && item.coluna === 'feito')
+        .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+      const paraGravar: Item[] = emFeito.map((item, posicao) => ({
+        ...item,
+        coluna: 'afazer' as ColunaKanban,
+        ordem: posicao,
+        concluido: false,
+        updatedAt: agora,
+      }))
+      if (paraGravar.length > 0) {
+        await db.items.bulkPut(paraGravar)
+        for (const item of paraGravar) {
+          await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
+        }
+      }
+      await recalcularConclusaoProjetoTx(projetoId, agora)
+    }),
+  )
 }
 
 export async function atualizar(id: string, entrada: EntradaItem): Promise<void> {
@@ -106,6 +243,17 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         delete item.timerIniciadoEm
         delete item.tempoDecorridoMs
       }
+      // Cartão de quadro preserva coluna/ordem (editado só em título/descrição).
+      if (atual.parentId === undefined) {
+        // Projeto kanban não tem coluna/ordem próprias (o quadro é dos cartões).
+        delete item.coluna
+        delete item.ordem
+        // Trocar um projeto pra outro tipo mantém a conclusão automática dele
+        // órfã; reabre para o novo mecanismo decidir.
+        if (item.tipo !== 'kanban' && atual.tipo === 'kanban') {
+          item.concluido = false
+        }
+      }
       // Campo opcional: presente grava, ausente apaga (limpar no formulário funciona).
       if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
         item.diasAgendamento = entrada.diasAgendamento
@@ -126,12 +274,87 @@ export async function alternarConcluido(item: Item): Promise<void> {
     db.transaction('rw', db.items, db.outbox, async () => {
       const atual = await db.items.get(item.id)
       if (atual === undefined) return
+      // Projeto kanban conclui sozinho pelo quadro — o botão manual não muda nada.
+      if (atual.tipo === 'kanban' && atual.parentId === undefined) return
       const atualizado: Item = { ...atual, concluido: !atual.concluido, updatedAt: agora }
       // Concluindo direto (sem passar pelo "Finalizar"), ainda assim encerra a
       // sessão em curso para o tempo não se perder.
       if (atualizado.concluido) encerrarSessao(atualizado, agora)
+      // Cartão: a conclusão e a coluna andam juntas (Feito ↔ concluído).
+      if (atualizado.parentId !== undefined) {
+        if (atualizado.concluido) {
+          atualizado.coluna = 'feito'
+          atualizado.ordem = await proximaOrdem('feito', atualizado.parentId)
+        } else if (atualizado.coluna === 'feito') {
+          atualizado.coluna = 'afazer'
+          atualizado.ordem = await proximaOrdem('afazer', atualizado.parentId)
+        }
+        await db.items.put(atualizado)
+        await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+        await recalcularConclusaoProjetoTx(atualizado.parentId, agora)
+        return
+      }
       await db.items.put(atualizado)
       await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
+/**
+ * Move um cartão do quadro do projeto para `coluna` na posição `indice`
+ * (0 = topo). Recalcula a `ordem` da coluna de destino, mantém Feito ⇔
+ * concluído e reavalia a conclusão do projeto dono.
+ */
+export async function moverParaColuna(
+  id: string,
+  coluna: ColunaKanban,
+  indice: number,
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.parentId === undefined) return
+      const projetoId = atual.parentId
+
+      const doProjeto = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
+        (item) => item.deletedAt === undefined,
+      )
+      const daColuna = doProjeto
+        .filter((item) => item.coluna === coluna)
+        .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+      // Remove o cartão da lista antiga antes de inserir no novo índice.
+      const semORespetivo = daColuna.filter((item) => item.id !== id)
+      const destino = Math.max(0, Math.min(indice, semORespetivo.length))
+      const novaSequencia = [...semORespetivo.slice(0, destino), atual, ...semORespetivo.slice(destino)]
+
+      const paraGravar: Item[] = []
+      const idsAlterados = new Set<string>()
+      novaSequencia.forEach((item, posicao) => {
+        const mudou = item.coluna !== coluna || (item.ordem ?? 0) !== posicao
+        const alterado: Item = {
+          ...item,
+          coluna,
+          ordem: posicao,
+          // Feito é a única coluna que conclui; sair dela reabre o cartão.
+          concluido: coluna === 'feito',
+        }
+        // Só cartão que mudou de fato ganha novo `updatedAt` (e é sincronizado).
+        if (mudou) {
+          alterado.updatedAt = agora
+          idsAlterados.add(item.id)
+        }
+        paraGravar.push(alterado)
+      })
+
+      await db.items.bulkPut(paraGravar)
+      for (const item of paraGravar) {
+        if (idsAlterados.has(item.id)) {
+          await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
+        }
+      }
+      // Mover cartão pode concluir/reabrir o projeto (todos em Feito ⇔ concluído).
+      await recalcularConclusaoProjetoTx(projetoId, agora)
     }),
   )
 }
@@ -210,9 +433,20 @@ export async function excluir(id: string): Promise<void> {
     db.transaction('rw', db.items, db.outbox, async () => {
       const atual = await db.items.get(id)
       if (atual === undefined) return
-      const item: Item = { ...atual, deletedAt: agora, updatedAt: agora }
-      await db.items.put(item)
-      await db.outbox.add(novaMutacao(TABELA, item, 'delete', agora))
+      const paraExcluir: Item[] = [{ ...atual, deletedAt: agora, updatedAt: agora }]
+      // Excluir um projeto kanban leva os cartões do quadro junto.
+      if (atual.tipo === 'kanban' && atual.parentId === undefined) {
+        const filhos = await db.items.where('parentId').equals(id).toArray()
+        for (const filho of filhos) {
+          if (filho.deletedAt === undefined) {
+            paraExcluir.push({ ...filho, deletedAt: agora, updatedAt: agora })
+          }
+        }
+      }
+      await db.items.bulkPut(paraExcluir)
+      for (const item of paraExcluir) {
+        await db.outbox.add(novaMutacao(TABELA, item, 'delete', agora))
+      }
     }),
   )
 }
