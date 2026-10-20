@@ -8,7 +8,7 @@
     "dev:web": "vite",
     "dev:api": "tsx watch --env-file=.env server/index.ts",
     "build": "npm run build:function && npm run typecheck && vite build && npm run build:server",
-    "build:function": "npm run db:generate && esbuild server/vercel.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=api/index.js --log-level=warning",
+    "build:function": "npm run db:generate && esbuild server/vercel.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=api/_bundle.js --log-level=warning",
     "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist-server/index.js --log-level=warning",
     "preview": "vite preview",
     "start": "node --env-file-if-exists=.env dist-server/index.js",
