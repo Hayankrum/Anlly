@@ -38,8 +38,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--cor-texto-suave);
-  font-size: 0.875rem;
 }
 
 .sobre-funcionalidades li {

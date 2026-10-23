@@ -15,6 +15,21 @@ const MONTH_NAMES = [
   'Dezembro',
 ]
 
+const MONTH_NAMES_SHORT = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+]
+
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -58,6 +73,31 @@ export function formatDateLong(date: DateStr): string {
   const p = parseDate(date)
   if (!p) return date
   return `${p.day} de ${MONTH_NAMES[p.month - 1]}`
+}
+
+/** "12 de Outubro de 2026" */
+export function dayLabel(date: DateStr): string {
+  const p = parseDate(date)
+  if (!p) return date
+  return `${p.day} de ${MONTH_NAMES[p.month - 1]} de ${p.year}`
+}
+
+/** "12 – 18 de Outubro de 2026" (ou com meses/anos diferentes). */
+export function weekLabel(dates: DateStr[]): string {
+  const start = dates.length > 0 ? parseDate(dates[0]) : null
+  const end = dates.length > 1 ? parseDate(dates[dates.length - 1]) : null
+  if (!start || !end) return ''
+  if (start.year === end.year && start.month === end.month) {
+    return `${start.day} – ${end.day} de ${MONTH_NAMES[start.month - 1]} de ${start.year}`
+  }
+  if (start.year === end.year) {
+    const inicio = `${start.day} ${MONTH_NAMES_SHORT[start.month - 1]}`
+    const fim = `${end.day} ${MONTH_NAMES_SHORT[end.month - 1]}`
+    return `${inicio} – ${fim} de ${start.year}`
+  }
+  const inicio = `${start.day} ${MONTH_NAMES_SHORT[start.month - 1]} ${start.year}`
+  const fim = `${end.day} ${MONTH_NAMES_SHORT[end.month - 1]} ${end.year}`
+  return `${inicio} – ${fim}`
 }
 
 /** Weekday index, 0 = Monday ... 6 = Sunday. */

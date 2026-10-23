@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
+  addDays,
   addMonths,
   calendarWeekdayLabels,
   getDaysInMonth,
@@ -7,6 +8,7 @@ import {
   monthLabel,
   parseDate,
   todayStr,
+  weekOf,
 } from './datas'
 import { compareItemDia, type ItemDia } from './itens-dia'
 
@@ -20,9 +22,19 @@ interface UseCalendarResult {
   diasComItens: Set<string>
   /** itens do dia selecionado, ordenados para exibição */
   dayItems: ItemDia[]
+  /** itens da semana selecionada */
+  weekItems: ItemDia[]
+  /** itens do mês em exibição */
+  monthItems: ItemDia[]
+  /** os 7 dias da semana selecionada */
+  weekDates: string[]
   /** rótulos dos dias na ordem das colunas */
   weekdayLabels: string[]
   selectDate: (date: string) => void
+  goToPrevDay: () => void
+  goToNextDay: () => void
+  goToPrevWeek: () => void
+  goToNextWeek: () => void
   goToPrevMonth: () => void
   goToNextMonth: () => void
   goToPrevYear: () => void
@@ -61,6 +73,18 @@ export function useCalendar(
     [sorted, selectedDate],
   )
 
+  const weekDates = useMemo(() => weekOf(selectedDate), [selectedDate])
+
+  const weekItems = useMemo(() => {
+    const set = new Set(weekDates)
+    return sorted.filter((item) => set.has(item.data))
+  }, [sorted, weekDates])
+
+  const monthItems = useMemo(() => {
+    const prefix = `${view.year}-${String(view.month).padStart(2, '0')}`
+    return sorted.filter((item) => item.data.startsWith(prefix))
+  }, [sorted, view.year, view.month])
+
   /** Move a vista e mantém o dia selecionado, ajustado ao novo mês. */
   const moveMonth = useCallback(
     (delta: number) => {
@@ -84,6 +108,11 @@ export function useCalendar(
     setSelectedDate(date)
   }, [])
 
+  const goToPrevDay = useCallback(() => goTo(addDays(selectedDate, -1)), [goTo, selectedDate])
+  const goToNextDay = useCallback(() => goTo(addDays(selectedDate, 1)), [goTo, selectedDate])
+  const goToPrevWeek = useCallback(() => goTo(addDays(selectedDate, -7)), [goTo, selectedDate])
+  const goToNextWeek = useCallback(() => goTo(addDays(selectedDate, 7)), [goTo, selectedDate])
+
   return {
     year: view.year,
     month: view.month,
@@ -92,8 +121,15 @@ export function useCalendar(
     today,
     diasComItens,
     dayItems,
+    weekItems,
+    monthItems,
+    weekDates,
     weekdayLabels,
     selectDate: setSelectedDate,
+    goToPrevDay,
+    goToNextDay,
+    goToPrevWeek,
+    goToNextWeek,
     goToPrevMonth,
     goToNextMonth,
     goToPrevYear,

@@ -1,23 +1,37 @@
 .quadro {
   display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   /* linhas esticam (padrão) para as colunas ocuparem a altura disponível */
   min-height: clamp(300px, calc(100dvh - 360px), 720px);
   overflow-x: auto;
   padding-bottom: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .quadro {
+    gap: 6px;
+  }
 }
 
 .quadro-coluna {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-width: 200px;
-  padding: 12px;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background: var(--cor-superficie-2);
   transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+@media (max-width: 767px) {
+  .quadro-coluna {
+    padding: 6px;
+  }
 }
 
 .quadro-coluna--sobre {
@@ -84,7 +98,7 @@
 .quadro-coluna-lista {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -102,8 +116,8 @@
 .quadro-cartao {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  padding: 10px;
+  gap: 4px;
+  padding: 8px;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background: var(--cor-superficie);
@@ -175,7 +189,7 @@
   display: block;
   overflow-wrap: anywhere;
   color: var(--cor-texto);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -186,11 +200,15 @@
 
 .quadro-cartao-descricao {
   display: block;
-  margin-top: 3px;
-  font-size: 0.78rem;
+  margin-top: 2px;
+  font-size: 0.76rem;
   color: var(--cor-texto-suave);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .quadro-cartao-check {

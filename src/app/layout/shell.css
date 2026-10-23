@@ -150,6 +150,8 @@
   max-width: 768px;
   margin-inline: auto;
   padding: 24px 24px calc(96px + env(safe-area-inset-bottom));
+  overflow: visible;
+  min-width: 0;
 }
 
 .shell-conteudo:focus-visible {

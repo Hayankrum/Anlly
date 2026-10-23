@@ -140,7 +140,7 @@ export function ItemDetalhePage() {
       await itemsRepo.excluir(item.id)
       setConfirmandoExcluir(false)
       mostrar('Item excluído', { tipo: 'info' })
-      navigate('/itens')
+      navigate('/calendario')
     } catch (erro) {
       avisarErro(erro)
     }
@@ -189,9 +189,9 @@ export function ItemDetalhePage() {
               Entrar / Criar conta
             </Link>
           )}
-          <Link className="btn btn--secundario" to="/itens">
+          <Link className="btn btn--secundario" to="/calendario">
             <ArrowLeft size={16} aria-hidden="true" />
-            Voltar para itens
+            Voltar para agenda
           </Link>
         </div>
       </div>
@@ -223,9 +223,9 @@ export function ItemDetalhePage() {
       <div className="pagina-cabecalho">
         <div>
           <p className="pagina-subtitulo">
-            <Link className="item-voltar" to="/itens">
+            <Link className="item-voltar" to="/calendario">
               <ArrowLeft size={14} aria-hidden="true" />
-              Itens
+              Agenda
             </Link>
           </p>
           <h1 className="pagina-titulo">{item.titulo}</h1>

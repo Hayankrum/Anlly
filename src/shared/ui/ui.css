@@ -359,7 +359,7 @@
 .pagina {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .pagina-cabecalho {
@@ -408,7 +408,7 @@
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  padding: 20px;
+  padding: 16px;
 }
 
 .cartao-titulo {

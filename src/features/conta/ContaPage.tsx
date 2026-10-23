@@ -385,7 +385,7 @@ export function ContaPage() {
   const IconeFase = iconeDaFase(status.fase)
 
   return (
-    <div className="pagina">
+    <div className="pagina conta-pagina">
       <section className="cartao" aria-labelledby="titulo-sua-conta">
         <h2 className="cartao-titulo" id="titulo-sua-conta">
           Sua conta

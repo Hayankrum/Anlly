@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { CheckSquare, Square } from 'lucide-react'
+import { CheckSquare, Pencil, Square, Trash2 } from 'lucide-react'
 import type { ItemDia } from './itens-dia'
 
 /** Pixels por hora — dá folga vertical para os marcadores não ficarem colados. */
 const HOUR_HEIGHT = 64
 /** Altura mínima de um bloco — um item curto ainda ocupa essa faixa. */
-const MIN_BLOCK_PX = 32
+const MIN_BLOCK_PX = 56
 /** A mesma altura mínima em minutos, usada para detectar colisões reais. */
 const MIN_BLOCK_MINUTES = Math.ceil((MIN_BLOCK_PX / HOUR_HEIGHT) * 60)
 /** Folga vertical entre dois blocos. */
@@ -14,9 +14,12 @@ const BLOCK_GAP = 4
 const DURACAO_PADRAO = 30
 
 interface MapaHorasProps {
-  date: string
+  date?: string
+  dates?: string[]
   items: ItemDia[]
   onOpenItem: (item: ItemDia) => void
+  onEditItem: (item: ItemDia) => void
+  onDeleteItem: (item: ItemDia) => void
 }
 
 function hourOf(time: string): number | null {
@@ -90,8 +93,8 @@ function layoutColumns(items: ItemDia[]): { span: Span; col: number; cols: numbe
   return out
 }
 
-/** Mapa hora a hora do dia selecionado: a agenda, não uma lista. */
-export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
+/** Mapa hora a hora do dia/semana/mês selecionado: a agenda, não uma lista. */
+export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDeleteItem }: MapaHorasProps) {
   const today = useMemo(() => {
     const agora = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -152,14 +155,16 @@ export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
       if (next && next.col === current.col && next.top > current.top) {
         current.height = Math.min(current.height, next.top - current.top)
       }
-      current.height = Math.max(current.height - BLOCK_GAP, 20)
+      current.height = Math.max(current.height - BLOCK_GAP, 28)
     }
     return list
   }, [comHora, windowStartMin, trackHeight])
 
   const now = new Date()
   const nowTop =
-    date === today ? ((now.getHours() * 60 + now.getMinutes() - windowStartMin) / 60) * HOUR_HEIGHT : null
+    date && date === today
+      ? ((now.getHours() * 60 + now.getMinutes() - windowStartMin) / 60) * HOUR_HEIGHT
+      : null
 
   const viewportRef = useRef<HTMLDivElement>(null)
   const scrolledDateRef = useRef<string | null>(null)
@@ -167,11 +172,12 @@ export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
   // Ao abrir um dia, a área começa na hora atual em vez do topo da janela.
   useEffect(() => {
     const el = viewportRef.current
-    if (!el || scrolledDateRef.current === date) return
-    scrolledDateRef.current = date
+    const chave = date ?? dates?.join(',') ?? ''
+    if (!el || scrolledDateRef.current === chave) return
+    scrolledDateRef.current = chave
     const target = nowTop === null ? 0 : nowTop - el.clientHeight * 0.4
     el.scrollTop = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight))
-  }, [date, nowTop])
+  }, [date, dates, nowTop])
 
   const semHora = items.filter((item) => item.hora === null)
 
@@ -180,7 +186,7 @@ export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
       {semHora.length > 0 && (
         <ul className="timeline-sem-hora" aria-label="itens sem horário">
           {semHora.map((item) => (
-            <li key={item.id}>
+            <li key={item.id} className="timeline-sem-hora-linha">
               <button
                 type="button"
                 className={`timeline-sem-hora-item${item.concluido ? ' is-done' : ''}`}
@@ -191,14 +197,50 @@ export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
                 ) : (
                   <Square size={15} aria-hidden="true" />
                 )}
-                <span>{item.titulo}</span>
+                <span className="timeline-sem-hora-texto">
+                  <span className="timeline-sem-hora-titulo">{item.titulo}</span>
+                  {item.descricao ? <span className="timeline-sem-hora-descricao">{item.descricao}</span> : null}
+                </span>
               </button>
+              <div className="timeline-sem-hora-acoes">
+                <button
+                  type="button"
+                  className="timeline-sem-hora-acao"
+                  aria-label={`Editar ${item.titulo}`}
+                  onClick={(evento) => {
+                    evento.stopPropagation()
+                    onEditItem(item)
+                  }}
+                >
+                  <Pencil size={15} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="timeline-sem-hora-acao timeline-sem-hora-acao--perigo"
+                  aria-label={`Excluir ${item.titulo}`}
+                  onClick={(evento) => {
+                    evento.stopPropagation()
+                    onDeleteItem(item)
+                  }}
+                >
+                  <Trash2 size={15} aria-hidden="true" />
+                </button>
+              </div>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="timeline-viewport" ref={viewportRef}>
+      <div
+        className="timeline-viewport"
+        ref={viewportRef}
+        onWheelCapture={(e) => {
+          const el = viewportRef.current
+          if (!el) return
+          if (el.scrollHeight <= el.clientHeight) return
+          e.stopPropagation()
+        }}
+      >
         <div className="timeline-scroll" style={{ height: trackHeight }}>
           <div className="timeline-gutter">
             {windowHours.hours.map((hour, index) => (
@@ -238,26 +280,58 @@ export function MapaHoras({ date, items, onOpenItem }: MapaHorasProps) {
               if (cols >= 3) classNames.push('is-narrow')
 
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
                   className={classNames.join(' ')}
                   style={style}
-                  onClick={() => onOpenItem(item)}
+                  role="group"
                   aria-label={`${item.titulo}, ${item.hora}${item.concluido ? ', concluído' : ''}`}
                 >
-                  <span className="timeline-event-icon">
-                    {item.concluido ? (
-                      <CheckSquare size={15} aria-hidden="true" />
-                    ) : (
-                      <Square size={15} aria-hidden="true" />
-                    )}
-                  </span>
-                  <span className="timeline-event-body">
-                    <span className="timeline-event-title">{item.titulo}</span>
-                    <span className="timeline-event-time">{item.hora}</span>
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    className="timeline-event-main"
+                    onClick={() => onOpenItem(item)}
+                  >
+                    <span className="timeline-event-icon">
+                      {item.concluido ? (
+                        <CheckSquare size={16} aria-hidden="true" />
+                      ) : (
+                        <Square size={16} aria-hidden="true" />
+                      )}
+                    </span>
+                    <span className="timeline-event-body">
+                      <span className="timeline-event-title">{item.titulo}</span>
+                      {item.descricao ? (
+                        <span className="timeline-event-descricao">{item.descricao}</span>
+                      ) : null}
+                      <span className="timeline-event-time">{item.hora}</span>
+                    </span>
+                  </button>
+                  <div className="timeline-event-acoes">
+                    <button
+                      type="button"
+                      className="timeline-event-acao"
+                      aria-label={`Editar ${item.titulo}`}
+                      onClick={(evento) => {
+                        evento.stopPropagation()
+                        onEditItem(item)
+                      }}
+                    >
+                      <Pencil size={15} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="timeline-event-acao timeline-event-acao--perigo"
+                      aria-label={`Excluir ${item.titulo}`}
+                      onClick={(evento) => {
+                        evento.stopPropagation()
+                        onDeleteItem(item)
+                      }}
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
               )
             })}
 

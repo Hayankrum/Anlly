@@ -199,7 +199,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="pagina">
+    <div className="pagina config-pagina">
       <div className="pagina-cabecalho">
         <div>
           <h1 className="pagina-titulo">Configurações</h1>

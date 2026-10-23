@@ -185,8 +185,23 @@
 
 .item-detalhe-acoes {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .item-detalhe-pagina {
+    margin-inline: -16px;
+  }
+
+  .item-detalhe-quadro {
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+  }
+
+  .item-detalhe-quadro .quadro {
+    min-width: max-content;
+  }
 }
 
 .item-detalhe {

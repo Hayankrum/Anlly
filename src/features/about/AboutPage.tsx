@@ -30,7 +30,7 @@ export function AboutPage() {
   const { canInstall, isIOS, install } = useInstallPrompt()
 
   return (
-    <div className="pagina">
+    <div className="pagina sobre-pagina">
       <div className="pagina-cabecalho">
         <div>
           <h1 className="pagina-titulo">Sobre o aplicativo</h1>
@@ -44,12 +44,7 @@ export function AboutPage() {
           alt=""
           aria-hidden="true"
         />
-        <h2 className="cartao-titulo">{appConfig.name}</h2>
-        <p className="sobre-texto">{appConfig.description}</p>
-        <div className="sobre-versao">
-          <span className="sobre-versao-ponto" aria-hidden="true" />
-          <span className="sobre-versao-rotulo">Versão {__APP_VERSION__}</span>
-        </div>
+        <p className="sobre-texto">{appConfig.description.replace(/^Anlly\s*[—-]\s*/i, '')}</p>
       </section>
 
       <section className="cartao">

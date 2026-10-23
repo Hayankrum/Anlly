@@ -11,6 +11,7 @@ export interface ItemDia {
   /** HH:mm ou null (só tem dia, sem horário) */
   hora: string | null
   titulo: string
+  descricao: string
   concluido: boolean
 }
 
@@ -27,6 +28,7 @@ export function buildItemDia(itens: Item[]): ItemDia[] {
         data,
         hora: item.horaAgendamento ?? null,
         titulo: item.titulo,
+        descricao: item.descricao,
         concluido: item.concluido,
       })
     }

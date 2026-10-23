@@ -116,7 +116,7 @@ export function HomePage() {
                 <>
                   <p className="home-vazio-titulo">Seu caminho ainda está vazio</p>
                   <p className="home-vazio-nota">Adicione o primeiro passo da sua jornada.</p>
-                  <Link className="btn btn--primario" to="/itens">
+                  <Link className="btn btn--primario" to="/calendario">
                     Criar primeiro item
                   </Link>
                 </>

@@ -21,9 +21,6 @@ interface VistaAnoProps {
   selectedDate: string
   diasComItens: Set<string>
   onSelectDate: (date: string) => void
-  onPrevYear: () => void
-  onNextYear: () => void
-  onClose: () => void
 }
 
 export function VistaAno({
@@ -32,27 +29,12 @@ export function VistaAno({
   selectedDate,
   diasComItens,
   onSelectDate,
-  onPrevYear,
-  onNextYear,
-  onClose,
 }: VistaAnoProps) {
   const selectedParts = parseDate(selectedDate)
   const miniWeekdays = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
   return (
     <section className="year-view" aria-label={`mapa do ano ${year}`}>
-      <header className="calendar-header">
-        <button type="button" className="nav-button" onClick={onPrevYear} aria-label="ano anterior">
-          ‹
-        </button>
-        <button type="button" className="calendar-title year-title" onClick={onClose} aria-label="voltar ao mês">
-          {year} ▾
-        </button>
-        <button type="button" className="nav-button" onClick={onNextYear} aria-label="próximo ano">
-          ›
-        </button>
-      </header>
-
       <div className="year-grid">
         {Array.from({ length: 12 }, (_, idx) => {
           const month = idx + 1
