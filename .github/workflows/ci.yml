@@ -20,6 +20,12 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      # O client do Prisma é gerado (server/generated/ está no .gitignore);
+      # sem ele o typecheck falha no import e todos os callbacks de
+      # transação viram 'any' implícito.
+      - name: Gerar client do Prisma
+        run: npm run db:generate
+
       - name: Typecheck
         run: npm run typecheck
 
