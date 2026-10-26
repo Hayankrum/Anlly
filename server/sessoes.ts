@@ -37,6 +37,11 @@ sessoesRoutes.get('/sessoes', async (c) => {
     }
   })
 
+  // Este aparelho sempre em cima; os demais, do mais recente para o mais antigo.
+  // O orderBy do banco usa só createdAt, então sem isto um aparelho logado
+  // antes apareceria acima do que você está usando agora.
+  dispositivos.sort((a, b) => Number(b.atual) - Number(a.atual) || b.conectadoEm - a.conectadoEm)
+
   // Valida a saída com o mesmo schema que o cliente espera.
   const parse = listaDispositivosSchema.safeParse({ dispositivos })
   if (!parse.success) return c.json({ erro: 'Erro interno ao montar lista', code: 'INTERNAL' }, 500)
