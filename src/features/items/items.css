@@ -185,7 +185,37 @@
 
 .item-detalhe-acoes {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Botões de ícone (editar/excluir) — mesmo padrão visual da agenda. */
+.item-detalhe-acao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.item-detalhe-acao + .item-detalhe-acao {
+  border-left: 1px solid var(--cor-borda);
+}
+
+.item-detalhe-acao:hover {
+  color: var(--cor-texto);
+  background: var(--cor-superficie-2);
+}
+
+.item-detalhe-acao--perigo:hover {
+  color: var(--cor-perigo);
 }
 
 @media (max-width: 767px) {

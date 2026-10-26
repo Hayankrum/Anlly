@@ -6,6 +6,7 @@ import { UpdateToast } from '../../features/pwa/UpdateToast'
 import { AvisoTermos } from '../../features/termos/AvisoTermos'
 import { soltarCampoFocado } from '../../shared/lib/dom'
 import { useAlertaCota } from '../../shared/lib/useAlertaCota'
+import { useSairComDoisToques } from '../../shared/lib/useSairComDoisToques'
 import { BottomNav } from './BottomNav'
 import { TopNav } from './TopNav'
 import './shell.css'
@@ -13,6 +14,7 @@ import './shell.css'
 export function AppShell() {
   const local = useLocation()
   useAlertaCota()
+  useSairComDoisToques()
 
   // Navegação: se um campo desmontou/perdeu o foco sem avisar, o teclado e a
   // barra de autocompletar do celular continuam na tela. Força a saída.

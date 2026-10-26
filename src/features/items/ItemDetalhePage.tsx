@@ -2,7 +2,6 @@ import { useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, Check, Pause, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
-import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
@@ -231,18 +230,24 @@ export function ItemDetalhePage() {
           <h1 className="pagina-titulo">{item.titulo}</h1>
         </div>
         <div className="item-detalhe-acoes">
-          <Button variante="secundario" tamanho="pequeno" onClick={() => setEditando(true)}>
+          <button
+            type="button"
+            className="item-detalhe-acao"
+            aria-label={`Editar ${item.titulo}`}
+            title="Editar"
+            onClick={() => setEditando(true)}
+          >
             <Pencil size={16} aria-hidden="true" />
-            Editar
-          </Button>
-          <Button
-            variante="perigo"
-            tamanho="pequeno"
+          </button>
+          <button
+            type="button"
+            className="item-detalhe-acao item-detalhe-acao--perigo"
+            aria-label={`Excluir ${item.titulo}`}
+            title="Excluir"
             onClick={() => setConfirmandoExcluir(true)}
           >
             <Trash2 size={16} aria-hidden="true" />
-            Excluir
-          </Button>
+          </button>
         </div>
       </div>
 

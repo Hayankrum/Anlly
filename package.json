@@ -17,8 +17,7 @@
     "db:migrate": "prisma migrate dev --config prisma7.config.ts || (sleep 2 && prisma migrate dev --config prisma7.config.ts)",
     "db:deploy": "prisma migrate deploy --config prisma7.config.ts || (sleep 2 && prisma migrate deploy --config prisma7.config.ts)",
     "db:studio": "prisma studio --config prisma7.config.ts",
-    "db:generate": "prisma generate --config prisma7.config.ts",
-    "icons": "node scripts/generate-icons.mjs"
+    "db:generate": "prisma generate --config prisma7.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
