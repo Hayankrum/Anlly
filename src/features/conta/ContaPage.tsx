@@ -1,8 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Eye, EyeOff, Info, LogOut, RefreshCw, Settings, ShieldCheck, KeyRound } from 'lucide-react'
+import { ChevronRight, Info, LogOut, RefreshCw, Settings, ShieldCheck, KeyRound } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
+import { CampoSenha } from './CampoSenha'
 import { useToast } from '../../shared/ui/Toast'
 import { tempoRelativo } from '../../shared/lib/date'
 import { pluralizar } from '../../shared/lib/texto'
@@ -20,6 +21,7 @@ import {
   type ResultadoPreparacao,
 } from './conta.repo'
 import { DESCRICOES_FASE, iconeDaFase } from './sync-estado'
+import { DispositivosConectados } from './DispositivosConectados'
 import { useSessao } from './useSessao'
 import { useSyncStatus } from './useSyncStatus'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -250,26 +252,14 @@ export function ContaPage() {
               placeholder="voce@exemplo.com"
               required
             />
-            <Input
+            <CampoSenha
               label="Senha"
-              type={verSenha ? 'text' : 'password'}
-              value={senha}
-              onChange={(evento) => setSenha(evento.target.value)}
+              valor={senha}
+              aoMudar={setSenha}
+              verSenha={verSenha}
+              aoAlternarVisibilidade={() => setVerSenha((valor) => !valor)}
               autoComplete={modo === 'criar' ? 'new-password' : 'current-password'}
-              minLength={LIMITE_SENHA}
-              required
-              sufixo={
-                <button
-                  type="button"
-                  className="campo-sufixo"
-                  onClick={() => setVerSenha((valor) => !valor)}
-                  aria-label={verSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={verSenha}
-                  title={verSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {verSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              }
+              placeholder="Sua senha"
             />
             {modo === 'entrar' ? (
               esqueciSenha ? (
@@ -390,117 +380,45 @@ export function ContaPage() {
         <h2 className="cartao-titulo" id="titulo-sua-conta">
           Sua conta
         </h2>
-        <p className="conta-email">{sessao.email}</p>
-        {sessao.nome ? <p className="pagina-subtitulo">{sessao.nome}</p> : null}
-        <div className="conta-acoes">
-          <Button variante="secundario" onClick={() => void aoSair()} disabled={saindo}>
-            <LogOut size={16} aria-hidden="true" />
-            {saindo ? 'Saindo…' : 'Sair da conta'}
-          </Button>
+        <p className="conta-email">
+          {sessao.email}
+          {sessao.nome ? <span className="conta-nome"> · {sessao.nome}</span> : null}
+        </p>
+
+        {/* Status da nuvem em uma linha, com o botão de sincronizar ao lado. */}
+        <div className="conta-sync">
+          <p className={`conta-status conta-status--${descricao.tom}`} role="status">
+            <IconeFase
+              size={16}
+              aria-hidden="true"
+              className={
+                descricao.girando ? 'conta-status-icone conta-status-icone--girando' : 'conta-status-icone'
+              }
+            />
+            <strong>{descricao.rotulo}</strong>
+          </p>
           <Button
             variante="secundario"
-            onClick={() => {
-              setMostrarTrocarSenha((v) => !v)
-              setErroTrocarSenha(null)
-              setSenhaAtual('')
-              setNovaSenha('')
-              setConfirmarNovaSenha('')
-            }}
+            tamanho="pequeno"
+            onClick={() => void sincronizarAgora()}
+            disabled={status.fase === 'sincronizando'}
           >
-            <KeyRound size={16} aria-hidden="true" />
-            {mostrarTrocarSenha ? 'Cancelar' : 'Trocar senha'}
+            <RefreshCw size={14} aria-hidden="true" />
+            {status.fase === 'sincronizando' ? 'Sincronizando…' : 'Sincronizar'}
           </Button>
         </div>
-        {mostrarTrocarSenha ? (
-          <form className="conta-formulario" onSubmit={(evento) => void aoTrocarSenha(evento)} noValidate>
-            <Input
-              label="Senha atual"
-              type={verSenhaTrocar ? 'text' : 'password'}
-              value={senhaAtual}
-              onChange={(evento) => setSenhaAtual(evento.target.value)}
-              autoComplete="current-password"
-              minLength={LIMITE_SENHA}
-              required
-              sufixo={
-                <button
-                  type="button"
-                  className="campo-sufixo"
-                  onClick={() => setVerSenhaTrocar((v) => !v)}
-                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={verSenhaTrocar}
-                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              }
-            />
-            <Input
-              label="Nova senha"
-              type={verSenhaTrocar ? 'text' : 'password'}
-              value={novaSenha}
-              onChange={(evento) => setNovaSenha(evento.target.value)}
-              autoComplete="new-password"
-              minLength={LIMITE_SENHA}
-              required
-              sufixo={
-                <button
-                  type="button"
-                  className="campo-sufixo"
-                  onClick={() => setVerSenhaTrocar((v) => !v)}
-                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={verSenhaTrocar}
-                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              }
-            />
-            <Input
-              label="Confirmar nova senha"
-              type={verSenhaTrocar ? 'text' : 'password'}
-              value={confirmarNovaSenha}
-              onChange={(evento) => setConfirmarNovaSenha(evento.target.value)}
-              autoComplete="new-password"
-              minLength={LIMITE_SENHA}
-              required
-              sufixo={
-                <button
-                  type="button"
-                  className="campo-sufixo"
-                  onClick={() => setVerSenhaTrocar((v) => !v)}
-                  aria-label={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={verSenhaTrocar}
-                  title={verSenhaTrocar ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {verSenhaTrocar ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              }
-            />
-            {erroTrocarSenha ? (
-              <p className="conta-erro" role="alert">
-                {erroTrocarSenha}
-              </p>
-            ) : null}
-            <Button type="submit" block disabled={enviandoTrocarSenha}>
-              {enviandoTrocarSenha ? 'Aguarde…' : 'Salvar nova senha'}
-            </Button>
-          </form>
-        ) : null}
-      </section>
-
-      <section className="cartao" aria-labelledby="titulo-sincronizacao">
-        <h2 className="cartao-titulo" id="titulo-sincronizacao">
-          Sincronização
-        </h2>
-        <p className={`conta-status conta-status--${descricao.tom}`} role="status">
-          <IconeFase
-            size={18}
-            aria-hidden="true"
-            className={descricao.girando ? 'conta-status-icone conta-status-icone--girando' : 'conta-status-icone'}
-          />
-          <strong>{descricao.rotulo}</strong>
+        <p className="pagina-subtitulo conta-detalhes">
+          {pluralizar(pendentes, 'alteração aguardando envio', 'alterações aguardando envio')}
+          {' · última sincronização: '}
+          {status.ultimaSincronizacao === null ? 'nunca' : tempoRelativo(status.ultimaSincronizacao)}
+          {status.proximaTentativaEm !== null
+            ? ` · próxima tentativa ${tempoRelativo(status.proximaTentativaEm)}`
+            : ''}
         </p>
-        <p className="pagina-subtitulo">{descricao.texto}</p>
+        {/* O texto da fase só aparece quando ajuda: "Tudo em dia" é redundante. */}
+        {descricao.tom !== 'positivo' && status.fase !== 'sincronizando' ? (
+          <p className="pagina-subtitulo conta-detalhes">{descricao.texto}</p>
+        ) : null}
         {status.fase === 'erro' && status.ultimoErro ? (
           <p className="conta-erro" role="alert">
             {status.ultimoErro}
@@ -523,25 +441,65 @@ export function ContaPage() {
             </button>
           </p>
         ) : null}
-        <p className="pagina-subtitulo conta-detalhes">
-          {pluralizar(pendentes, 'alteração aguardando envio', 'alterações aguardando envio')}
-          {' · '}
-          última sincronização:{' '}
-          {status.ultimaSincronizacao === null ? 'nunca' : tempoRelativo(status.ultimaSincronizacao)}
-          {status.proximaTentativaEm !== null
-            ? ` · próxima tentativa automática ${tempoRelativo(status.proximaTentativaEm)}`
-            : ''}
-        </p>
         <div className="conta-acoes">
           <Button
-            variante="primario"
-            onClick={() => void sincronizarAgora()}
-            disabled={status.fase === 'sincronizando'}
+            variante="secundario"
+            tamanho="pequeno"
+            onClick={() => {
+              setMostrarTrocarSenha((v) => !v)
+              setErroTrocarSenha(null)
+              setSenhaAtual('')
+              setNovaSenha('')
+              setConfirmarNovaSenha('')
+            }}
           >
-            <RefreshCw size={16} aria-hidden="true" />
-            {status.fase === 'sincronizando' ? 'Sincronizando…' : 'Sincronizar agora'}
+            <KeyRound size={14} aria-hidden="true" />
+            {mostrarTrocarSenha ? 'Cancelar' : 'Trocar senha'}
+          </Button>
+          <Button variante="secundario" tamanho="pequeno" onClick={() => void aoSair()} disabled={saindo}>
+            <LogOut size={14} aria-hidden="true" />
+            {saindo ? 'Saindo…' : 'Sair'}
           </Button>
         </div>
+        {mostrarTrocarSenha ? (
+          <form className="conta-formulario" onSubmit={(evento) => void aoTrocarSenha(evento)} noValidate>
+            <CampoSenha
+              label="Senha atual"
+              valor={senhaAtual}
+              aoMudar={setSenhaAtual}
+              verSenha={verSenhaTrocar}
+              aoAlternarVisibilidade={() => setVerSenhaTrocar((v) => !v)}
+              autoComplete="current-password"
+              placeholder="Digite sua senha atual"
+            />
+            <CampoSenha
+              label="Nova senha"
+              valor={novaSenha}
+              aoMudar={setNovaSenha}
+              verSenha={verSenhaTrocar}
+              aoAlternarVisibilidade={() => setVerSenhaTrocar((v) => !v)}
+              autoComplete="new-password"
+              placeholder="A nova senha"
+            />
+            <CampoSenha
+              label="Confirmar nova senha"
+              valor={confirmarNovaSenha}
+              aoMudar={setConfirmarNovaSenha}
+              verSenha={verSenhaTrocar}
+              aoAlternarVisibilidade={() => setVerSenhaTrocar((v) => !v)}
+              autoComplete="new-password"
+              placeholder="Repita a nova senha"
+            />
+            {erroTrocarSenha ? (
+              <p className="conta-erro" role="alert">
+                {erroTrocarSenha}
+              </p>
+            ) : null}
+            <Button type="submit" block disabled={enviandoTrocarSenha}>
+              {enviandoTrocarSenha ? 'Aguarde…' : 'Salvar nova senha'}
+            </Button>
+          </form>
+        ) : null}
       </section>
 
       <section className="cartao" aria-labelledby="titulo-outros">
@@ -561,6 +519,8 @@ export function ContaPage() {
           </Link>
         </nav>
       </section>
+
+      <DispositivosConectados chaveSessao={sessao.usuarioId} />
     </div>
   )
 }

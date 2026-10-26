@@ -252,7 +252,8 @@
   max-height: min(60vh, 520px);
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior-y: contain;
+  /* Sem "contain": ao chegar no topo/fim a rolagem passa para a página. */
+  overscroll-behavior-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--cor-borda) transparent;
   touch-action: pan-y;

@@ -231,16 +231,7 @@ export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDelete
         </ul>
       )}
 
-      <div
-        className="timeline-viewport"
-        ref={viewportRef}
-        onWheelCapture={(e) => {
-          const el = viewportRef.current
-          if (!el) return
-          if (el.scrollHeight <= el.clientHeight) return
-          e.stopPropagation()
-        }}
-      >
+      <div className="timeline-viewport" ref={viewportRef}>
         <div className="timeline-scroll" style={{ height: trackHeight }}>
           <div className="timeline-gutter">
             {windowHours.hours.map((hour, index) => (

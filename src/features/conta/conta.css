@@ -1,13 +1,13 @@
 .conta-mascote {
   display: block;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 8px;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 6px;
   object-fit: contain;
 }
 
 .conta-formulario {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .conta-erro {
@@ -82,11 +82,43 @@
   overflow-wrap: anywhere;
 }
 
+/* Nome junto do e-mail, em uma linha só. */
+.conta-nome {
+  font-weight: 400;
+  color: var(--cor-texto-suave);
+}
+
+/* Faixa da nuvem: rótulo à esquerda, botão "Sincronizar" à direita. */
+.conta-sync {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.conta-sync .conta-status {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
 .conta-acoes {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 12px;
+}
+
+/* A página da conta é mais enxuta que as demais. */
+.conta-pagina {
+  gap: 12px;
+}
+
+.conta-pagina .cartao-titulo {
+  margin-bottom: 10px;
 }
 
 /* Links "Mais": linhas no estilo lista de ajustes (ícone + texto + seta). */
@@ -185,4 +217,77 @@
 .conta-esqueci-acoes {
   display: flex;
   gap: 8px;
+}
+
+/* ---------- Dispositivos conectados ---------- */
+
+.dispositivos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dispositivo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.dispositivo:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.dispositivo-icone {
+  flex-shrink: 0;
+  color: var(--cor-texto-suave);
+}
+
+.dispositivo-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dispositivo-nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.dispositivo-atual {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--cor-sucesso);
+  background: color-mix(in srgb, var(--cor-sucesso) 12%, transparent);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* "Sair de todos os outros": na tela estreita o botão fica centralizado. */
+.dispositivos-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .dispositivos-acoes {
+    justify-content: flex-start;
+  }
+}
+
+.dispositivo-detalhe {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--cor-texto-suave);
 }

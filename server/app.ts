@@ -5,6 +5,7 @@ import { auth } from './auth'
 import { env } from './env'
 import { syncRoutes } from './sync'
 import { termosRoutes } from './termos'
+import { sessoesRoutes } from './sessoes'
 
 const LIMITE_CORPO_API = 2 * 1024 * 1024 // 2 MB (push aceita até 500 mutações)
 
@@ -68,6 +69,7 @@ export function createApp(): Hono {
 
   app.route('/api', syncRoutes)
   app.route('/api', termosRoutes)
+  app.route('/api', sessoesRoutes)
 
   // No Vercel quem serve dist/ é a CDN (vercel.json); a função só cuida de /api
   if (env.NODE_ENV === 'production' && !process.env.VERCEL) {
