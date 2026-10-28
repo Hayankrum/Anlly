@@ -40,6 +40,8 @@ export function CalendarioPage() {
 
   const [vista, setVista] = useState<VistaCalendario>('mes')
   const [vistaAno, setVistaAno] = useState(false)
+  /** true = o mapa de horas está filtrado no dia marcado (o calendário continua visível). */
+  const [filtrandoDia, setFiltrandoDia] = useState(false)
   const [criando, setCriando] = useState(false)
   const [editando, setEditando] = useState<ItemDia | null>(null)
   const [excluindo, setExcluindo] = useState<ItemDia | null>(null)
@@ -58,7 +60,25 @@ export function CalendarioPage() {
   const trocarVista = useCallback((valor: VistaCalendario) => {
     setVista(valor)
     setVistaAno(false)
+    setFiltrandoDia(false)
   }, [])
+
+  /**
+   * Marca o dia na célula do calendário e filtra o mapa de horas para ele,
+   * sem trocar a vista — o calendário continua visível. Clicar de novo no
+   * mesmo dia limpa o filtro e volta a mostrar a semana/mês inteiro.
+   */
+  const selecionarDia = useCallback(
+    (date: string) => {
+      if (date === calendar.selectedDate && filtrandoDia) {
+        setFiltrandoDia(false)
+        return
+      }
+      calendar.selectDate(date)
+      setFiltrandoDia(true)
+    },
+    [calendar, filtrandoDia],
+  )
 
   async function salvarNovo(entrada: EntradaItem) {
     if (!podeEditar) return
@@ -233,10 +253,7 @@ export function CalendarioPage() {
           today={calendar.today}
           selectedDate={calendar.selectedDate}
           diasComItens={calendar.diasComItens}
-          onSelectDate={(date) => {
-            calendar.selectDate(date)
-            setVista('dia')
-          }}
+          onSelectDate={selecionarDia}
         />
       )}
 
@@ -250,7 +267,7 @@ export function CalendarioPage() {
             onSelectDate={(date) => {
               calendar.goTo(date)
               setVistaAno(false)
-              setVista('dia')
+              setFiltrandoDia(true)
             }}
           />
         ) : (
@@ -260,10 +277,7 @@ export function CalendarioPage() {
             selectedDate={calendar.selectedDate}
             today={calendar.today}
             diasComItens={calendar.diasComItens}
-            onSelectDate={(date) => {
-              calendar.selectDate(date)
-              setVista('dia')
-            }}
+            onSelectDate={selecionarDia}
           />
         ))}
 
@@ -275,13 +289,24 @@ export function CalendarioPage() {
                 Mapa de horas
               </h2>
               <span className="timeline-date">
-                {vista === 'semana' ? weekLabel(calendar.weekDates) : calendar.label}
+                {filtrandoDia
+                  ? dayLabel(calendar.selectedDate)
+                  : vista === 'semana'
+                    ? weekLabel(calendar.weekDates)
+                    : calendar.label}
               </span>
             </header>
           </section>
           <MapaHoras
-            dates={vista === 'semana' ? calendar.weekDates : undefined}
-            items={vista === 'semana' ? weekItems : monthItems}
+            date={filtrandoDia ? calendar.selectedDate : undefined}
+            dates={!filtrandoDia && vista === 'semana' ? calendar.weekDates : undefined}
+            items={
+              filtrandoDia
+                ? dayItems
+                : vista === 'semana'
+                  ? weekItems
+                  : monthItems
+            }
             onOpenItem={(item) => abrirItem(item.itemId)}
             onEditItem={(item) => setEditando(item)}
             onDeleteItem={(item) => setExcluindo(item)}
