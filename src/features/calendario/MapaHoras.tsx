@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
-import { CheckSquare, Pencil, Square, Trash2 } from 'lucide-react'
+import { CheckSquare, Square } from 'lucide-react'
 import type { ItemDia } from './itens-dia'
 
 /** Pixels por hora — dá folga vertical para os marcadores não ficarem colados. */
@@ -18,8 +18,6 @@ interface MapaHorasProps {
   dates?: string[]
   items: ItemDia[]
   onOpenItem: (item: ItemDia) => void
-  onEditItem: (item: ItemDia) => void
-  onDeleteItem: (item: ItemDia) => void
 }
 
 function hourOf(time: string): number | null {
@@ -94,7 +92,7 @@ function layoutColumns(items: ItemDia[]): { span: Span; col: number; cols: numbe
 }
 
 /** Mapa hora a hora do dia/semana/mês selecionado: a agenda, não uma lista. */
-export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDeleteItem }: MapaHorasProps) {
+export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
   const today = useMemo(() => {
     const agora = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -160,6 +158,9 @@ export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDelete
     return list
   }, [comHora, windowStartMin, trackHeight])
 
+  /** Quantidade máxima de colunas lado a lado — define a largura mínima da faixa. */
+  const maxCols = placed.reduce((max, evento) => Math.max(max, evento.cols), 1)
+
   const now = new Date()
   const nowTop =
     date && date === today
@@ -202,37 +203,16 @@ export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDelete
                   {item.descricao ? <span className="timeline-sem-hora-descricao">{item.descricao}</span> : null}
                 </span>
               </button>
-              <div className="timeline-sem-hora-acoes">
-                <button
-                  type="button"
-                  className="timeline-sem-hora-acao"
-                  aria-label={`Editar ${item.titulo}`}
-                  onClick={(evento) => {
-                    evento.stopPropagation()
-                    onEditItem(item)
-                  }}
-                >
-                  <Pencil size={15} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="timeline-sem-hora-acao timeline-sem-hora-acao--perigo"
-                  aria-label={`Excluir ${item.titulo}`}
-                  onClick={(evento) => {
-                    evento.stopPropagation()
-                    onDeleteItem(item)
-                  }}
-                >
-                  <Trash2 size={15} aria-hidden="true" />
-                </button>
-              </div>
             </li>
           ))}
         </ul>
       )}
 
       <div className="timeline-viewport" ref={viewportRef}>
-        <div className="timeline-scroll" style={{ height: trackHeight }}>
+        <div
+          className="timeline-scroll"
+          style={{ height: trackHeight, '--timeline-cols': String(maxCols) } as CSSProperties}
+        >
           <div className="timeline-gutter">
             {windowHours.hours.map((hour, index) => (
               <span key={hour} className="timeline-hour" style={{ top: index * HOUR_HEIGHT }}>
@@ -267,8 +247,6 @@ export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDelete
               } as CSSProperties
               const classNames = ['timeline-event']
               if (item.concluido) classNames.push('is-done')
-              if (cols > 1) classNames.push('is-split')
-              if (cols >= 3) classNames.push('is-narrow')
 
               return (
                 <div
@@ -298,30 +276,6 @@ export function MapaHoras({ date, dates, items, onOpenItem, onEditItem, onDelete
                       <span className="timeline-event-time">{item.hora}</span>
                     </span>
                   </button>
-                  <div className="timeline-event-acoes">
-                    <button
-                      type="button"
-                      className="timeline-event-acao"
-                      aria-label={`Editar ${item.titulo}`}
-                      onClick={(evento) => {
-                        evento.stopPropagation()
-                        onEditItem(item)
-                      }}
-                    >
-                      <Pencil size={15} aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      className="timeline-event-acao timeline-event-acao--perigo"
-                      aria-label={`Excluir ${item.titulo}`}
-                      onClick={(evento) => {
-                        evento.stopPropagation()
-                        onDeleteItem(item)
-                      }}
-                    >
-                      <Trash2 size={15} aria-hidden="true" />
-                    </button>
-                  </div>
                 </div>
               )
             })}

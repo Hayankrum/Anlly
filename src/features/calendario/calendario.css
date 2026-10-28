@@ -251,12 +251,14 @@
   position: relative;
   max-height: min(60vh, 520px);
   overflow-y: auto;
-  overflow-x: hidden;
+  /* Com vários compromissos sobrepostos a faixa fica larga e rola para o lado
+     em vez de espremer os blocos. */
+  overflow-x: auto;
   /* Sem "contain": ao chegar no topo/fim a rolagem passa para a página. */
   overscroll-behavior-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--cor-borda) transparent;
-  touch-action: pan-y;
+  touch-action: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -281,8 +283,9 @@
 .timeline-scroll {
   position: relative;
   display: grid;
-  /* sem rolagem horizontal: a faixa acompanha a tela */
-  grid-template-columns: 64px minmax(0, 1fr);
+  /* A coluna de eventos tem no mínimo --timeline-cols × 200px: se não couber
+     na tela a faixa rola para o lado em vez de espremer os blocos. */
+  grid-template-columns: 64px minmax(calc(var(--timeline-cols, 1) * 200px), 1fr);
   /* folga para o rótulo da primeira hora não ser cortado */
   padding: 12px 0;
 }
@@ -316,7 +319,7 @@
   }
 
   .calendario-pagina .timeline-scroll {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 48px minmax(calc(var(--timeline-cols, 1) * 180px), 1fr);
   }
 
   .calendario-pagina .timeline-hour {
@@ -363,7 +366,8 @@
   display: flex;
   align-items: stretch;
   border: 0;
-  border-radius: 10px;
+  /* Cantos retos: bloco quadrado, sem arredondamento. */
+  border-radius: 0;
   background: color-mix(in srgb, var(--cor-acento) 14%, var(--cor-superficie));
   color: var(--cor-texto);
   overflow: hidden;
@@ -441,42 +445,6 @@
   text-overflow: ellipsis;
 }
 
-.timeline-event-acoes {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid color-mix(in srgb, var(--cor-texto) 10%, transparent);
-}
-
-.timeline-event-acao {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 50%;
-  border: 0;
-  background: transparent;
-  color: var(--cor-texto-suave);
-  cursor: pointer;
-}
-
-.timeline-event-acao + .timeline-event-acao {
-  border-top: 1px solid color-mix(in srgb, var(--cor-texto) 10%, transparent);
-}
-
-.timeline-event-acao:hover {
-  color: var(--cor-texto);
-  background: color-mix(in srgb, var(--cor-texto) 6%, transparent);
-}
-
-.timeline-event-acao--perigo:hover {
-  color: var(--cor-perigo);
-}
-
-/* Colunas estreitas: o ícone sai para o texto não virar bagunça. */
-.timeline-event.is-narrow .timeline-event-icon {
-  display: none;
-}
-
 .timeline-empty {
   position: absolute;
   top: 16px;
@@ -501,7 +469,8 @@
   display: flex;
   align-items: stretch;
   border: 1px solid var(--cor-borda);
-  border-radius: 10px;
+  /* Cantos retos: linha quadrada, sem arredondamento. */
+  border-radius: 0;
   background: var(--cor-superficie);
   overflow: hidden;
 }
@@ -550,35 +519,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.timeline-sem-hora-acoes {
-  display: flex;
-  border-left: 1px solid var(--cor-borda);
-}
-
-.timeline-sem-hora-acao {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  border: 0;
-  background: transparent;
-  color: var(--cor-texto-suave);
-  cursor: pointer;
-}
-
-.timeline-sem-hora-acao + .timeline-sem-hora-acao {
-  border-left: 1px solid var(--cor-borda);
-}
-
-.timeline-sem-hora-acao:hover {
-  color: var(--cor-texto);
-  background: var(--cor-superficie-2);
-}
-
-.timeline-sem-hora-acao--perigo:hover {
-  color: var(--cor-perigo);
 }
 
 /* ---------- Mapa do ano ---------- */

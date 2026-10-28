@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
@@ -10,7 +9,7 @@ import { usePodeEditar } from '../conta/usePodeEditar'
 import * as itemsRepo from '../items/items.repo'
 import type { EntradaItem } from '../items/items.repo'
 import { ItemForm } from '../items/ItemForm'
-import { buildItemDia, type ItemDia } from './itens-dia'
+import { buildItemDia } from './itens-dia'
 import { useCalendar } from './useCalendar'
 import { MesCalendario } from './MesCalendario'
 import { SemanaCalendario } from './SemanaCalendario'
@@ -43,8 +42,6 @@ export function CalendarioPage() {
   /** true = o mapa de horas está filtrado no dia marcado (o calendário continua visível). */
   const [filtrandoDia, setFiltrandoDia] = useState(false)
   const [criando, setCriando] = useState(false)
-  const [editando, setEditando] = useState<ItemDia | null>(null)
-  const [excluindo, setExcluindo] = useState<ItemDia | null>(null)
 
   const dayItems = calendar.dayItems
   const weekItems = calendar.weekItems
@@ -96,44 +93,6 @@ export function CalendarioPage() {
         return
       }
       mostrar('Não foi possível criar o item', { tipo: 'erro' })
-    }
-  }
-
-  async function salvarEdicao(entrada: EntradaItem) {
-    if (!podeEditar || !editando) return
-    try {
-      await itemsRepo.atualizar(editando.itemId, entrada)
-      setEditando(null)
-      mostrar('Item atualizado', { tipo: 'sucesso' })
-    } catch (erro) {
-      if (erro instanceof ErroCotaExcedida) {
-        mostrar(erro.message, {
-          tipo: 'erro',
-          duracao: 10000,
-          acao: { rotulo: 'Ver armazenamento', aoClicar: () => navigate('/config') },
-        })
-        return
-      }
-      mostrar('Não foi possível atualizar o item', { tipo: 'erro' })
-    }
-  }
-
-  async function confirmarExclusao() {
-    if (!podeEditar || !excluindo) return
-    try {
-      await itemsRepo.excluir(excluindo.itemId)
-      setExcluindo(null)
-      mostrar('Item excluído', { tipo: 'info' })
-    } catch (erro) {
-      if (erro instanceof ErroCotaExcedida) {
-        mostrar(erro.message, {
-          tipo: 'erro',
-          duracao: 10000,
-          acao: { rotulo: 'Ver armazenamento', aoClicar: () => navigate('/config') },
-        })
-        return
-      }
-      mostrar('Não foi possível excluir o item', { tipo: 'erro' })
     }
   }
 
@@ -242,8 +201,6 @@ export function CalendarioPage() {
           date={calendar.selectedDate}
           items={dayItems}
           onOpenItem={(item) => abrirItem(item.itemId)}
-          onEditItem={(item) => setEditando(item)}
-          onDeleteItem={(item) => setExcluindo(item)}
         />
       )}
 
@@ -308,13 +265,11 @@ export function CalendarioPage() {
                   : monthItems
             }
             onOpenItem={(item) => abrirItem(item.itemId)}
-            onEditItem={(item) => setEditando(item)}
-            onDeleteItem={(item) => setExcluindo(item)}
           />
         </>
       )}
 
-      {criando || editando ? null : (
+      {criando ? null : (
         <button
           type="button"
           className="fab"
@@ -333,35 +288,6 @@ export function CalendarioPage() {
       >
         {criando ? <ItemForm aoCancelar={() => setCriando(false)} aoSalvar={salvarNovo} /> : null}
       </Modal>
-
-      <Modal
-        aberto={editando !== null}
-        titulo="Editar item"
-        onFechar={() => setEditando(null)}
-        largura="estreito"
-      >
-        {editando ? (
-          <ItemForm
-            item={itens.find((item) => item.id === editando.itemId)}
-            aoCancelar={() => setEditando(null)}
-            aoSalvar={salvarEdicao}
-          />
-        ) : null}
-      </Modal>
-
-      <ConfirmDialog
-        aberto={excluindo !== null}
-        titulo="Excluir item"
-        mensagem={
-          excluindo
-            ? `O item "${excluindo.titulo}" será removido da lista. Esta ação não pode ser desfeita.`
-            : ''
-        }
-        textoConfirmar="Excluir"
-        perigo
-        aoConfirmar={() => void confirmarExclusao()}
-        aoCancelar={() => setExcluindo(null)}
-      />
     </div>
   )
 }
