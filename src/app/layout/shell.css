@@ -78,8 +78,8 @@
 }
 
 .top-nav-link--ativo {
-  color: var(--cor-texto);
-  background: var(--cor-superficie-2);
+  color: var(--cor-acento);
+  background: var(--cor-hover);
 }
 
 .top-nav-acoes {
@@ -206,12 +206,13 @@
 }
 
 .bottom-nav-link:hover {
-  color: var(--cor-texto);
+  color: var(--cor-acento);
+  background: var(--cor-hover);
 }
 
 .bottom-nav-link--ativo {
-  color: var(--cor-texto);
-  background: var(--cor-superficie-2);
+  color: var(--cor-acento);
+  background: var(--cor-hover);
 }
 
 .bottom-nav-rotulo {
