@@ -64,7 +64,7 @@
 }
 
 .btn--secundario:hover:not(:disabled) {
-  background: var(--cor-superficie-3);
+  background: color-mix(in srgb, var(--cor-acento) 12%, var(--cor-superficie-2));
 }
 
 .btn--perigo {
@@ -82,8 +82,8 @@
 }
 
 .btn--fantasma:hover:not(:disabled) {
-  background: var(--cor-superficie-2);
-  color: var(--cor-texto);
+  background: var(--cor-hover);
+  color: var(--cor-acento);
 }
 
 .campo {

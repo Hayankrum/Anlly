@@ -215,7 +215,7 @@
 }
 
 .day-cell:not(.is-empty):not(.is-selected):hover {
-  background: var(--cor-superficie);
+  background: var(--cor-hover);
 }
 
 /* ---------- Mapa de horas ---------- */
@@ -297,7 +297,11 @@
   /* Réguas das horas pintadas no próprio contêiner de rolagem: como ele tem a
      largura toda do conteúdo, as linhas acompanham a faixa inteira e nunca
      "acabam antes" do fim, independente de largura de filhos. */
-  background-image: linear-gradient(to bottom, var(--cor-borda) 1px, transparent 1px);
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--cor-acento) 24%, var(--cor-borda)) 1px,
+    transparent 1px
+  );
   background-size: 100% 64px;
   background-position: 0 12px;
   background-repeat: repeat-y;
@@ -505,7 +509,7 @@
 }
 
 .timeline-sem-hora-item:hover {
-  background: var(--cor-superficie-2);
+  background: var(--cor-hover);
 }
 
 .timeline-sem-hora-item.is-done {
@@ -640,5 +644,5 @@
 }
 
 .mini-day:not(.is-empty):not(.is-selected):hover {
-  background: var(--cor-fundo);
+  background: var(--cor-hover);
 }

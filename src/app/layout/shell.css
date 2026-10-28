@@ -73,8 +73,8 @@
 }
 
 .top-nav-link:hover {
-  color: var(--cor-texto);
-  background: color-mix(in srgb, var(--cor-superficie-2) 60%, transparent);
+  color: var(--cor-acento);
+  background: var(--cor-hover);
 }
 
 .top-nav-link--ativo {
@@ -104,8 +104,8 @@
 }
 
 .top-nav-botao:hover {
-  background: var(--cor-superficie-2);
-  color: var(--cor-texto);
+  background: var(--cor-hover);
+  color: var(--cor-acento);
 }
 
 .top-nav-botao:focus-visible {

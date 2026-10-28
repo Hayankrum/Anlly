@@ -81,7 +81,7 @@
 }
 
 .quadro-coluna-add:hover {
-  background: var(--cor-superficie);
+  background: var(--cor-hover);
   color: var(--cor-acento);
 }
 
@@ -152,8 +152,8 @@
 }
 
 .quadro-cartao-pegar:hover {
-  background: var(--cor-superficie-2);
-  color: var(--cor-texto);
+  background: var(--cor-hover);
+  color: var(--cor-acento);
 }
 
 .quadro-cartao-pegar:focus-visible {

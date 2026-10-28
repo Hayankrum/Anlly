@@ -155,8 +155,8 @@
 }
 
 .item-acao:hover {
-  background: var(--cor-superficie-2);
-  color: var(--cor-texto);
+  background: var(--cor-hover);
+  color: var(--cor-acento);
 }
 
 .item-acao--perigo:hover {
@@ -210,8 +210,8 @@
 }
 
 .item-detalhe-acao:hover {
-  color: var(--cor-texto);
-  background: var(--cor-superficie-2);
+  color: var(--cor-acento);
+  background: var(--cor-hover);
 }
 
 .item-detalhe-acao--perigo:hover {

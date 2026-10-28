@@ -141,7 +141,8 @@
 }
 
 .conta-link:hover {
-  background: var(--cor-superficie-2);
+  background: var(--cor-hover);
+  color: var(--cor-acento);
 }
 
 .conta-link:focus-visible {
