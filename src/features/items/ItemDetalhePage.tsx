@@ -219,7 +219,7 @@ export function ItemDetalhePage() {
 
   return (
     <div className="pagina">
-      <div className="pagina-cabecalho">
+      <div className="pagina-cabecalho pagina-cabecalho--detalhe">
         <div>
           <p className="pagina-subtitulo">
             <Link className="item-voltar" to="/calendario">

@@ -183,8 +183,26 @@
   text-decoration: underline;
 }
 
+/* Cabeçalho do detalhe: o título pode quebrar em várias linhas, mas os botões
+   de editar/excluir ficam fixos no topo à direita — não mudam de lugar com
+   títulos longos (no mobile o `flex-wrap` do `.pagina-cabecalho` empurrava
+   as ações para uma segunda linha). */
+.pagina-cabecalho.pagina-cabecalho--detalhe {
+  flex-wrap: nowrap;
+}
+
+.pagina-cabecalho.pagina-cabecalho--detalhe > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pagina-cabecalho.pagina-cabecalho--detalhe .pagina-titulo {
+  overflow-wrap: anywhere;
+}
+
 .item-detalhe-acoes {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   border: 1px solid var(--cor-borda);
   border-radius: 10px;
