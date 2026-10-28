@@ -259,7 +259,6 @@
   scrollbar-width: thin;
   scrollbar-color: var(--cor-borda) transparent;
   touch-action: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .timeline-viewport::-webkit-scrollbar {
@@ -282,18 +281,33 @@
 
 .timeline-scroll {
   position: relative;
-  display: grid;
-  /* A coluna de eventos tem no mínimo --timeline-cols × 200px: se não couber
-     na tela a faixa rola para o lado em vez de espremer os blocos. */
-  grid-template-columns: 64px minmax(calc(var(--timeline-cols, 1) * 200px), 1fr);
+  /* flex (e não grade): a área de contenção do sticky vira a faixa inteira,
+     então a coluna de horas consegue ficar parada em qualquer navegador. */
+  display: flex;
+  align-items: stretch;
+  /* Largura do conteúdo, não da tela: coluna de horas + faixa de eventos.
+     Se fosse só a largura da tela, o sticky só teria essa folga para deslizar e
+     os horários sumiriam quando a rolagem lateral passasse da largura da tela. */
+  --timeline-bloco: 200px;
+  --timeline-faixa: calc(var(--timeline-cols, 1) * (var(--timeline-bloco) + 8px));
+  width: calc(64px + var(--timeline-faixa));
+  min-width: 100%;
   /* folga para o rótulo da primeira hora não ser cortado */
   padding: 12px 0;
+  /* Réguas das horas pintadas no próprio contêiner de rolagem: como ele tem a
+     largura toda do conteúdo, as linhas acompanham a faixa inteira e nunca
+     "acabam antes" do fim, independente de largura de filhos. */
+  background-image: linear-gradient(to bottom, var(--cor-borda) 1px, transparent 1px);
+  background-size: 100% 64px;
+  background-position: 0 12px;
+  background-repeat: repeat-y;
 }
 
 .timeline-gutter {
   position: sticky;
   left: 0;
   z-index: 4;
+  flex: 0 0 64px;
   background: var(--cor-fundo);
   box-shadow: 8px 0 10px -8px rgb(0 0 0 / 0.25);
 }
@@ -311,6 +325,10 @@
 
 .timeline-track {
   position: relative;
+  flex: 1 1 auto;
+  /* Faixa larga o bastante para todas as colunas de eventos lado a lado:
+     se não couber na tela, a faixa rola para o lado em vez de espremer os blocos. */
+  min-width: var(--timeline-faixa);
 }
 
 @media (max-width: 767px) {
@@ -319,21 +337,17 @@
   }
 
   .calendario-pagina .timeline-scroll {
-    grid-template-columns: 48px minmax(calc(var(--timeline-cols, 1) * 180px), 1fr);
+    width: calc(48px + var(--timeline-faixa));
+  }
+
+  .calendario-pagina .timeline-gutter {
+    flex-basis: 48px;
   }
 
   .calendario-pagina .timeline-hour {
     left: 4px;
     right: auto;
   }
-}
-
-.timeline-rule {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--cor-borda);
 }
 
 .timeline-now {
@@ -359,10 +373,10 @@
 
 .timeline-event {
   position: absolute;
-  /* colunas: itens do mesmo horário dividem a faixa lado a lado */
-  left: calc(8px + (100% - 20px) * var(--col, 0) / var(--cols, 1));
-  width: calc((100% - 20px) / var(--cols, 1) - var(--gap, 0px));
-  max-width: var(--timeline-block-max, 380px);
+  /* colunas lado a lado: todos os blocos com a mesma largura, encostados
+     à esquerda da faixa, em vez de dividir o espaço que sobra */
+  left: calc(8px + var(--col, 0) * (var(--timeline-bloco) + 8px));
+  width: var(--timeline-bloco);
   display: flex;
   align-items: stretch;
   border: 0;

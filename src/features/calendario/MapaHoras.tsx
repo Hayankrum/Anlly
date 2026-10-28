@@ -222,28 +222,17 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
           </div>
 
           <div className="timeline-track">
-            {windowHours.hours.map((hour, index) => (
-              <span
-                key={hour}
-                className="timeline-rule"
-                style={{ top: index * HOUR_HEIGHT }}
-                aria-hidden="true"
-              />
-            ))}
-
             {nowTop !== null && nowTop >= 0 && nowTop <= trackHeight && (
               <span className="timeline-now" style={{ top: nowTop }} aria-hidden="true">
                 <span className="timeline-now-dot" />
               </span>
             )}
 
-            {placed.map(({ item, top, height, col, cols }) => {
+            {placed.map(({ item, top, height, col }) => {
               const style = {
                 top,
                 height,
                 '--col': String(col),
-                '--cols': String(cols),
-                '--gap': cols > 1 ? '8px' : '0px',
               } as CSSProperties
               const classNames = ['timeline-event']
               if (item.concluido) classNames.push('is-done')
