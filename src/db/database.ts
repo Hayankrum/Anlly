@@ -58,4 +58,13 @@ db.version(5).stores({
   syncState: 'chave',
 })
 
+// v6: configuração de colunas do Kanban persistida no item do projeto.
+db.version(6).stores({
+  items:
+    'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm, tipo, parentId',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+})
+
 export default db

@@ -1,7 +1,12 @@
 import db from '../../db/database'
 import { novaMutacao } from '../../db/outbox.repo'
 import type { EntradaOutbox, Item, PeriodoItens } from '../../db/schema'
-import { COLUNAS_KANBAN, type ColunaKanban, type TipoItem } from '@shared/schemas/item'
+import {
+  obterQuadroKanban,
+  QUADRO_KANBAN_PADRAO,
+  type ColunaKanban,
+  type TipoItem,
+} from '@shared/schemas/item'
 import { executarComCota } from '../../shared/lib/cota'
 import { gerarId } from '../../shared/lib/id'
 import { todayStr, weekOf } from '../calendario/datas'
@@ -63,18 +68,20 @@ export async function obter(id: string): Promise<Item | undefined> {
 
 /** Cartões do quadro de um projeto, ordenados por coluna e depois por `ordem`. */
 export async function listarCartoes(projetoId: string): Promise<Item[]> {
+  const projeto = await db.items.get(projetoId)
+  const colunas = obterQuadroKanban(projeto?.quadroKanban).colunas
   const itens = await db.items.where('parentId').equals(projetoId).toArray()
   return itens
     .filter((item) => item.deletedAt === undefined)
     .sort((a, b) => {
-      const colunaA = COLUNAS_KANBAN.indexOf(a.coluna ?? 'afazer')
-      const colunaB = COLUNAS_KANBAN.indexOf(b.coluna ?? 'afazer')
+      const colunaA = Math.max(0, colunas.findIndex((coluna) => coluna.id === a.coluna))
+      const colunaB = Math.max(0, colunas.findIndex((coluna) => coluna.id === b.coluna))
       if (colunaA !== colunaB) return colunaA - colunaB
       return (a.ordem ?? 0) - (b.ordem ?? 0)
     })
 }
 
-/** Progresso dos projetos kanban: quantos cartões e quantos em Feito. */
+/** Progresso dos projetos kanban: quantos cartões estão na coluna de conclusão. */
 export async function progressoProjetos(
   ids: string[],
 ): Promise<Map<string, { total: number; feitos: number }>> {
@@ -83,9 +90,11 @@ export async function progressoProjetos(
     const filhos = (await db.items.where('parentId').equals(id).toArray()).filter(
       (item) => item.deletedAt === undefined,
     )
+    const projeto = await db.items.get(id)
+    const colunaConclusao = obterQuadroKanban(projeto?.quadroKanban).colunaConclusao
     mapa.set(id, {
       total: filhos.length,
-      feitos: filhos.filter((item) => item.coluna === 'feito').length,
+      feitos: filhos.filter((item) => item.coluna === colunaConclusao).length,
     })
   }
   return mapa
@@ -99,7 +108,7 @@ export async function listarParaBackup(): Promise<Item[]> {
  * Próxima `ordem` livre na coluna do quadro de um projeto (cartões ordenados
  * por `ordem` crescente; o novo entra no fim). Chamada dentro da transação.
  */
-async function proximaOrdem(coluna: ColunaKanban, projetoId: string): Promise<number> {
+async function proximaOrdem(coluna: string, projetoId: string): Promise<number> {
   const daColuna = await db.items.where('parentId').equals(projetoId).toArray()
   const ordens = daColuna
     .filter((item) => item.coluna === coluna && item.deletedAt === undefined)
@@ -109,7 +118,7 @@ async function proximaOrdem(coluna: ColunaKanban, projetoId: string): Promise<nu
 
 /**
  * Recalcula a conclusão do projeto: concluído quando tem ao menos um cartão e
- * todos estão em Feito. Projeto vazio nunca conclui. Só grava se mudou.
+ * todos estão na coluna de conclusão. Projeto vazio nunca conclui.
  * Deve rodar dentro de uma transação (chamada por criar/mover/excluir cartão).
  */
 async function recalcularConclusaoProjetoTx(projetoId: string, agora: number): Promise<void> {
@@ -118,7 +127,9 @@ async function recalcularConclusaoProjetoTx(projetoId: string, agora: number): P
   const filhos = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
     (item) => item.deletedAt === undefined,
   )
-  const concluido = filhos.length > 0 && filhos.every((item) => item.coluna === 'feito')
+  const colunaConclusao = obterQuadroKanban(projeto.quadroKanban).colunaConclusao
+  const concluido =
+    filhos.length > 0 && filhos.every((item) => item.coluna === colunaConclusao)
   if (projeto.concluido === concluido) return
   const atualizado: Item = { ...projeto, concluido, updatedAt: agora }
   await db.items.put(atualizado)
@@ -141,6 +152,7 @@ export async function criar(entrada: EntradaItem): Promise<string> {
         criadoEm: agora,
         updatedAt: agora,
       }
+      if (tipo === 'kanban') item.quadroKanban = QUADRO_KANBAN_PADRAO
       if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
         item.diasAgendamento = entrada.diasAgendamento
       }
@@ -162,12 +174,18 @@ export async function criarCartao(
   const agora = Date.now()
   await executarComCota(() =>
     db.transaction('rw', db.items, db.outbox, async () => {
+      const projeto = await db.items.get(projetoId)
+      if (projeto === undefined || projeto.deletedAt !== undefined) return
+      const quadro = obterQuadroKanban(projeto.quadroKanban)
+      if (!quadro.colunas.some((itemColuna) => itemColuna.id === coluna)) {
+        throw new Error('A coluna selecionada não existe neste quadro.')
+      }
       const item: Item = {
         id: gerarId(),
         parentId: projetoId,
         titulo: titulo.trim(),
         descricao: descricao.trim(),
-        concluido: coluna === 'feito',
+        concluido: coluna === quadro.colunaConclusao,
         coluna,
         ordem: await proximaOrdem(coluna, projetoId),
         criadoEm: agora,
@@ -198,17 +216,26 @@ export async function atualizarCartao(
   )
 }
 
-/** Reabre o quadro: todos os cartões de Feito voltam pra A Fazer (topo). */
+/** Reabre o quadro: cartões concluídos voltam à primeira coluna não concluída. */
 export async function reabrirQuadro(projetoId: string): Promise<void> {
   const agora = Date.now()
   await executarComCota(() =>
     db.transaction('rw', db.items, db.outbox, async () => {
-      const emFeito = (await db.items.where('parentId').equals(projetoId).toArray())
-        .filter((item) => item.deletedAt === undefined && item.coluna === 'feito')
+      const projeto = await db.items.get(projetoId)
+      if (projeto === undefined || projeto.deletedAt !== undefined) return
+      const quadro = obterQuadroKanban(projeto.quadroKanban)
+      const destino = quadro.colunas.find(
+        (coluna) => coluna.id !== quadro.colunaConclusao,
+      )
+      if (destino === undefined) throw new Error('O quadro precisa de uma coluna não concluída.')
+      const emConclusao = (await db.items.where('parentId').equals(projetoId).toArray())
+        .filter(
+          (item) => item.deletedAt === undefined && item.coluna === quadro.colunaConclusao,
+        )
         .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
-      const paraGravar: Item[] = emFeito.map((item, posicao) => ({
+      const paraGravar: Item[] = emConclusao.map((item, posicao) => ({
         ...item,
-        coluna: 'afazer' as ColunaKanban,
+        coluna: destino.id,
         ordem: posicao,
         concluido: false,
         updatedAt: agora,
@@ -248,6 +275,11 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         // Projeto kanban não tem coluna/ordem próprias (o quadro é dos cartões).
         delete item.coluna
         delete item.ordem
+        if (item.tipo === 'kanban') {
+          item.quadroKanban = atual.quadroKanban ?? QUADRO_KANBAN_PADRAO
+        } else {
+          delete item.quadroKanban
+        }
         // Trocar um projeto pra outro tipo mantém a conclusão automática dele
         // órfã; reabre para o novo mecanismo decidir.
         if (item.tipo !== 'kanban' && atual.tipo === 'kanban') {
@@ -280,14 +312,22 @@ export async function alternarConcluido(item: Item): Promise<void> {
       // Concluindo direto (sem passar pelo "Finalizar"), ainda assim encerra a
       // sessão em curso para o tempo não se perder.
       if (atualizado.concluido) encerrarSessao(atualizado, agora)
-      // Cartão: a conclusão e a coluna andam juntas (Feito ↔ concluído).
+      // Cartão: a conclusão e a coluna de conclusão andam juntas.
       if (atualizado.parentId !== undefined) {
+        const projeto = await db.items.get(atualizado.parentId)
+        const quadro = obterQuadroKanban(projeto?.quadroKanban)
+        const colunaInicial = quadro.colunas.find(
+          (coluna) => coluna.id !== quadro.colunaConclusao,
+        )
+        if (colunaInicial === undefined) {
+          throw new Error('O quadro precisa de uma coluna não concluída.')
+        }
         if (atualizado.concluido) {
-          atualizado.coluna = 'feito'
-          atualizado.ordem = await proximaOrdem('feito', atualizado.parentId)
-        } else if (atualizado.coluna === 'feito') {
-          atualizado.coluna = 'afazer'
-          atualizado.ordem = await proximaOrdem('afazer', atualizado.parentId)
+          atualizado.coluna = quadro.colunaConclusao
+          atualizado.ordem = await proximaOrdem(quadro.colunaConclusao, atualizado.parentId)
+        } else if (atualizado.coluna === quadro.colunaConclusao) {
+          atualizado.coluna = colunaInicial.id
+          atualizado.ordem = await proximaOrdem(colunaInicial.id, atualizado.parentId)
         }
         await db.items.put(atualizado)
         await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
@@ -302,7 +342,7 @@ export async function alternarConcluido(item: Item): Promise<void> {
 
 /**
  * Move um cartão do quadro do projeto para `coluna` na posição `indice`
- * (0 = topo). Recalcula a `ordem` da coluna de destino, mantém Feito ⇔
+ * (0 = topo). Recalcula a `ordem` da coluna de destino, sincroniza o estado de
  * concluído e reavalia a conclusão do projeto dono.
  */
 export async function moverParaColuna(
@@ -316,6 +356,11 @@ export async function moverParaColuna(
       const atual = await db.items.get(id)
       if (atual === undefined || atual.parentId === undefined) return
       const projetoId = atual.parentId
+      const projeto = await db.items.get(projetoId)
+      const quadro = obterQuadroKanban(projeto?.quadroKanban)
+      if (!quadro.colunas.some((itemColuna) => itemColuna.id === coluna)) {
+        throw new Error('A coluna de destino não existe neste quadro.')
+      }
 
       const doProjeto = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
         (item) => item.deletedAt === undefined,
@@ -336,8 +381,7 @@ export async function moverParaColuna(
           ...item,
           coluna,
           ordem: posicao,
-          // Feito é a única coluna que conclui; sair dela reabre o cartão.
-          concluido: coluna === 'feito',
+          concluido: coluna === quadro.colunaConclusao,
         }
         // Só cartão que mudou de fato ganha novo `updatedAt` (e é sincronizado).
         if (mudou) {
@@ -353,8 +397,156 @@ export async function moverParaColuna(
           await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
         }
       }
-      // Mover cartão pode concluir/reabrir o projeto (todos em Feito ⇔ concluído).
+      // Mover cartão pode concluir/reabrir o projeto.
       await recalcularConclusaoProjetoTx(projetoId, agora)
+    }),
+  )
+}
+
+async function salvarQuadroProjetoTx(
+  projeto: Item,
+  quadro: NonNullable<Item['quadroKanban']>,
+  cartoes: Item[],
+  agora: number,
+): Promise<void> {
+  const concluido =
+    cartoes.length > 0 &&
+    cartoes.every((cartao) => cartao.coluna === quadro.colunaConclusao)
+  const atualizado: Item = {
+    ...projeto,
+    quadroKanban: quadro,
+    concluido,
+    updatedAt: agora,
+  }
+  await db.items.put(atualizado)
+  await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+}
+
+export async function adicionarColunaKanban(projetoId: string, titulo: string): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const projeto = await db.items.get(projetoId)
+      if (projeto === undefined || projeto.deletedAt !== undefined || projeto.tipo !== 'kanban') {
+        throw new Error('Projeto Kanban não encontrado.')
+      }
+      const quadro = obterQuadroKanban(projeto.quadroKanban)
+      if (quadro.colunas.length >= 12) throw new Error('O quadro aceita no máximo 12 colunas.')
+      const novaColuna = { id: gerarId(), titulo: titulo.trim() }
+      const novoQuadro = { ...quadro, colunas: [...quadro.colunas, novaColuna] }
+      const cartoes = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
+        (item) => item.deletedAt === undefined,
+      )
+      await salvarQuadroProjetoTx(projeto, novoQuadro, cartoes, agora)
+    }),
+  )
+}
+
+export async function marcarColunaConclusao(
+  projetoId: string,
+  colunaConclusao: ColunaKanban,
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const projeto = await db.items.get(projetoId)
+      if (projeto === undefined || projeto.deletedAt !== undefined || projeto.tipo !== 'kanban') {
+        throw new Error('Projeto Kanban não encontrado.')
+      }
+      const quadro = obterQuadroKanban(projeto.quadroKanban)
+      if (!quadro.colunas.some((coluna) => coluna.id === colunaConclusao)) {
+        throw new Error('A coluna selecionada não existe neste quadro.')
+      }
+      if (quadro.colunaConclusao === colunaConclusao) return
+
+      const novoQuadro = { ...quadro, colunaConclusao }
+      const cartoes = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
+        (item) => item.deletedAt === undefined,
+      )
+      const atualizados = cartoes.map((cartao) => {
+        const concluido = cartao.coluna === colunaConclusao
+        if (cartao.concluido === concluido) return cartao
+        const atualizado = { ...cartao, concluido, updatedAt: agora }
+        return atualizado
+      })
+      const alterados = atualizados.filter((cartao, indice) => cartao !== cartoes[indice])
+      if (alterados.length > 0) {
+        await db.items.bulkPut(alterados)
+        for (const cartao of alterados) {
+          await db.outbox.add(novaMutacao(TABELA, cartao, 'upsert', agora))
+        }
+      }
+      await salvarQuadroProjetoTx(projeto, novoQuadro, atualizados, agora)
+    }),
+  )
+}
+
+export async function removerColunaKanban(
+  projetoId: string,
+  colunaRemovida: ColunaKanban,
+  colunaDestino: ColunaKanban,
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const projeto = await db.items.get(projetoId)
+      if (
+        projeto === undefined ||
+        projeto.deletedAt !== undefined ||
+        projeto.tipo !== 'kanban'
+      ) {
+        throw new Error('Projeto Kanban não encontrado.')
+      }
+      const quadro = obterQuadroKanban(projeto.quadroKanban)
+      if (quadro.colunas.length <= 2) {
+        throw new Error('O quadro precisa manter pelo menos duas colunas.')
+      }
+      if (
+        colunaRemovida === colunaDestino ||
+        !quadro.colunas.some((coluna) => coluna.id === colunaRemovida) ||
+        !quadro.colunas.some((coluna) => coluna.id === colunaDestino)
+      ) {
+        throw new Error('Escolha uma coluna de destino válida.')
+      }
+
+      const novoQuadro = {
+        colunas: quadro.colunas.filter((coluna) => coluna.id !== colunaRemovida),
+        colunaConclusao:
+          quadro.colunaConclusao === colunaRemovida ? colunaDestino : quadro.colunaConclusao,
+      }
+      const cartoes = (await db.items.where('parentId').equals(projetoId).toArray()).filter(
+        (item) => item.deletedAt === undefined,
+      )
+      const destinoOrdenado = cartoes
+        .filter((cartao) => cartao.coluna === colunaDestino || cartao.coluna === colunaRemovida)
+        .sort((a, b) => {
+          if (a.coluna !== b.coluna) return a.coluna === colunaDestino ? -1 : 1
+          return (a.ordem ?? 0) - (b.ordem ?? 0)
+        })
+      const ordemDestino = new Map(
+        destinoOrdenado.map((cartao, indice) => [cartao.id, indice]),
+      )
+      const atualizados = cartoes.map((cartao) => {
+        const coluna = cartao.coluna === colunaRemovida ? colunaDestino : cartao.coluna
+        const ordem = ordemDestino.get(cartao.id) ?? cartao.ordem
+        const concluido = coluna === novoQuadro.colunaConclusao
+        if (
+          coluna === cartao.coluna &&
+          ordem === cartao.ordem &&
+          concluido === cartao.concluido
+        ) {
+          return cartao
+        }
+        return { ...cartao, coluna, ordem, concluido, updatedAt: agora }
+      })
+      const alterados = atualizados.filter((cartao, indice) => cartao !== cartoes[indice])
+      if (alterados.length > 0) {
+        await db.items.bulkPut(alterados)
+        for (const cartao of alterados) {
+          await db.outbox.add(novaMutacao(TABELA, cartao, 'upsert', agora))
+        }
+      }
+      await salvarQuadroProjetoTx(projeto, novoQuadro, atualizados, agora)
     }),
   )
 }

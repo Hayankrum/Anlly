@@ -13,21 +13,65 @@ export const LIMITE_DIAS_AGENDAMENTO = 400
  * - `padrao` (default): gesto "segure para concluir" — o mecanismo original.
  * - `cronometro`: cronômetro — Iniciar/Pausar/Finalizar, acumulando o tempo.
  * - `kanban`: projeto com quadro embutido no detalhe — conclui quando todos os
- *   seus cartões (itens com `parentId` deste item) estão na coluna "Feito".
+ *   seus cartões (itens com `parentId` deste item) estão na coluna de conclusão.
  */
 export const TIPOS_ITEM = ['padrao', 'cronometro', 'kanban'] as const
 export const tipoItemSchema = z.enum(TIPOS_ITEM)
 export type TipoItem = z.infer<typeof tipoItemSchema>
 
-/** Colunas fixas do quadro Kanban, na ordem em que aparecem. */
+/** Colunas iniciais do quadro novo e fallback para quadros antigos. */
 export const COLUNAS_KANBAN = ['afazer', 'fazendo', 'feito'] as const
-export const colunaKanbanSchema = z.enum(COLUNAS_KANBAN)
+export const colunaKanbanSchema = z.string().min(1).max(80)
 export type ColunaKanban = z.infer<typeof colunaKanbanSchema>
 
 export const ROTULOS_COLUNA: Record<ColunaKanban, string> = {
   afazer: 'A Fazer',
   fazendo: 'Fazendo',
   feito: 'Feito',
+}
+
+export const colunaQuadroSchema = z.object({
+  id: colunaKanbanSchema,
+  titulo: z.string().trim().min(1).max(40),
+})
+export type ColunaKanbanDetalhe = z.infer<typeof colunaQuadroSchema>
+
+export const quadroKanbanSchema = z
+  .object({
+    colunas: z.array(colunaQuadroSchema).min(2).max(12),
+    colunaConclusao: colunaKanbanSchema,
+  })
+  .superRefine((quadro, contexto) => {
+    const ids = quadro.colunas.map((coluna) => coluna.id)
+    if (new Set(ids).size !== ids.length) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['colunas'],
+        message: 'Os identificadores das colunas devem ser únicos.',
+      })
+    }
+    if (!ids.includes(quadro.colunaConclusao)) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['colunaConclusao'],
+        message: 'A coluna de conclusão deve existir no quadro.',
+      })
+    }
+  })
+
+export type QuadroKanban = z.infer<typeof quadroKanbanSchema>
+
+export const QUADRO_KANBAN_PADRAO: QuadroKanban = {
+  colunas: [
+    { id: 'afazer', titulo: 'A Fazer' },
+    { id: 'fazendo', titulo: 'Fazendo' },
+    { id: 'feito', titulo: 'Feito' },
+  ],
+  colunaConclusao: 'feito',
+}
+
+export function obterQuadroKanban(quadro?: QuadroKanban): QuadroKanban {
+  return quadro ?? QUADRO_KANBAN_PADRAO
 }
 
 export const itemSchema = z.object({
@@ -44,6 +88,8 @@ export const itemSchema = z.object({
   parentId: z.string().min(1).optional(),
   /** Kanban (cartão): coluna atual do quadro. Ausente = `afazer`. */
   coluna: colunaKanbanSchema.optional(),
+  /** Kanban (projeto): colunas ordenadas e a coluna que conclui os cartões. */
+  quadroKanban: quadroKanbanSchema.optional(),
   /** Kanban (cartão): posição dentro da coluna (menor = mais ao topo). */
   ordem: z.number().int().nonnegative().optional(),
   /** Opcional: dias do agendamento (YYYY-MM-DD, sem fuso). Um item pode marcar vários. */

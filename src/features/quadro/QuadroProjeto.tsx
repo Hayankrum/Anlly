@@ -1,20 +1,26 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import {
   DndContext,
   PointerSensor,
   closestCorners,
+  pointerWithin,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import { Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Input, TextArea } from '../../shared/ui/Input'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
-import { COLUNAS_KANBAN, ROTULOS_COLUNA, type ColunaKanban } from '@shared/schemas/item'
+import {
+  obterQuadroKanban,
+  type ColunaKanban,
+  type Item as ItemCompartilhado,
+} from '@shared/schemas/item'
 import type { Item } from '../../db/schema'
 import * as itemsRepo from '../items/items.repo'
 import { useCartoes } from '../items/useItems'
@@ -33,11 +39,30 @@ function colunaDe(id: string): ColunaKanban | null {
   return ehColuna(id) ? (id.slice('coluna:'.length) as ColunaKanban) : null
 }
 
-function agruparPorColuna(itens: Item[]): Map<ColunaKanban, Item[]> {
+const detectarColisao: CollisionDetection = (argumentos) => {
+  const candidatos = argumentos.droppableContainers.filter(
+    (container) => container.id !== argumentos.active.id,
+  )
+  const argumentosSemOrigem = { ...argumentos, droppableContainers: candidatos }
+  const sobPonteiro = pointerWithin(argumentosSemOrigem)
+  const cartaoAlvo = sobPonteiro.find(({ id }) => !ehColuna(String(id)))
+  if (cartaoAlvo) return [cartaoAlvo]
+
+  const colunaAlvo = sobPonteiro.find(({ id }) => ehColuna(String(id)))
+  return colunaAlvo ? [colunaAlvo] : closestCorners(argumentosSemOrigem)
+}
+
+function agruparPorColuna(
+  itens: Item[],
+  colunas: { id: string; titulo: string }[],
+): Map<ColunaKanban, Item[]> {
   const mapa = new Map<ColunaKanban, Item[]>()
-  for (const coluna of COLUNAS_KANBAN) mapa.set(coluna, [])
+  for (const coluna of colunas) mapa.set(coluna.id, [])
   for (const item of itens) {
-    mapa.get(item.coluna ?? 'afazer')?.push(item)
+    const colunaId = item.coluna ?? colunas[0]?.id
+    const colunaItens = colunaId === undefined ? undefined : mapa.get(colunaId)
+    if (colunaItens) colunaItens.push(item)
+    else if (colunas[0]) mapa.get(colunas[0].id)?.push(item)
   }
   return mapa
 }
@@ -53,25 +78,35 @@ function colunaDoCartao(mapa: Map<ColunaKanban, Item[]>, idCartao: string): Colu
 interface QuadroProjetoProps {
   projetoId: string
   podeEditar: boolean
+  config: ItemCompartilhado['quadroKanban']
 }
 
 /** Quadro kanban embutido na página de detalhe do projeto. */
-export function QuadroProjeto({ projetoId, podeEditar }: QuadroProjetoProps) {
+export function QuadroProjeto({ projetoId, podeEditar, config }: QuadroProjetoProps) {
   const { mostrar } = useToast()
   const [edicao, setEdicao] = useState<Edicao | null>(null)
   const [cartaoExcluir, setCartaoExcluir] = useState<Item | null>(null)
+  const [colunaRemover, setColunaRemover] = useState<string | null>(null)
+  const [adicionandoColuna, setAdicionandoColuna] = useState(false)
+  const [tituloColuna, setTituloColuna] = useState('')
+  const [erroColuna, setErroColuna] = useState<string | null>(null)
   const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
   const [erro, setErro] = useState<string | null>(null)
 
   const cartoes = useCartoes(projetoId)
+  const quadro = obterQuadroKanban(config)
+  const colunaRemoverConfig = quadro.colunas.find((coluna) => coluna.id === colunaRemover)
 
   // Distância de 8px evita que um toque vire arrasto no mobile.
   const sensores = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
-  const porColuna = useMemo(() => agruparPorColuna(cartoes), [cartoes])
+  const porColuna = useMemo(
+    () => agruparPorColuna(cartoes, quadro.colunas),
+    [cartoes, quadro.colunas],
+  )
 
-  function abrirCriacao(coluna: ColunaKanban) {
+  function abrirCriacao(coluna: string) {
     setTitulo('')
     setDescricao('')
     setErro(null)
@@ -115,6 +150,53 @@ export function QuadroProjeto({ projetoId, podeEditar }: QuadroProjetoProps) {
     } catch (erroCatch) {
       avisarErro(erroCatch)
     }
+
+  }
+
+  async function salvarNovaColuna(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+    const nome = tituloColuna.trim()
+    if (!nome) {
+      setErroColuna('Informe um nome para a coluna.')
+      return
+    }
+    if (!podeEditar) return
+    try {
+      await itemsRepo.adicionarColunaKanban(projetoId, nome)
+      setAdicionandoColuna(false)
+      setTituloColuna('')
+      setErroColuna(null)
+      mostrar('Coluna adicionada', { tipo: 'sucesso' })
+    } catch (erroCatch) {
+      avisarErro(erroCatch)
+    }
+  }
+
+  async function marcarConclusao(colunaId: string) {
+    if (!podeEditar) return
+    try {
+      await itemsRepo.marcarColunaConclusao(projetoId, colunaId)
+      mostrar('Coluna de conclusão atualizada', { tipo: 'sucesso' })
+    } catch (erroCatch) {
+      avisarErro(erroCatch)
+    }
+  }
+
+  async function removerColuna(destinoId: string) {
+    if (!podeEditar || colunaRemover === null) return
+    try {
+      await itemsRepo.removerColunaKanban(projetoId, colunaRemover, destinoId)
+      const destino = quadro.colunas.find((coluna) => coluna.id === destinoId)
+      setColunaRemover(null)
+      mostrar(
+        colunaRemover === quadro.colunaConclusao
+          ? `${destino?.titulo ?? 'Coluna'} agora é a coluna de conclusão`
+          : 'Coluna removida e cartões movidos',
+        { tipo: 'sucesso' },
+      )
+    } catch (erroCatch) {
+      avisarErro(erroCatch)
+    }
   }
 
   async function alternar(item: Item) {
@@ -137,7 +219,9 @@ export function QuadroProjeto({ projetoId, podeEditar }: QuadroProjetoProps) {
     try {
       if (edicao.modo === 'criar') {
         await itemsRepo.criarCartao(projetoId, edicao.coluna, tituloLimpo, descricao.trim())
-        mostrar(`Cartão criado em ${ROTULOS_COLUNA[edicao.coluna]}`, { tipo: 'sucesso' })
+        const nomeColuna =
+          quadro.colunas.find((coluna) => coluna.id === edicao.coluna)?.titulo ?? 'a coluna'
+        mostrar(`Cartão criado em ${nomeColuna}`, { tipo: 'sucesso' })
       } else {
         await itemsRepo.atualizarCartao(edicao.cartao.id, tituloLimpo, descricao.trim())
         mostrar('Cartão atualizado', { tipo: 'sucesso' })
@@ -163,23 +247,102 @@ export function QuadroProjeto({ projetoId, podeEditar }: QuadroProjetoProps) {
     <>
       <DndContext
         sensors={sensores}
-        collisionDetection={closestCorners}
+        collisionDetection={detectarColisao}
         onDragEnd={(evento) => void aoTerminarArrasto(evento)}
       >
-        <div className="quadro">
-          {COLUNAS_KANBAN.map((coluna) => (
-            <ColunaQuadro
-              key={coluna}
-              coluna={coluna}
-              itens={porColuna.get(coluna) ?? []}
-              podeEditar={podeEditar}
-              aoAbrir={abrirEdicao}
-              aoAlternar={(item) => void alternar(item)}
-              aoCriar={(c) => abrirCriacao(c)}
-            />
-          ))}
+        <div className="quadro-projeto">
+          <div
+            className="quadro"
+            style={{
+              '--kanban-colunas': quadro.colunas.length + (podeEditar ? 1 : 0),
+            } as CSSProperties}
+          >
+            {quadro.colunas.map((coluna) => (
+              <ColunaQuadro
+                key={coluna.id}
+                coluna={coluna}
+                itens={porColuna.get(coluna.id) ?? []}
+                podeEditar={podeEditar}
+                ehConclusao={coluna.id === quadro.colunaConclusao}
+                podeRemover={quadro.colunas.length > 2}
+                aoAbrir={abrirEdicao}
+                aoAlternar={(item) => void alternar(item)}
+                aoCriar={(c) => abrirCriacao(c)}
+                aoMarcarConclusao={(id) => void marcarConclusao(id)}
+                aoRemover={setColunaRemover}
+              />
+            ))}
+            {podeEditar ? (
+              <button
+                type="button"
+                className="quadro-coluna-cabecalho quadro-coluna-adicionar"
+                onClick={() => {
+                  setTituloColuna('')
+                  setErroColuna(null)
+                  setAdicionandoColuna(true)
+                }}
+                disabled={quadro.colunas.length >= 12}
+              >
+                <Plus size={16} aria-hidden="true" />
+                <span>Adicionar coluna</span>
+              </button>
+            ) : null}
+          </div>
         </div>
       </DndContext>
+
+      <Modal
+        aberto={adicionandoColuna}
+        titulo="Adicionar coluna"
+        onFechar={() => setAdicionandoColuna(false)}
+        largura="estreito"
+      >
+        <form onSubmit={(evento) => void salvarNovaColuna(evento)} noValidate>
+          <Input
+            label="Nome da coluna"
+            value={tituloColuna}
+            onChange={(evento) => setTituloColuna(evento.target.value)}
+            placeholder="Ex.: Em revisão"
+            maxLength={40}
+            erro={erroColuna ?? undefined}
+            required
+            autoFocus
+          />
+          <div className="formulario-acoes">
+            <Button variante="secundario" onClick={() => setAdicionandoColuna(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit">Adicionar</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        aberto={colunaRemoverConfig !== undefined}
+        titulo={`Remover coluna ${colunaRemoverConfig?.titulo ?? ''}`}
+        onFechar={() => setColunaRemover(null)}
+        largura="estreito"
+      >
+        <div className="quadro-remover-coluna">
+          <p>
+            Os cartões desta coluna serão movidos para a coluna escolhida.
+            {colunaRemover === quadro.colunaConclusao
+              ? ' A coluna de destino também passará a ser a coluna de conclusão.'
+              : ''}
+          </p>
+          {quadro.colunas
+            .filter((coluna) => coluna.id !== colunaRemover)
+            .map((coluna) => (
+              <Button
+                key={coluna.id}
+                variante="secundario"
+                onClick={() => void removerColuna(coluna.id)}
+              >
+                Mover para {coluna.titulo}
+              </Button>
+            ))}
+        </div>
+      </Modal>
 
       {edicao ? (
         <Modal

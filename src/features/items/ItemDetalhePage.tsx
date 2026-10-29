@@ -5,17 +5,15 @@ import { ArrowLeft, Check, Pause, Pencil, Play, RotateCcw, Trash2 } from 'lucide
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
-import { formatarDataHora, formatarDataISO, formatarDuracao } from '../../shared/lib/date'
+import { formatarDataHora, formatarDuracao } from '../../shared/lib/date'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { useCronometro } from '../../shared/lib/useCronometro'
 import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
 import { usePodeEditar } from '../conta/usePodeEditar'
-import { useSessao } from '../conta/useSessao'
 import type { Item } from '../../db/schema'
 import * as itemsRepo from './items.repo'
 import type { EntradaItem } from './items.repo'
 import { ItemForm } from './ItemForm'
-import { useCartoes } from './useItems'
 import { QuadroProjeto } from '../quadro/QuadroProjeto'
 import './items.css'
 
@@ -31,8 +29,6 @@ export function ItemDetalhePage() {
   const navigate = useNavigate()
   const { mostrar } = useToast()
   const podeEditar = usePodeEditar()
-  const sessao = useSessao()
-  const autor = sessao?.nome?.trim() || sessao?.email || null
 
   const [editando, setEditando] = useState(false)
   const [confirmandoExcluir, setConfirmandoExcluir] = useState(false)
@@ -49,11 +45,6 @@ export function ItemDetalhePage() {
   const item = leitura.item
   const ehCronometro = item?.tipo === 'cronometro'
   const ehKanban = item?.tipo === 'kanban' && item.parentId === undefined
-
-  // Quadro do projeto: cartões vivem no detalhe (só projetos têm quadro).
-  const cartoes = useCartoes(ehKanban ? item.id : '')
-  const totalCartoes = cartoes.length
-  const cartoesFeitos = cartoes.filter((cartao) => cartao.coluna === 'feito').length
 
   // Tica a cada segundo enquanto o cronômetro estiver rodando.
   const tempoMs = useCronometro(item?.tempoDecorridoMs, item?.timerIniciadoEm)
@@ -109,7 +100,7 @@ export function ItemDetalhePage() {
     }
   }
 
-  /** Projeto kanban: todos os cartões de Feito voltam pra A Fazer. */
+  /** Projeto kanban: cartões da coluna de conclusão voltam para uma coluna aberta. */
   async function reabrirQuadro() {
     if (!podeEditar || !item) return
     try {
@@ -218,7 +209,7 @@ export function ItemDetalhePage() {
   )
 
   return (
-    <div className="pagina">
+    <div className={`pagina${ehKanban ? ' pagina--kanban' : ''}`}>
       <div className="pagina-cabecalho pagina-cabecalho--detalhe">
         <div>
           <p className="pagina-subtitulo">
@@ -252,32 +243,10 @@ export function ItemDetalhePage() {
       </div>
 
       <section className="cartao item-detalhe" aria-label="Detalhes do item">
-        {autor ? (
-          <p className="item-autor">
-            Publicado por <strong>{autor}</strong>
-          </p>
-        ) : null}
-        <p className={`item-situacao${item.concluido ? ' item-situacao--ok' : ''}`}>
-          {item.concluido ? 'Concluído' : 'Pendente'}
-        </p>
-        {ehKanban ? (
-          <p className="item-agendado">
-            Quadro · {cartoesFeitos} de {totalCartoes} cartões em Feito
-          </p>
-        ) : null}
-        {item.diasAgendamento && item.diasAgendamento.length > 0 ? (
-          <p className="item-agendado">
-            Agendado para {item.diasAgendamento.map(formatarDataISO).join(', ')}
-            {item.horaAgendamento ? ` às ${item.horaAgendamento}` : ''}
-          </p>
-        ) : null}
         <p className="item-detalhe-descricao">
           {item.descricao ? item.descricao : 'Sem descrição.'}
         </p>
-        <p className="item-data">criado em {formatarDataHora(item.criadoEm)}</p>
-        {item.updatedAt !== item.criadoEm ? (
-          <p className="item-data">atualizado em {formatarDataHora(item.updatedAt)}</p>
-        ) : null}
+        <p className="item-data">Criado em {formatarDataHora(item.criadoEm)}</p>
       </section>
 
       {ehKanban ? (
@@ -288,7 +257,11 @@ export function ItemDetalhePage() {
               Reabrir quadro
             </button>
           ) : null}
-          <QuadroProjeto projetoId={item.id} podeEditar={podeEditar} />
+          <QuadroProjeto
+            projetoId={item.id}
+            podeEditar={podeEditar}
+            config={item.quadroKanban}
+          />
         </>
       ) : item.concluido ? (
         conteudoConcluido

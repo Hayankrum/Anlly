@@ -98,10 +98,11 @@ model Item {
   // item normal ou o próprio projeto). Projetos concluem quando todos os
   // cartões estão na coluna 'feito'.
   parentId  String?
-  // Kanban (cartão): coluna fixa do quadro ('afazer' | 'fazendo' | 'feito') e a
-  // posição dentro dela (menor = mais ao topo). Null em itens sem quadro.
+  // Kanban (cartão): id da coluna do quadro e posição dentro dela.
   coluna    String?
   ordem     Int?
+  // Kanban (projeto): colunas ordenadas e a coluna que representa conclusão.
+  quadroKanban Json?
   // Agendamento opcional: vários dias (YYYY-MM-DD) + um horário (HH:mm) que
   // vale para todos eles.
   diasAgendamento String[]

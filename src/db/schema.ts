@@ -27,6 +27,6 @@ export type Tema = 'claro' | 'escuro' | 'sistema'
 
 export type PeriodoItens = 'dia' | 'semana' | 'mes'
 
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 
 export const CHAVE_SYNC_GLOBAL = 'global'

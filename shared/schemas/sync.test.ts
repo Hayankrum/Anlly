@@ -25,6 +25,27 @@ describe('mutacaoSchema', () => {
     expect(resultado.success).toBe(true)
   })
 
+  it('aceita configuração de colunas personalizadas no payload sincronizado', () => {
+    const resultado = mutacaoSchema.safeParse({
+      id: 'mut-colunas',
+      tabela: 'items',
+      registroId: 'item1',
+      operacao: 'upsert',
+      payload: {
+        ...payload(),
+        tipo: 'kanban',
+        quadroKanban: {
+          colunas: [
+            { id: 'ideias', titulo: 'Ideias' },
+            { id: 'concluido', titulo: 'Concluído' },
+          ],
+          colunaConclusao: 'concluido',
+        },
+      },
+    })
+    expect(resultado.success).toBe(true)
+  })
+
   it('aceita delete válido', () => {
     const resultado = mutacaoSchema.safeParse({
       id: 'mut2',

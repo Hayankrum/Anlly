@@ -104,9 +104,57 @@ describe('itemSchema', () => {
     }
   })
 
-  it('rejeita coluna desconhecida', () => {
+  it('aceita coluna personalizada', () => {
     expect(
       itemSchema.safeParse(itemBase({ tipo: 'kanban', coluna: 'concluido' })).success,
+    ).toBe(true)
+  })
+
+  it('aceita configuração de quadro com coluna de conclusão existente', () => {
+    expect(
+      itemSchema.safeParse(
+        itemBase({
+          tipo: 'kanban',
+          quadroKanban: {
+            colunas: [
+              { id: 'todo', titulo: 'A fazer' },
+              { id: 'review', titulo: 'Em revisão' },
+            ],
+            colunaConclusao: 'review',
+          },
+        }),
+      ).success,
+    ).toBe(true)
+  })
+
+  it('rejeita configuração de quadro sem coluna de conclusão válida', () => {
+    expect(
+      itemSchema.safeParse(
+        itemBase({
+          tipo: 'kanban',
+          quadroKanban: {
+            colunas: [{ id: 'todo', titulo: 'A fazer' }],
+            colunaConclusao: 'feito',
+          },
+        }),
+      ).success,
+    ).toBe(false)
+  })
+
+  it('rejeita identificadores repetidos no quadro', () => {
+    expect(
+      itemSchema.safeParse(
+        itemBase({
+          tipo: 'kanban',
+          quadroKanban: {
+            colunas: [
+              { id: 'todo', titulo: 'A fazer' },
+              { id: 'todo', titulo: 'Em revisão' },
+            ],
+            colunaConclusao: 'todo',
+          },
+        }),
+      ).success,
     ).toBe(false)
   })
 

@@ -3,9 +3,9 @@ import { CHAVES, limparExceto, definir as definirConfig } from '../../db/config.
 import * as syncState from '../../db/sync-state.repo'
 import { SCHEMA_VERSION, type Item } from '../../db/schema'
 import {
-  COLUNAS_KANBAN,
   TIPOS_ITEM,
-  type ColunaKanban,
+  colunaKanbanSchema,
+  quadroKanbanSchema,
   type TipoItem,
 } from '@shared/schemas/item'
 import * as itemsRepo from '../../features/items/items.repo'
@@ -80,12 +80,15 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
   if (typeof item.parentId === 'string' && item.parentId !== '') {
     normalizado.parentId = item.parentId
   }
-  if ((COLUNAS_KANBAN as readonly string[]).includes(item.coluna as string)) {
-    normalizado.coluna = item.coluna as ColunaKanban
+  const coluna = colunaKanbanSchema.safeParse(item.coluna)
+  if (coluna.success) {
+    normalizado.coluna = coluna.data
     if (typeof item.ordem === 'number' && Number.isFinite(item.ordem)) {
       normalizado.ordem = item.ordem
     }
   }
+  const quadroKanban = quadroKanbanSchema.safeParse(item.quadroKanban)
+  if (quadroKanban.success) normalizado.quadroKanban = quadroKanban.data
   return normalizado
 }
 

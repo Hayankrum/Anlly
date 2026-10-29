@@ -200,6 +200,10 @@
   overflow-wrap: anywhere;
 }
 
+.pagina--kanban {
+  min-height: calc(100dvh - 120px);
+}
+
 .item-detalhe-acoes {
   display: flex;
   flex: 0 0 auto;
@@ -255,7 +259,12 @@
 .item-detalhe {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding: 12px;
+}
+
+.item-detalhe > p {
+  margin: 0;
 }
 
 .item-cronometro {
@@ -417,29 +426,9 @@
 }
 
 .item-detalhe-descricao {
+  line-height: 1.4;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.item-autor {
-  font-size: 0.85rem;
-  color: var(--cor-texto-suave);
-  overflow-wrap: anywhere;
-}
-
-.item-situacao {
-  align-self: flex-start;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--cor-superficie-2);
-  color: var(--cor-texto-suave);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.item-situacao--ok {
-  background: color-mix(in srgb, var(--cor-sucesso) 16%, transparent);
-  color: var(--cor-sucesso);
 }
 
 .formulario-acoes {

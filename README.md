@@ -103,6 +103,9 @@ Regras de camada do cliente:
 - Sync: `POST /api/sync/push` idempotente por id de mutação (LWW por
   `updatedAt`, `serverVersion` = `serverSeq`); `GET /api/sync/pull?cursor=N`
   paginado com cursor monotônico **por usuário**. Sessão better-auth obrigatória.
+- Quadros Kanban: cada projeto salva e sincroniza suas colunas; é possível
+  adicionar/remover colunas, escolher qual conclui cartões e mover os cartões
+  de uma coluna removida para outra.
 - Conta (`features/conta/`): tela em `/conta` (entrar/criar/sair via
   `/api/auth/*`), indicador de fase do sync no TopNav (`useSyncStatus`) e o
   guarda de troca de conta — ao conectar, `conectar()` enfileira na outbox os
