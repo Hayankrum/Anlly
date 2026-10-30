@@ -2,6 +2,7 @@ import { createHashRouter, Navigate } from 'react-router-dom'
 import { AppShell } from './layout/AppShell'
 import { HomePage } from '../features/home/HomePage'
 import { ItemDetalhePage } from '../features/items/ItemDetalhePage'
+import { ItensPage } from '../features/items/ItensPage'
 import { CalendarioPage } from '../features/calendario/CalendarioPage'
 import { AboutPage } from '../features/about/AboutPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
@@ -15,7 +16,7 @@ export const router = createHashRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'itens', element: <Navigate to="/calendario" replace /> },
+      { path: 'itens', element: <ItensPage /> },
       { path: 'itens/:id', element: <ItemDetalhePage /> },
       { path: 'calendario', element: <CalendarioPage /> },
       { path: 'conta', element: <ContaPage /> },

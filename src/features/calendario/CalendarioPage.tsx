@@ -1,14 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
-import { Modal } from '../../shared/ui/Modal'
-import { useToast } from '../../shared/ui/Toast'
-import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { useItems } from '../items/useItems'
 import { usePodeEditar } from '../conta/usePodeEditar'
-import * as itemsRepo from '../items/items.repo'
-import type { EntradaItem } from '../items/items.repo'
-import { ItemForm } from '../items/ItemForm'
 import { buildItemDia } from './itens-dia'
 import { useCalendar } from './useCalendar'
 import { MesCalendario } from './MesCalendario'
@@ -35,13 +28,10 @@ export function CalendarioPage() {
   const itensDia = useMemo(() => buildItemDia(itens), [itens])
   const calendar = useCalendar(itensDia)
 
-  const { mostrar } = useToast()
-
   const [vista, setVista] = useState<VistaCalendario>('mes')
   const [vistaAno, setVistaAno] = useState(false)
   /** true = o mapa de horas está filtrado no dia marcado (o calendário continua visível). */
   const [filtrandoDia, setFiltrandoDia] = useState(false)
-  const [criando, setCriando] = useState(false)
 
   const dayItems = calendar.dayItems
   const weekItems = calendar.weekItems
@@ -76,25 +66,6 @@ export function CalendarioPage() {
     },
     [calendar, filtrandoDia],
   )
-
-  async function salvarNovo(entrada: EntradaItem) {
-    if (!podeEditar) return
-    try {
-      await itemsRepo.criar(entrada)
-      setCriando(false)
-      mostrar('Item criado', { tipo: 'sucesso' })
-    } catch (erro) {
-      if (erro instanceof ErroCotaExcedida) {
-        mostrar(erro.message, {
-          tipo: 'erro',
-          duracao: 10000,
-          acao: { rotulo: 'Ver armazenamento', aoClicar: () => navigate('/config') },
-        })
-        return
-      }
-      mostrar('Não foi possível criar o item', { tipo: 'erro' })
-    }
-  }
 
   if (!podeEditar) {
     return (
@@ -269,25 +240,6 @@ export function CalendarioPage() {
         </>
       )}
 
-      {criando ? null : (
-        <button
-          type="button"
-          className="fab"
-          aria-label="Novo item"
-          onClick={() => setCriando(true)}
-        >
-          <Plus size={26} aria-hidden="true" />
-        </button>
-      )}
-
-      <Modal
-        aberto={criando}
-        titulo="Novo item"
-        onFechar={() => setCriando(false)}
-        largura="estreito"
-      >
-        {criando ? <ItemForm aoCancelar={() => setCriando(false)} aoSalvar={salvarNovo} /> : null}
-      </Modal>
     </div>
   )
 }

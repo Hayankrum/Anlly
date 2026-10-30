@@ -1,0 +1,67 @@
+.itens-pagina {
+  gap: 20px;
+}
+
+.itens-secao {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.itens-secao:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.itens-secao-cabecalho {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.itens-secao-titulo {
+  color: var(--cor-texto);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.itens-lista-horizontal {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+}
+
+.itens-lista-horizontal li {
+  flex: 0 0 auto;
+}
+
+.itens-botao {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-acento);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.itens-botao:hover {
+  border-color: var(--cor-acento);
+  background: var(--cor-hover);
+}
+
+.itens-botao:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}

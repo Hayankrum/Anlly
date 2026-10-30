@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, House, UserRound } from 'lucide-react'
+import { CalendarDays, House, List, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface LinkNavegacao {
@@ -11,6 +11,7 @@ interface LinkNavegacao {
 
 const LINKS: LinkNavegacao[] = [
   { to: '/', rotulo: 'Início', icone: House, exato: true },
+  { to: '/itens', rotulo: 'Itens', icone: List },
   { to: '/calendario', rotulo: 'Agenda', icone: CalendarDays },
   { to: '/conta', rotulo: 'Conta', icone: UserRound },
 ]
