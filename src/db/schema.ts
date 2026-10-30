@@ -1,8 +1,9 @@
 import type { Item } from '@shared/schemas/item'
+import type { Modelo } from '@shared/schemas/modelo'
 import type { Mutacao, OperacaoOutbox } from '@shared/schemas/outbox'
 import type { SessaoLocal } from '@shared/schemas/usuario'
 
-export type { Item, OperacaoOutbox, SessaoLocal }
+export type { Item, Modelo, OperacaoOutbox, SessaoLocal }
 
 export type ValorConfig = string | number | boolean | null
 
@@ -27,6 +28,6 @@ export type Tema = 'claro' | 'escuro' | 'sistema'
 
 export type PeriodoItens = 'dia' | 'semana' | 'mes'
 
-export const SCHEMA_VERSION = 6
+export const SCHEMA_VERSION = 8
 
 export const CHAVE_SYNC_GLOBAL = 'global'

@@ -123,6 +123,7 @@ export function CalendarioMulti({ valor, aoSelecionar, rotuloId }: CalendarioMul
           }
           const dia = Number(iso.slice(8, 10))
           const selecionado = conjunto.has(iso)
+          const passado = iso < hoje
           return (
             <button
               key={iso}
@@ -136,6 +137,7 @@ export function CalendarioMulti({ valor, aoSelecionar, rotuloId }: CalendarioMul
                 .join(' ')}
               aria-pressed={selecionado}
               aria-label={`${dia} de ${NOMES_MES[vista.mes1 - 1]}`}
+              disabled={passado}
               onClick={() => alternar(iso)}
             >
               {dia}

@@ -25,9 +25,12 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
   const concluido = item.concluido
   const ehCronometro = item.tipo === 'cronometro'
   const ehProjeto = item.tipo === 'kanban'
+  const ehLista = item.tipo === 'lista'
 
   const { progresso, segurando, propsSegurar } = useSegurarParaConcluir({
-    aoConcluir: () => aoConcluir(item),
+    aoConcluir: () => {
+      if (!ehLista) aoConcluir(item)
+    },
     aoTocar: () => aoAbrir(item),
   })
 
@@ -44,12 +47,22 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
     item.titulo,
     metaDoItem(item),
     concluido ? 'concluído' : 'pendente',
-    ehProjeto ? 'projeto com quadro' : ehCronometro ? 'tipo cronômetro' : 'tipo segurar para concluir',
+    ehProjeto
+      ? 'projeto com quadro'
+      : ehCronometro
+        ? 'tipo cronômetro'
+        : ehLista
+          ? 'lista de subitens'
+          : 'tipo segurar para concluir',
     concluido
-      ? 'segure para desfazer a conclusão'
+      ? ehLista
+        ? 'abra a lista para desmarcar subitens'
+        : 'segure para desfazer a conclusão'
       : ehProjeto
         ? 'toque para abrir o projeto'
-        : 'toque para ver detalhes, segure 2s para concluir',
+        : ehLista
+          ? 'toque para marcar os subitens'
+          : 'toque para ver detalhes, segure 2s para concluir',
   ]
     .filter(Boolean)
     .join(', ')

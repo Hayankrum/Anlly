@@ -16,12 +16,13 @@ const TABELA = 'items'
 export async function enfileirarItensParaSync(): Promise<number> {
   let enfileiradas = 0
   await executarComCota(() =>
-    db.transaction('rw', db.items, db.outbox, async () => {
+    db.transaction('rw', db.items, db.modelos, db.outbox, async () => {
       const pendentes = new Set(
         (await db.outbox.toArray()).map((entrada) => `${entrada.tabela}:${entrada.registroId}`),
       )
       const agora = Date.now()
       const itens = await db.items.toArray()
+      const modelos = await db.modelos.toArray()
       const normais = itens.map(normalizarItem)
       const reparados = normais.filter(
         (item, indice) =>
@@ -38,6 +39,17 @@ export async function enfileirarItensParaSync(): Promise<number> {
             agora,
           ),
         )
+      const mutacoesModelos = modelos
+        .filter((modelo) => !pendentes.has(`modelos:${modelo.id}`))
+        .map((modelo) =>
+          novaMutacao(
+            'modelos',
+            modelo,
+            modelo.deletedAt !== undefined ? 'delete' : 'upsert',
+            agora,
+          ),
+        )
+      mutacoes.push(...mutacoesModelos)
       if (mutacoes.length > 0) {
         await db.outbox.bulkAdd(mutacoes)
         enfileiradas = mutacoes.length
@@ -52,8 +64,9 @@ export async function enfileirarItensParaSync(): Promise<number> {
  * diferente da anterior, para não levar dados de uma conta para outra.
  */
 export async function apagarDadosLocais(): Promise<void> {
-  await db.transaction('rw', db.items, db.outbox, db.syncState, async () => {
+  await db.transaction('rw', db.items, db.modelos, db.outbox, db.syncState, async () => {
     await db.items.clear()
+    await db.modelos.clear()
     await db.outbox.clear()
     await syncState.definirCursor('0')
   })

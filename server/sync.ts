@@ -3,12 +3,21 @@ import {
   pullQuerySchema,
   pushRequestSchema,
   TABELA_ITEMS,
+  TABELA_MODELOS,
   type ResultadoMutacao,
 } from '@shared/schemas/sync'
 import type { Item, TipoItem } from '@shared/schemas/item'
-import { quadroKanbanSchema, TIPOS_ITEM } from '@shared/schemas/item'
+import { modeloSchema, type Modelo } from '@shared/schemas/modelo'
+import {
+  faseTempoSchema,
+  modoTempoSchema,
+  quadroKanbanSchema,
+  subitemSchema,
+  TIPOS_ITEM,
+} from '@shared/schemas/item'
 import { prisma } from './prisma'
 import { Prisma } from './generated/prisma/client'
+import { z } from 'zod'
 import { exigirSessao } from './session'
 import { exigirTermosAceitos } from './termos'
 
@@ -29,6 +38,12 @@ type ItemTabela = {
   coluna: string | null
   ordem: number | null
   quadroKanban: unknown
+  subitens: unknown
+  modoTempo: string | null
+  minutosFoco: number | null
+  minutosPausa: number | null
+  faseTempo: string | null
+  ciclosConcluidos: number | null
   diasAgendamento: string[]
   horaAgendamento: string | null
   timerIniciadoEm: bigint | null
@@ -39,8 +54,38 @@ type ItemTabela = {
   serverSeq: bigint
 }
 
+type ModeloTabela = {
+  id: string
+  userId: string
+  titulo: string
+  tipo: string
+  payload: unknown
+  updatedAt: bigint
+  deletedAt: bigint | null
+  serverSeq: bigint
+}
+
+function toWireModelo(registro: ModeloTabela): Modelo {
+  const dados =
+    typeof registro.payload === 'object' && registro.payload !== null
+      ? registro.payload
+      : {}
+  return modeloSchema.parse({
+    ...dados,
+    id: registro.id,
+    titulo: registro.titulo,
+    tipo: registro.tipo,
+    updatedAt: Number(registro.updatedAt),
+    ...(registro.deletedAt === null ? {} : { deletedAt: Number(registro.deletedAt) }),
+    serverVersion: Number(registro.serverSeq),
+  })
+}
+
 function toWire(item: ItemTabela): Item {
   const quadroKanban = quadroKanbanSchema.safeParse(item.quadroKanban)
+  const subitens = z.array(subitemSchema).safeParse(item.subitens)
+  const modoTempo = modoTempoSchema.safeParse(item.modoTempo)
+  const faseTempo = faseTempoSchema.safeParse(item.faseTempo)
   const base = {
     id: item.id,
     titulo: item.titulo,
@@ -53,6 +98,14 @@ function toWire(item: ItemTabela): Item {
     ...(item.parentId === null ? {} : { parentId: item.parentId }),
     ...(item.coluna === null ? {} : { coluna: item.coluna }),
     ...(quadroKanban.success ? { quadroKanban: quadroKanban.data } : {}),
+    ...(subitens.success && subitens.data.length > 0
+      ? { subitens: subitens.data }
+      : {}),
+    ...(modoTempo.success ? { modoTempo: modoTempo.data } : {}),
+    ...(item.minutosFoco === null ? {} : { minutosFoco: item.minutosFoco }),
+    ...(item.minutosPausa === null ? {} : { minutosPausa: item.minutosPausa }),
+    ...(faseTempo.success ? { faseTempo: faseTempo.data } : {}),
+    ...(item.ciclosConcluidos === null ? {} : { ciclosConcluidos: item.ciclosConcluidos }),
     ...(item.ordem === null ? {} : { ordem: item.ordem }),
     ...(item.diasAgendamento.length === 0 ? {} : { diasAgendamento: item.diasAgendamento }),
     ...(item.horaAgendamento === null ? {} : { horaAgendamento: item.horaAgendamento }),
@@ -101,14 +154,82 @@ async function processarLote(
     }
 
     for (const mut of mutacoes) {
-      if (mut.tabela !== TABELA_ITEMS) {
-        // Grava a idempotência também para rejeições: sem isso o replay
-        // reprocessaria para sempre e o cliente não tem como saber que a
-        // mutação foi descartada de vez.
+      if (mut.tabela === TABELA_MODELOS) {
+        const jaVista = await tx.syncMutation.findUnique({ where: { id: mut.id } })
+        if (jaVista) {
+          const atual = await tx.modelo.findUnique({ where: { id: mut.registroId } })
+          if (atual && atual.userId === userId) {
+            resultados.push({
+              mutacaoId: mut.id,
+              status: 'aplicada',
+              serverVersion: Number(atual.serverSeq),
+              registro: { tabela: TABELA_MODELOS, registro: toWireModelo(atual) },
+            })
+          } else {
+            resultados.push({ mutacaoId: mut.id, status: 'aplicada' })
+          }
+          continue
+        }
+
+        const existente = await tx.modelo.findUnique({ where: { id: mut.registroId } })
+        if (existente && existente.userId !== userId) {
+          await tx.syncMutation.create({
+            data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },
+          })
+          resultados.push({ mutacaoId: mut.id, status: 'invalida' })
+          continue
+        }
+
+        const payload = modeloSchema.parse(mut.payload)
+        const updatedAt = Math.min(Math.max(payload.updatedAt, pisoTs), limiteTs)
+        const deletedAt =
+          payload.deletedAt === undefined
+            ? existente?.deletedAt ?? null
+            : BigInt(Math.min(payload.deletedAt, updatedAt))
+        if (existente && existente.updatedAt > BigInt(updatedAt)) {
+          await tx.syncMutation.create({
+            data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },
+          })
+          resultados.push({
+            mutacaoId: mut.id,
+            status: 'ignorada',
+            serverVersion: Number(existente.serverSeq),
+            registro: { tabela: TABELA_MODELOS, registro: toWireModelo(existente) },
+          })
+          continue
+        }
+
+        const seq = await proximoSeq()
+        const gravado = await tx.modelo.upsert({
+          where: { id: mut.registroId },
+          create: {
+            id: mut.registroId,
+            userId,
+            titulo: payload.titulo,
+            tipo: payload.tipo,
+            payload,
+            updatedAt: BigInt(updatedAt),
+            deletedAt,
+            serverSeq: seq,
+          },
+          update: {
+            titulo: payload.titulo,
+            tipo: payload.tipo,
+            payload,
+            updatedAt: BigInt(updatedAt),
+            deletedAt,
+            serverSeq: seq,
+          },
+        })
         await tx.syncMutation.create({
           data: { id: mut.id, userId, appliedAt: BigInt(agoraMs) },
         })
-        resultados.push({ mutacaoId: mut.id, status: 'invalida' })
+        resultados.push({
+          mutacaoId: mut.id,
+          status: 'aplicada',
+          serverVersion: Number(seq),
+          registro: { tabela: TABELA_MODELOS, registro: toWireModelo(gravado) },
+        })
         continue
       }
 
@@ -120,7 +241,7 @@ async function processarLote(
             mutacaoId: mut.id,
             status: 'aplicada',
             serverVersion: Number(atual.serverSeq),
-            registro: toWire(atual),
+            registro: { tabela: TABELA_ITEMS, registro: toWire(atual) },
           })
         } else {
           resultados.push({ mutacaoId: mut.id, status: 'aplicada' })
@@ -152,7 +273,7 @@ async function processarLote(
           mutacaoId: mut.id,
           status: 'ignorada',
           serverVersion: Number(existente.serverSeq),
-          registro: toWire(existente),
+          registro: { tabela: TABELA_ITEMS, registro: toWire(existente) },
         })
         continue
       }
@@ -167,6 +288,12 @@ async function processarLote(
         coluna: mut.payload.coluna ?? null,
         ordem: mut.payload.ordem ?? null,
         quadroKanban: mut.payload.quadroKanban ?? Prisma.DbNull,
+        subitens: mut.payload.subitens ?? Prisma.DbNull,
+        modoTempo: mut.payload.modoTempo ?? null,
+        minutosFoco: mut.payload.minutosFoco ?? null,
+        minutosPausa: mut.payload.minutosPausa ?? null,
+        faseTempo: mut.payload.faseTempo ?? null,
+        ciclosConcluidos: mut.payload.ciclosConcluidos ?? null,
         diasAgendamento: mut.payload.diasAgendamento ?? [],
         horaAgendamento: mut.payload.horaAgendamento ?? null,
         timerIniciadoEm:
@@ -199,7 +326,7 @@ async function processarLote(
         mutacaoId: mut.id,
         status: 'aplicada',
         serverVersion: Number(seq),
-        registro: toWire(gravado),
+        registro: { tabela: TABELA_ITEMS, registro: toWire(gravado) },
       })
     }
 
@@ -278,14 +405,31 @@ syncRoutes.get('/sync/pull', async (c) => {
   }
   const { cursor, limit } = parse.data
 
-  const linhas = await prisma.item.findMany({
-    where: { userId: sessao.userId, serverSeq: { gt: BigInt(cursor) } },
-    orderBy: { serverSeq: 'asc' },
-    take: limit + 1,
-  })
+  const [itens, modelos] = await Promise.all([
+    prisma.item.findMany({
+      where: { userId: sessao.userId, serverSeq: { gt: BigInt(cursor) } },
+      orderBy: { serverSeq: 'asc' },
+      take: limit + 1,
+    }),
+    prisma.modelo.findMany({
+      where: { userId: sessao.userId, serverSeq: { gt: BigInt(cursor) } },
+      orderBy: { serverSeq: 'asc' },
+      take: limit + 1,
+    }),
+  ])
+  const linhas = [
+    ...itens.map((registro) => ({
+      serverSeq: registro.serverSeq,
+      wire: { tabela: TABELA_ITEMS, registro: toWire(registro) },
+    })),
+    ...modelos.map((registro) => ({
+      serverSeq: registro.serverSeq,
+      wire: { tabela: TABELA_MODELOS, registro: toWireModelo(registro) },
+    })),
+  ].sort((a, b) => (a.serverSeq < b.serverSeq ? -1 : a.serverSeq > b.serverSeq ? 1 : 0))
   const temMais = linhas.length > limit
   const pagina = temMais ? linhas.slice(0, limit) : linhas
   const proximoCursor = pagina.length > 0 ? String(pagina[pagina.length - 1].serverSeq) : cursor
 
-  return c.json({ registros: pagina.map(toWire), proximoCursor, temMais })
+  return c.json({ registros: pagina.map((linha) => linha.wire), proximoCursor, temMais })
 })

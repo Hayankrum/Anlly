@@ -2,9 +2,13 @@ import db from '../../db/database'
 import { novaMutacao } from '../../db/outbox.repo'
 import type { EntradaOutbox, Item, PeriodoItens } from '../../db/schema'
 import {
+  itemSchema,
   obterQuadroKanban,
   QUADRO_KANBAN_PADRAO,
   type ColunaKanban,
+  type ModoTempo,
+  type QuadroKanban,
+  type Subitem,
   type TipoItem,
 } from '@shared/schemas/item'
 import { executarComCota } from '../../shared/lib/cota'
@@ -43,6 +47,11 @@ export interface EntradaItem {
   diasAgendamento?: string[]
   /** HH:mm escolhido no formulário (opcional) — mesmo horário em todos os dias. */
   horaAgendamento?: string
+  subitens?: Subitem[]
+  modoTempo?: ModoTempo
+  minutosFoco?: number
+  minutosPausa?: number
+  quadroKanban?: QuadroKanban
 }
 
 export async function listar({ busca = '', periodo }: OpcoesListagem = {}): Promise<Item[]> {
@@ -152,13 +161,24 @@ export async function criar(entrada: EntradaItem): Promise<string> {
         criadoEm: agora,
         updatedAt: agora,
       }
-      if (tipo === 'kanban') item.quadroKanban = QUADRO_KANBAN_PADRAO
+      if (tipo === 'kanban') item.quadroKanban = entrada.quadroKanban ?? QUADRO_KANBAN_PADRAO
+      if (tipo === 'lista') item.subitens = entrada.subitens ?? []
+      if (tipo === 'cronometro') {
+        item.modoTempo = entrada.modoTempo ?? 'livre'
+        if (item.modoTempo === 'focoPausa') {
+          item.minutosFoco = entrada.minutosFoco ?? 25
+          item.minutosPausa = entrada.minutosPausa ?? 5
+          item.faseTempo = 'foco'
+          item.ciclosConcluidos = 0
+        }
+      }
       if (entrada.diasAgendamento && entrada.diasAgendamento.length > 0) {
         item.diasAgendamento = entrada.diasAgendamento
       }
       if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
-      await db.items.add(item)
-      await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
+      const valido = itemSchema.parse(item)
+      await db.items.add(valido)
+      await db.outbox.add(novaMutacao(TABELA, valido, 'upsert', agora))
     }),
   )
   return id
@@ -269,6 +289,8 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
       if (item.tipo !== 'cronometro' || atual.tipo !== 'cronometro') {
         delete item.timerIniciadoEm
         delete item.tempoDecorridoMs
+        delete item.faseTempo
+        delete item.ciclosConcluidos
       }
       // Cartão de quadro preserva coluna/ordem (editado só em título/descrição).
       if (atual.parentId === undefined) {
@@ -276,9 +298,38 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         delete item.coluna
         delete item.ordem
         if (item.tipo === 'kanban') {
-          item.quadroKanban = atual.quadroKanban ?? QUADRO_KANBAN_PADRAO
+          item.quadroKanban =
+            entrada.quadroKanban ?? atual.quadroKanban ?? QUADRO_KANBAN_PADRAO
         } else {
           delete item.quadroKanban
+        }
+        if (item.tipo === 'lista') item.subitens = entrada.subitens ?? atual.subitens ?? []
+        else delete item.subitens
+        if (item.tipo === 'cronometro') {
+          const mudouConfiguracaoTimer =
+            (entrada.modoTempo !== undefined && entrada.modoTempo !== atual.modoTempo) ||
+            (entrada.minutosFoco !== undefined && entrada.minutosFoco !== atual.minutosFoco) ||
+            (entrada.minutosPausa !== undefined && entrada.minutosPausa !== atual.minutosPausa)
+          item.modoTempo = entrada.modoTempo ?? atual.modoTempo ?? 'livre'
+          if (item.modoTempo === 'focoPausa') {
+            item.minutosFoco = entrada.minutosFoco ?? atual.minutosFoco ?? 25
+            item.minutosPausa = entrada.minutosPausa ?? atual.minutosPausa ?? 5
+            item.faseTempo = mudouConfiguracaoTimer ? 'foco' : atual.faseTempo ?? 'foco'
+            item.ciclosConcluidos = mudouConfiguracaoTimer ? 0 : atual.ciclosConcluidos ?? 0
+            if (mudouConfiguracaoTimer) {
+              delete item.timerIniciadoEm
+              delete item.tempoDecorridoMs
+            }
+          } else {
+            delete item.minutosFoco
+            delete item.minutosPausa
+            delete item.faseTempo
+            delete item.ciclosConcluidos
+          }
+        } else {
+          delete item.modoTempo
+          delete item.minutosFoco
+          delete item.minutosPausa
         }
         // Trocar um projeto pra outro tipo mantém a conclusão automática dele
         // órfã; reabre para o novo mecanismo decidir.
@@ -294,6 +345,29 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
       }
       if (entrada.horaAgendamento) item.horaAgendamento = entrada.horaAgendamento
       else delete item.horaAgendamento
+      const valido = itemSchema.parse(item)
+      await db.items.put(valido)
+      await db.outbox.add(novaMutacao(TABELA, valido, 'upsert', agora))
+    }),
+  )
+}
+
+/** Marca/desmarca um subitem e conclui a lista somente quando todos foram marcados. */
+export async function atualizarSubitem(
+  id: string,
+  subitemId: string,
+  concluido: boolean,
+): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (atual === undefined || atual.tipo !== 'lista' || atual.subitens === undefined) return
+      const subitens = atual.subitens.map((subitem) =>
+        subitem.id === subitemId ? { ...subitem, concluido } : subitem,
+      )
+      const novoEstado = subitens.length > 0 && subitens.every((subitem) => subitem.concluido)
+      const item = itemSchema.parse({ ...atual, subitens, concluido: novoEstado, updatedAt: agora })
       await db.items.put(item)
       await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
     }),
@@ -306,6 +380,8 @@ export async function alternarConcluido(item: Item): Promise<void> {
     db.transaction('rw', db.items, db.outbox, async () => {
       const atual = await db.items.get(item.id)
       if (atual === undefined) return
+      // Listas só concluem quando todos os subitens forem marcados.
+      if (atual.tipo === 'lista') return
       // Projeto kanban conclui sozinho pelo quadro — o botão manual não muda nada.
       if (atual.tipo === 'kanban' && atual.parentId === undefined) return
       const atualizado: Item = { ...atual, concluido: !atual.concluido, updatedAt: agora }
@@ -573,6 +649,61 @@ export async function iniciarTimer(id: string): Promise<void> {
   )
 }
 
+/**
+ * Avança o ciclo ao vencer a fase atual ou por ação explícita. O tempo excedente
+ * é carregado para a próxima fase, inclusive quando o app ficou em segundo plano.
+ */
+export async function avancarFaseTimer(id: string, forcar = false): Promise<void> {
+  const agora = Date.now()
+  await executarComCota(() =>
+    db.transaction('rw', db.items, db.outbox, async () => {
+      const atual = await db.items.get(id)
+      if (
+        atual === undefined ||
+        atual.concluido ||
+        atual.tipo !== 'cronometro' ||
+        atual.modoTempo !== 'focoPausa'
+      ) {
+        return
+      }
+      const fase = atual.faseTempo ?? 'foco'
+      const duracaoMs = (fase === 'foco' ? atual.minutosFoco ?? 25 : atual.minutosPausa ?? 5) * 60_000
+      const decorrido =
+        (atual.tempoDecorridoMs ?? 0) +
+        (atual.timerIniciadoEm === undefined ? 0 : Math.max(0, agora - atual.timerIniciadoEm))
+      if (!forcar && decorrido < duracaoMs) return
+
+      let proximaFase: 'foco' | 'pausa' = fase === 'foco' ? 'pausa' : 'foco'
+      let ciclosConcluidos = atual.ciclosConcluidos ?? 0
+      let restante = forcar ? 0 : decorrido - duracaoMs
+      if (fase === 'pausa') ciclosConcluidos += 1
+      if (!forcar) {
+        const duracaoCiclo = ((atual.minutosFoco ?? 25) + (atual.minutosPausa ?? 5)) * 60_000
+        const ciclosExtras = Math.floor(restante / duracaoCiclo)
+        ciclosConcluidos += ciclosExtras
+        restante %= duracaoCiclo
+        const duracaoProximaFase =
+          (proximaFase === 'foco' ? atual.minutosFoco ?? 25 : atual.minutosPausa ?? 5) * 60_000
+        if (restante >= duracaoProximaFase) {
+          restante -= duracaoProximaFase
+          if (proximaFase === 'pausa') ciclosConcluidos += 1
+          proximaFase = proximaFase === 'foco' ? 'pausa' : 'foco'
+        }
+      }
+      const atualizado = itemSchema.parse({
+        ...atual,
+        faseTempo: proximaFase,
+        ciclosConcluidos,
+        tempoDecorridoMs: restante,
+        ...(atual.timerIniciadoEm === undefined ? {} : { timerIniciadoEm: agora }),
+        updatedAt: agora,
+      })
+      await db.items.put(atualizado)
+      await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
+    }),
+  )
+}
+
 /** Para a sessão em curso somando o tempo, sem concluir o item. */
 export async function pausarTimer(id: string): Promise<void> {
   const agora = Date.now()
@@ -613,6 +744,10 @@ export async function resetarTimer(id: string): Promise<void> {
       const atualizado: Item = { ...atual, updatedAt: agora }
       delete atualizado.timerIniciadoEm
       delete atualizado.tempoDecorridoMs
+      if (atualizado.modoTempo === 'focoPausa') {
+        atualizado.faseTempo = 'foco'
+        atualizado.ciclosConcluidos = 0
+      }
       await db.items.put(atualizado)
       await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
     }),
@@ -645,8 +780,9 @@ export async function excluir(id: string): Promise<void> {
 
 export async function limparTodos(): Promise<void> {
   await executarComCota(() =>
-    db.transaction('rw', db.items, db.outbox, async () => {
+    db.transaction('rw', db.items, db.modelos, db.outbox, async () => {
       await db.items.clear()
+      await db.modelos.clear()
       await db.outbox.clear()
     }),
   )

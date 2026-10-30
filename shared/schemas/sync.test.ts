@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { mutacaoSchema } from './outbox'
-import { pushRequestSchema, pullQuerySchema, statusMutacaoSchema } from './sync'
+import {
+  pushRequestSchema,
+  pullQuerySchema,
+  pullResponseSchema,
+  statusMutacaoSchema,
+} from './sync'
 
 function payload() {
   return {
@@ -67,6 +72,37 @@ describe('mutacaoSchema', () => {
     })
     expect(resultado.success).toBe(false)
   })
+
+  it('aceita payload de modelo e rejeita tabela incompatível', () => {
+    const modelo = {
+      id: 'modelo1',
+      titulo: 'Estudar',
+      tipo: 'cronometro',
+      modoTempo: 'focoPausa',
+      minutosFoco: 50,
+      minutosPausa: 10,
+      agenda: { modo: 'hoje' },
+      updatedAt: 2,
+    }
+    expect(
+      mutacaoSchema.safeParse({
+        id: 'mut-modelo',
+        tabela: 'modelos',
+        registroId: 'modelo1',
+        operacao: 'upsert',
+        payload: modelo,
+      }).success,
+    ).toBe(true)
+    expect(
+      mutacaoSchema.safeParse({
+        id: 'mut-incompativel',
+        tabela: 'modelos',
+        registroId: 'item1',
+        operacao: 'upsert',
+        payload: payload(),
+      }).success,
+    ).toBe(false)
+  })
 })
 
 describe('pushRequestSchema', () => {
@@ -95,6 +131,29 @@ describe('pullQuerySchema', () => {
     const resultado = pullQuerySchema.parse({})
     expect(resultado.cursor).toBe('0')
     expect(resultado.limit).toBe(100)
+  })
+
+  describe('pullResponseSchema', () => {
+    it('aceita registros identificados por tabela', () => {
+      const resultado = pullResponseSchema.safeParse({
+        registros: [
+          {
+            tabela: 'modelos',
+            registro: {
+              id: 'modelo1',
+              titulo: 'Pagar energia',
+              tipo: 'padrao',
+              agenda: { modo: 'repetir', regra: { frequencia: 'mensal', diaMes: 10 } },
+              updatedAt: 1,
+              serverVersion: 1,
+            },
+          },
+        ],
+        proximoCursor: '1',
+        temMais: false,
+      })
+      expect(resultado.success).toBe(true)
+    })
   })
 
   it('aceita limit como string numérica', () => {

@@ -29,6 +29,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   itens         Item[]
+  modelos       Modelo[]
   mutacoes      SyncMutation[]
 
   @@unique([email])
@@ -103,6 +104,13 @@ model Item {
   ordem     Int?
   // Kanban (projeto): colunas ordenadas e a coluna que representa conclusão.
   quadroKanban Json?
+  // Configuração dos tipos Lista e Tempo (campos ausentes em itens legados).
+  subitens Json?
+  modoTempo String?
+  minutosFoco Int?
+  minutosPausa Int?
+  faseTempo String?
+  ciclosConcluidos Int?
   // Agendamento opcional: vários dias (YYYY-MM-DD) + um horário (HH:mm) que
   // vale para todos eles.
   diasAgendamento String[]
@@ -120,6 +128,21 @@ model Item {
   @@index([userId, serverSeq])
   @@index([parentId])
   @@map("item")
+}
+
+model Modelo {
+  id         String   @id
+  userId     String
+  titulo     String
+  tipo       String
+  payload    Json
+  updatedAt  BigInt
+  deletedAt  BigInt?
+  serverSeq  BigInt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, serverSeq])
+  @@map("modelo")
 }
 
 // Log de idempotência do push: cada id de mutação aplicada (ou avaliada como

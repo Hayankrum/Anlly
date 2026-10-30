@@ -15,9 +15,57 @@ export const LIMITE_DIAS_AGENDAMENTO = 400
  * - `kanban`: projeto com quadro embutido no detalhe — conclui quando todos os
  *   seus cartões (itens com `parentId` deste item) estão na coluna de conclusão.
  */
-export const TIPOS_ITEM = ['padrao', 'cronometro', 'kanban'] as const
+export const TIPOS_ITEM = ['padrao', 'lista', 'cronometro', 'kanban'] as const
 export const tipoItemSchema = z.enum(TIPOS_ITEM)
 export type TipoItem = z.infer<typeof tipoItemSchema>
+
+export const subitemSchema = z.object({
+  id: z.string().min(1),
+  titulo: z.string().trim().min(1).max(120),
+  concluido: z.boolean(),
+})
+export type Subitem = z.infer<typeof subitemSchema>
+
+export const modoTempoSchema = z.enum(['livre', 'focoPausa'])
+export type ModoTempo = z.infer<typeof modoTempoSchema>
+
+export const faseTempoSchema = z.enum(['foco', 'pausa'])
+export type FaseTempo = z.infer<typeof faseTempoSchema>
+
+const DATA_REPETICAO_RE = /^\d{4}-\d{2}-\d{2}$/
+
+export const repeticaoSchema = z
+  .object({
+    frequencia: z.enum(['diario', 'semanal', 'cadaN', 'mensal']),
+    diasSemana: z.array(z.number().int().min(0).max(6)).max(7).optional(),
+    intervaloDias: z.number().int().min(1).max(365).optional(),
+    diaMes: z.number().int().min(1).max(31).optional(),
+    terminaEm: z.string().regex(DATA_REPETICAO_RE).optional(),
+  })
+  .superRefine((regra, contexto) => {
+    if (regra.frequencia === 'semanal' && (regra.diasSemana?.length ?? 0) === 0) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['diasSemana'],
+        message: 'Escolha pelo menos um dia da semana.',
+      })
+    }
+    if (regra.frequencia === 'cadaN' && regra.intervaloDias === undefined) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['intervaloDias'],
+        message: 'Informe o intervalo em dias.',
+      })
+    }
+    if (regra.frequencia === 'mensal' && regra.diaMes === undefined) {
+      contexto.addIssue({
+        code: 'custom',
+        path: ['diaMes'],
+        message: 'Informe o dia do mês.',
+      })
+    }
+  })
+export type RegraRepeticao = z.infer<typeof repeticaoSchema>
 
 /** Colunas iniciais do quadro novo e fallback para quadros antigos. */
 export const COLUNAS_KANBAN = ['afazer', 'fazendo', 'feito'] as const
@@ -90,6 +138,14 @@ export const itemSchema = z.object({
   coluna: colunaKanbanSchema.optional(),
   /** Kanban (projeto): colunas ordenadas e a coluna que conclui os cartões. */
   quadroKanban: quadroKanbanSchema.optional(),
+  /** Lista: subitens e seu estado ficam no mesmo registro do item. */
+  subitens: z.array(subitemSchema).max(100).optional(),
+  /** Cronômetro: modalidade e duração de cada fase do ciclo. */
+  modoTempo: modoTempoSchema.optional(),
+  minutosFoco: z.number().int().min(1).max(180).optional(),
+  minutosPausa: z.number().int().min(1).max(60).optional(),
+  faseTempo: faseTempoSchema.optional(),
+  ciclosConcluidos: z.number().int().nonnegative().optional(),
   /** Kanban (cartão): posição dentro da coluna (menor = mais ao topo). */
   ordem: z.number().int().nonnegative().optional(),
   /** Opcional: dias do agendamento (YYYY-MM-DD, sem fuso). Um item pode marcar vários. */

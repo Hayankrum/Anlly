@@ -1,7 +1,7 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Check, Pause, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookmarkPlus, Check, Pause, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
@@ -14,6 +14,8 @@ import type { Item } from '../../db/schema'
 import * as itemsRepo from './items.repo'
 import type { EntradaItem } from './items.repo'
 import { ItemForm } from './ItemForm'
+import * as modelosRepo from './modelos.repo'
+import type { EntradaModelo } from '@shared/schemas/modelo'
 import { QuadroProjeto } from '../quadro/QuadroProjeto'
 import './items.css'
 
@@ -49,6 +51,27 @@ export function ItemDetalhePage() {
   // Tica a cada segundo enquanto o cronômetro estiver rodando.
   const tempoMs = useCronometro(item?.tempoDecorridoMs, item?.timerIniciadoEm)
   const cronometroRodando = item?.timerIniciadoEm !== undefined
+  const ehFocoPausa = item?.modoTempo === 'focoPausa'
+  const duracaoFaseMs =
+    (item?.faseTempo === 'pausa' ? item.minutosPausa ?? 5 : item?.minutosFoco ?? 25) * 60_000
+  const faseAvancadaRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (
+      !item ||
+      !ehFocoPausa ||
+      item.concluido ||
+      item.timerIniciadoEm === undefined ||
+      tempoMs < duracaoFaseMs
+    ) {
+      faseAvancadaRef.current = null
+      return
+    }
+    const chave = `${item.id}:${item.faseTempo ?? 'foco'}:${item.timerIniciadoEm}`
+    if (faseAvancadaRef.current === chave) return
+    faseAvancadaRef.current = chave
+    void itemsRepo.avancarFaseTimer(item.id).catch(avisarErro)
+  }, [duracaoFaseMs, ehFocoPausa, item, tempoMs])
 
   async function alternar() {
     if (!podeEditar || !item) return
@@ -80,15 +103,33 @@ export function ItemDetalhePage() {
     mostrar('Não foi possível completar a operação', { tipo: 'erro' })
   }
 
-  async function salvar(entrada: EntradaItem) {
-    if (!podeEditar || !item) return
+  async function salvar(entrada: EntradaItem): Promise<boolean> {
+    if (!podeEditar || !item) return false
     try {
       await itemsRepo.atualizar(item.id, entrada)
       setEditando(false)
       mostrar('Item atualizado', { tipo: 'sucesso' })
+      return true
     } catch (erro) {
       avisarErro(erro)
+      return false
     }
+  }
+
+  async function salvarComoModelo(entrada: EntradaModelo): Promise<boolean> {
+    try {
+      await modelosRepo.salvar(entrada)
+      mostrar('Modelo salvo.', { tipo: 'sucesso' })
+      return true
+    } catch (erro) {
+      avisarErro(erro)
+      return false
+    }
+  }
+
+  async function salvarModeloAtual() {
+    if (!item) return
+    await salvarComoModelo(modelosRepo.modeloDoItem(item))
   }
 
   async function reabrir() {
@@ -142,6 +183,15 @@ export function ItemDetalhePage() {
       await itemsRepo.resetarTimer(item.id)
       setConfirmandoReset(false)
       mostrar('Cronômetro zerado', { tipo: 'info' })
+    } catch (erro) {
+      avisarErro(erro)
+    }
+  }
+
+  async function alternarSubitem(subitemId: string, concluido: boolean) {
+    if (!podeEditar || !item) return
+    try {
+      await itemsRepo.atualizarSubitem(item.id, subitemId, concluido)
     } catch (erro) {
       avisarErro(erro)
     }
@@ -224,6 +274,15 @@ export function ItemDetalhePage() {
           <button
             type="button"
             className="item-detalhe-acao"
+            aria-label={`Salvar ${item.titulo} como modelo`}
+            title="Salvar como modelo"
+            onClick={() => void salvarModeloAtual()}
+          >
+            <BookmarkPlus size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="item-detalhe-acao"
             aria-label={`Editar ${item.titulo}`}
             title="Editar"
             onClick={() => setEditando(true)}
@@ -263,14 +322,70 @@ export function ItemDetalhePage() {
             config={item.quadroKanban}
           />
         </>
+      ) : item.tipo === 'lista' ? (
+        <section className="item-lista-progresso" aria-label="Subitens da lista">
+          <div
+            className="item-lista-barra"
+            role="progressbar"
+            aria-label="Progresso da lista"
+            aria-valuemin={0}
+            aria-valuemax={item.subitens?.length ?? 0}
+            aria-valuenow={item.subitens?.filter((subitem) => subitem.concluido).length ?? 0}
+          >
+            <span
+              style={{
+                width: `${
+                  item.subitens && item.subitens.length > 0
+                    ? (item.subitens.filter((subitem) => subitem.concluido).length /
+                        item.subitens.length) *
+                      100
+                    : 0
+                }%`,
+              }}
+            />
+          </div>
+          <p className="item-lista-resumo">
+            {item.subitens?.filter((subitem) => subitem.concluido).length ?? 0} de{' '}
+            {item.subitens?.length ?? 0} concluídos
+          </p>
+          {item.subitens && item.subitens.length > 0 ? (
+            <ul className="item-lista-subitens">
+              {item.subitens.map((subitem) => (
+                <li key={subitem.id}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={subitem.concluido}
+                      disabled={!podeEditar}
+                      onChange={(evento) =>
+                        void alternarSubitem(subitem.id, evento.target.checked)
+                      }
+                    />
+                    <span className={subitem.concluido ? 'is-concluido' : ''}>
+                      {subitem.titulo}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="item-lista-resumo">Adicione subitens editando este item.</p>
+          )}
+        </section>
       ) : item.concluido ? (
         conteudoConcluido
       ) : ehCronometro ? (
         <div className="item-cronometro">
           <p className={`item-cronometro-tempo${cronometroRodando ? ' item-cronometro-tempo--rodando' : ''}`} aria-live="polite">
-            {formatarDuracao(tempoMs)}
+            {formatarDuracao(ehFocoPausa ? Math.max(0, duracaoFaseMs - tempoMs) : tempoMs)}
             <span className="item-cronometro-estado">
-              {cronometroRodando ? 'em andamento' : tempoMs > 0 ? 'pausado' : 'pronto'}
+              {ehFocoPausa
+                ? `${item.faseTempo === 'pausa' ? 'Pausa' : 'Foco'} · ${item.ciclosConcluidos ?? 0} ciclos`
+                : cronometroRodando
+                  ? 'em andamento'
+                  : tempoMs > 0
+                    ? 'pausado'
+                    : 'pronto'}
             </span>
           </p>
 
@@ -306,6 +421,17 @@ export function ItemDetalhePage() {
                   <Check size={18} aria-hidden="true" />
                   Finalizar
                 </button>
+                {ehFocoPausa ? (
+                  <button
+                    type="button"
+                    className="item-cronometro-btn"
+                    onClick={() =>
+                      void acaoTimer(() => itemsRepo.avancarFaseTimer(item.id, true))
+                    }
+                  >
+                    Pular fase
+                  </button>
+                ) : null}
               </>
             ) : (
               <>
@@ -342,6 +468,17 @@ export function ItemDetalhePage() {
                     </button>
                   </>
                 ) : null}
+                {ehFocoPausa ? (
+                  <button
+                    type="button"
+                    className="item-cronometro-btn"
+                    onClick={() =>
+                      void acaoTimer(() => itemsRepo.avancarFaseTimer(item.id, true))
+                    }
+                  >
+                    Pular fase
+                  </button>
+                ) : null}
               </>
             )}
           </div>
@@ -363,7 +500,12 @@ export function ItemDetalhePage() {
       )}
 
       <Modal aberto={editando} titulo="Editar item" onFechar={() => setEditando(false)} largura="estreito">
-        <ItemForm item={item} aoCancelar={() => setEditando(false)} aoSalvar={salvar} />
+        <ItemForm
+          item={item}
+          aoCancelar={() => setEditando(false)}
+          aoSalvar={salvar}
+          aoSalvarModelo={salvarComoModelo}
+        />
       </Modal>
 
       <ConfirmDialog

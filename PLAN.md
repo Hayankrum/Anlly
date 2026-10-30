@@ -1,7 +1,7 @@
 # Plano — Anlly (app de acompanhamento do dia a dia)
 
 Um repo, um package.json, um deploy. Cliente offline-first (Dexie como fonte da
-verdade local), nuvem como réplica sincronizada. Dexie usa `version(2)` com
+verdade local), nuvem como réplica sincronizada. Dexie usa versões com
 `.upgrade()` para migrações de schema.
 
 | Etapa | Descrição | Status |
@@ -13,6 +13,7 @@ verdade local), nuvem como réplica sincronizada. Dexie usa `version(2)` com
 | E | SyncEngine no cliente (push/pull em segundo plano) | ✅ |
 | F | Conta e estado na interface | ✅ |
 | G | PWA e segurança | ✅ |
+| H | Tipos, agenda e modelos (Fases 1–2) | ✅ pronta para revisão |
 
 ## Notas pendentes
 
@@ -67,6 +68,27 @@ verdade local), nuvem como réplica sincronizada. Dexie usa `version(2)` com
 - **Proteção no pull**: o sync checa se há espaço antes de baixar uma página
   (~2KB por item + 5MB de margem) e, se falhar por quota, não avança o cursor,
   não reenvia em loop e mostra orientação para liberar espaço.
+- **Etapa H (em andamento)**: Fases 1 e 2 implementadas; Séries (Fase 3)
+  pendente. Modelos (`modelos`) têm schema Zod, outbox, tombstones, sync
+  push/pull com LWW, migração Dexie v8 e Prisma. Cada tipo tem sua fila de
+  cartões, modelos iniciais são determinísticos por usuário, e o formulário e
+  detalhe permitem salvar uma configuração como modelo. Qualquer modelo abre
+  o formulário preenchido; Dias pede datas e Hoje usa hoje ao salvar. Até a
+  Fase 3, Repetir cria apenas a próxima ocorrência como item comum ao salvar.
+- **Legado Prisma (2026-10-30)**: o banco ainda continha `quadro`, `coluna` e
+  `card`, entidades de uma versão anterior do Kanban que não fazem parte do
+  schema atual. A migration `migrar_quadros_legados` converte projetos e
+  cartões para `item` (`quadroKanban`/`parentId`), preserva datas, tombstones e
+  agenda, atribui novos `serverSeq` acima do cursor existente e então remove as
+  tabelas antigas. Se um quadro legado não tinha coluna de conclusão marcada,
+  a última coluna por ordem passa a ser a coluna de conclusão. As migrations
+  históricas de agenda continuam no repositório: são necessárias para
+  instalações novas e não devem ser apagadas/reescritas.
+- **Etapa H (Fase 1)**: `lista` é o único tipo novo persistido; Simples,
+  Tempo e Quadro continuam usando os valores compatíveis `padrao`,
+  `cronometro` e `kanban`. Na Fase 1, Repetir valida e mostra a prévia, mas
+  grava apenas a próxima data como item comum; séries e regra persistida ficam
+  para a Fase 3.
 - **Limpeza**: tombstones confirmados são apagados após o push; Ajustes →
   "Liberar espaço local" remove itens sincronizados com mais de 90 dias
   (continuam na conta) e "Baixar tudo de novo" zera o cursor para rebaixar.

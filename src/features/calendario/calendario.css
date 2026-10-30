@@ -17,6 +17,32 @@
   margin-bottom: 8px;
 }
 
+.calendario-criar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-acento);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calendario-criar-item:hover {
+  background: var(--cor-hover);
+}
+
+.calendario-criar-item:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
 .calendario-toolbar .calendar-header {
   flex: 1;
   min-width: 0;

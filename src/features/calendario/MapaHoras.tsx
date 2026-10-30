@@ -51,7 +51,7 @@ interface PlacedEvent {
 function layoutColumns(items: ItemDia[]): { span: Span; col: number; cols: number }[] {
   const spans: Span[] = items
     .map((item) => {
-      const hora = item.hora ?? '00:00'
+      const hora = item.hora
       const startMin = (hourOf(hora) ?? 0) * 60 + Number(hora.slice(3, 5) || 0)
       const duration = DURACAO_PADRAO
       return {
@@ -99,14 +99,13 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
     return `${agora.getFullYear()}-${pad(agora.getMonth() + 1)}-${pad(agora.getDate())}`
   }, [])
 
-  const comHora = useMemo(() => items.filter((item) => item.hora !== null), [items])
+  const comHora = items
 
   const windowHours = useMemo(() => {
     let start = 24
     let end = -1
     for (const item of comHora) {
       const hora = item.hora
-      if (hora === null) continue
       const hour = hourOf(hora)
       if (hour === null) continue
       start = Math.min(start, hour)
@@ -180,34 +179,8 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
     el.scrollTop = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight))
   }, [date, dates, nowTop])
 
-  const semHora = items.filter((item) => item.hora === null)
-
   return (
     <div className="day-timeline">
-      {semHora.length > 0 && (
-        <ul className="timeline-sem-hora" aria-label="itens sem horário">
-          {semHora.map((item) => (
-            <li key={item.id} className="timeline-sem-hora-linha">
-              <button
-                type="button"
-                className={`timeline-sem-hora-item${item.concluido ? ' is-done' : ''}`}
-                onClick={() => onOpenItem(item)}
-              >
-                {item.concluido ? (
-                  <CheckSquare size={15} aria-hidden="true" />
-                ) : (
-                  <Square size={15} aria-hidden="true" />
-                )}
-                <span className="timeline-sem-hora-texto">
-                  <span className="timeline-sem-hora-titulo">{item.titulo}</span>
-                  {item.descricao ? <span className="timeline-sem-hora-descricao">{item.descricao}</span> : null}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
       <div className="timeline-viewport" ref={viewportRef}>
         <div
           className="timeline-scroll"
@@ -269,7 +242,7 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
               )
             })}
 
-            {comHora.length === 0 && semHora.length === 0 && (
+            {items.length === 0 && (
               <p className="timeline-empty">Nenhum item agendado nesta data.</p>
             )}
           </div>

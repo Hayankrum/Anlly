@@ -8,8 +8,8 @@ export interface ItemDia {
   itemId: string
   /** YYYY-MM-DD */
   data: string
-  /** HH:mm ou null (só tem dia, sem horário) */
-  hora: string | null
+  /** HH:mm configurado ou, na ausência, horário local em que o item foi criado. */
+  hora: string
   titulo: string
   descricao: string
   concluido: boolean
@@ -21,12 +21,16 @@ export function buildItemDia(itens: Item[]): ItemDia[] {
   for (const item of itens) {
     if (item.deletedAt !== undefined) continue
     if (!item.diasAgendamento) continue
+    const dataCriacao = new Date(item.criadoEm)
+    const hora =
+      item.horaAgendamento ??
+      `${String(dataCriacao.getHours()).padStart(2, '0')}:${String(dataCriacao.getMinutes()).padStart(2, '0')}`
     for (const data of item.diasAgendamento) {
       linhas.push({
         id: `${item.id}:${data}`,
         itemId: item.id,
         data,
-        hora: item.horaAgendamento ?? null,
+        hora,
         titulo: item.titulo,
         descricao: item.descricao,
         concluido: item.concluido,

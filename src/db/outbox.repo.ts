@@ -1,6 +1,8 @@
 import db from './database'
-import type { EntradaOutbox, Item, OperacaoOutbox } from './schema'
+import type { EntradaOutbox, Item, Modelo, OperacaoOutbox } from './schema'
 import type { Mutacao } from '@shared/schemas/outbox'
+import { itemSchema } from '@shared/schemas/item'
+import { modeloSchema } from '@shared/schemas/modelo'
 import { gerarId } from '../shared/lib/id'
 
 export const LIMITE_LOTE_PUSH = 100
@@ -34,29 +36,61 @@ export function normalizarItem(registro: Item): Item {
 }
 
 export function novaMutacao(
-  tabela: string,
+  tabela: 'items',
   registro: Item,
   operacao: OperacaoOutbox,
   criadoEm: number,
+): EntradaOutbox
+export function novaMutacao(
+  tabela: 'modelos',
+  registro: Modelo,
+  operacao: OperacaoOutbox,
+  criadoEm: number,
+): EntradaOutbox
+export function novaMutacao(
+  tabela: 'items' | 'modelos',
+  registro: Item | Modelo,
+  operacao: OperacaoOutbox,
+  criadoEm: number,
 ): EntradaOutbox {
-  return {
+  const base = {
     id: gerarId(),
-    tabela,
     registroId: registro.id,
     operacao,
-    payload: normalizarItem(registro),
     criadoEm,
     tentativas: 0,
+  }
+  if (tabela === 'items') {
+    return {
+      ...base,
+      tabela,
+      payload: itemSchema.parse(normalizarItem(itemSchema.parse(registro))),
+    }
+  }
+  return {
+    ...base,
+    tabela,
+    payload: modeloSchema.parse(registro),
   }
 }
 
 export function paraWire(entrada: EntradaOutbox): Mutacao {
-  return {
+  const base = {
     id: entrada.id,
-    tabela: entrada.tabela,
     registroId: entrada.registroId,
     operacao: entrada.operacao,
-    payload: normalizarItem(entrada.payload),
+  }
+  if (entrada.tabela === 'items') {
+    return {
+      ...base,
+      tabela: 'items',
+      payload: normalizarItem(itemSchema.parse(entrada.payload)),
+    }
+  }
+  return {
+    ...base,
+    tabela: 'modelos',
+    payload: modeloSchema.parse(entrada.payload),
   }
 }
 

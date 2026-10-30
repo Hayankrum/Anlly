@@ -1,9 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie'
 import appConfig from '../app/app.config.json'
-import type { EntradaConfig, EntradaOutbox, EstadoSync, Item } from './schema'
+import type { EntradaConfig, EntradaOutbox, EstadoSync, Item, Modelo } from './schema'
 
 const db = new Dexie(appConfig.dbName) as Dexie & {
   items: EntityTable<Item, 'id'>
+  modelos: EntityTable<Modelo, 'id'>
   config: EntityTable<EntradaConfig, 'chave'>
   outbox: EntityTable<EntradaOutbox, 'id'>
   syncState: EntityTable<EstadoSync, 'chave'>
@@ -65,6 +66,29 @@ db.version(6).stores({
   config: 'chave',
   outbox: 'id, tabela, registroId, criadoEm',
   syncState: 'chave',
+})
+
+// v7: subitens e configuração do ciclo foco/pausa são campos opcionais no
+// próprio item; itens antigos continuam válidos sem transformação de dados.
+db.version(7).stores({
+  items:
+    'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm, tipo, parentId',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+})
+
+// v8: modelos são registros tombstonáveis e sincronizados independentemente.
+db.version(8).stores({
+  items:
+    'id, criadoEm, concluido, updatedAt, deletedAt, serverVersion, timerIniciadoEm, tipo, parentId',
+  modelos: 'id, tipo, updatedAt, deletedAt, serverVersion',
+  config: 'chave',
+  outbox: 'id, tabela, registroId, criadoEm',
+  syncState: 'chave',
+}).upgrade(async () => {
+  // A migração é aditiva: registros antigos permanecem válidos e a nova
+  // tabela inicia vazia para receber modelos ou os exemplos iniciais.
 })
 
 export default db

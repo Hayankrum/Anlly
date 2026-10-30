@@ -1,8 +1,16 @@
 import { z } from 'zod'
 import { itemSchema } from './item'
 import { mutacaoSchema } from './outbox'
+import { modeloSchema } from './modelo'
 
 export const TABELA_ITEMS = 'items'
+export const TABELA_MODELOS = 'modelos'
+
+export const syncRegistroSchema = z.discriminatedUnion('tabela', [
+  z.object({ tabela: z.literal(TABELA_ITEMS), registro: itemSchema }),
+  z.object({ tabela: z.literal(TABELA_MODELOS), registro: modeloSchema }),
+])
+export type SyncRegistro = z.infer<typeof syncRegistroSchema>
 
 export const LIMITE_MUTACOES = 500
 export const LIMITE_PULL = 500
@@ -22,7 +30,7 @@ export const resultadoMutacaoSchema = z.object({
   mutacaoId: z.string().min(1),
   status: statusMutacaoSchema,
   serverVersion: z.number().int().positive().optional(),
-  registro: itemSchema.optional(),
+  registro: syncRegistroSchema.optional(),
 })
 
 export type ResultadoMutacao = z.infer<typeof resultadoMutacaoSchema>
@@ -42,7 +50,7 @@ export const pullQuerySchema = z.object({
 export type PullQuery = z.infer<typeof pullQuerySchema>
 
 export const pullResponseSchema = z.object({
-  registros: z.array(itemSchema),
+  registros: z.array(syncRegistroSchema),
   proximoCursor: z.string(),
   temMais: z.boolean(),
 })

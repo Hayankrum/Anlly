@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anlly – tipos e agenda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fff;--fg:#18181b;--mut:#71717a;--line:#e4e4e7;--card:#f4f4f5;
+--simples:#ef5b4f;--lista:#e29a12;--tempo:#3b82f6;--quadro:#16a36a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#09090b;--fg:#fafafa;--mut:#a1a1aa;--line:#27272a;--card:#18181b}}
+:root[data-theme="dark"]{--bg:#09090b;--fg:#fafafa;--mut:#a1a1aa;--line:#27272a;--card:#18181b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:600 16px/1.4 Nunito,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 0 60px}
+.topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:0 20px 6px}
+.topo p{margin:2px 0 0;color:var(--mut);font-size:14px}
+h1{font-size:28px;font-weight:800;margin:0}
+h2{font-size:20px;font-weight:800;margin:0}
+.sec{padding:18px 0 14px;border-bottom:2px solid var(--line)}
+.sec-h{padding:0 20px 12px}
+.sec-h p{margin:2px 0 0;color:var(--mut);font-size:14px}
+.fila{display:flex;gap:16px;overflow-x:auto;padding:4px 20px 10px;scrollbar-width:none}
+.fila::-webkit-scrollbar{display:none}
+.item{flex:0 0 96px;text-align:center;position:relative}
+.nome{display:block;margin-top:10px;font-size:14px;font-weight:800;line-height:1.2}
+.dica{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.tile{width:96px;height:96px;border-radius:24px;border:0;font-size:38px;cursor:pointer;color:#fff;background:var(--c);box-shadow:0 5px 0 color-mix(in srgb,var(--c) 70%,#000);transition:transform .08s,box-shadow .08s}
+.tile:active{transform:translateY(4px);box-shadow:0 1px 0 color-mix(in srgb,var(--c) 70%,#000)}
+.tile.novo{background:var(--card);border:2px dashed var(--line);box-shadow:none;color:var(--mut);font-size:40px}
+.tile.novo:active{transform:none}
+.x{position:absolute;top:-6px;right:-2px;width:26px;height:26px;border-radius:50%;border:2px solid var(--bg);background:var(--fg);color:var(--bg);font-weight:800;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--tempo);outline-offset:2px}
+.btn{font:inherit;font-weight:800;border:0;border-radius:14px;padding:10px 18px;cursor:pointer;background:var(--card);color:var(--fg)}
+.btn.pri{background:var(--fg);color:var(--bg)}
+.criados{padding:22px 20px 0}
+.criados ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.criados li{background:var(--card);border-radius:16px;padding:12px 14px 12px 18px;border-left:6px solid var(--c)}
+.criados small{display:block;color:var(--mut);font-size:13px}
+.tag{font-size:12px;font-weight:800;color:var(--c);margin-left:6px}
+.vazio{color:var(--mut);margin:10px 0 0}
+dialog{width:min(92vw,430px);max-height:90vh;overflow:auto;border:0;border-radius:24px;padding:22px;background:var(--bg);color:var(--fg)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog h3{margin:0 0 4px;font-size:22px;font-weight:800}
+.dsc{margin:0 0 6px;color:var(--mut);font-size:14px}
+label,.lb{display:block;font-size:14px;font-weight:800;margin-top:14px}
+input[type=text],input[type=time],input[type=date],input[type=number],select,textarea{display:block;width:100%;margin-top:6px;font:inherit;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--fg)}
+textarea{resize:vertical;min-height:76px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600}
+.chk input{width:18px;height:18px}
+.seg{display:flex;gap:6px;margin-top:6px}
+.sg,.wd,.dc{font:inherit;font-weight:800;border:2px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;cursor:pointer}
+.sg{flex:1;padding:9px 4px;font-size:14px}
+.sg.on,.wd.on,.dc.on{background:var(--c);border-color:var(--c);color:#fff}
+.wds{display:flex;gap:6px;margin-top:8px}
+.wd{flex:1;padding:8px 0}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal .dc{padding:7px 0;font-size:14px}
+.cal .dc:disabled{opacity:.35;cursor:default}
+.cal span{text-align:center;color:var(--mut);font-size:12px}
+.pv{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--card);font-size:14px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--mut)}
+.err{color:var(--simples);font-size:14px;min-height:20px;margin:10px 0 0}
+.acoes{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:14px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+
+.criados li{padding:0}
+.cardli{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;padding:12px 14px 12px 18px;cursor:pointer}
+.dcorpo{padding:8px 20px}
+.dcorpo h1{margin-bottom:6px}
+.prog{height:12px;border-radius:8px;background:var(--card);margin-top:16px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--c);transition:width .2s}
+.chks{list-style:none;margin:6px 0 0;padding:0}
+.chks .chk{margin:0;padding:10px 0;border-bottom:2px solid var(--line)}
+.inl{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.inl input{margin:0;flex:1;min-width:0}
+.hold{position:relative;overflow:hidden;width:100%;margin-top:18px;padding:30px 16px;border-radius:22px;border:2px solid var(--c);background:var(--bg);color:var(--fg);font:inherit;font-weight:800;font-size:18px;cursor:pointer;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.hold .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--c);opacity:.3}
+.hold.on .fill{width:100%;transition:width .7s linear}
+.hold.ok{background:var(--c);color:#fff}
+.hold b{position:relative}
+.clk{font-size:64px;font-weight:800;text-align:center;margin-top:18px;font-variant-numeric:tabular-nums;color:var(--c)}
+.board{display:flex;gap:12px;overflow-x:auto;margin:16px -20px 0;padding:0 20px 8px}
+.col{flex:0 0 190px;background:var(--card);border-radius:16px;padding:12px}
+.col h4{margin:0 0 8px;font-size:15px;font-weight:800}
+.cd{display:flex;justify-content:space-between;gap:6px;align-items:center;background:var(--bg);border-left:5px solid var(--c);border-radius:10px;padding:8px 8px 8px 10px;margin-bottom:8px;font-size:14px}
+.cd button{border:0;background:var(--card);color:var(--fg);border-radius:8px;width:28px;height:28px;font-weight:800;cursor:pointer}
+.col form input{margin:0;font-size:14px;padding:8px 10px}
+.pan{margin-top:22px;padding:14px 16px;border-radius:16px;background:var(--card)}
+.pan p{margin:4px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:2px 10px;font-size:13px}
+.opc{display:grid;gap:8px;margin-top:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="home">
+  <div class="topo">
+    <div><h1>Itens</h1><p>O tipo define como conclui. A agenda define quando.</p></div>
+    <button class="btn" id="edit" type="button">Editar modelos</button>
+  </div>
+  <div id="secoes"></div>
+  <div class="criados">
+    <h2>Criados agora</h2>
+    <p class="vazio" id="vazio">Toque em um modelo ou em “Novo” para criar um item. Depois toque nele para ver os detalhes.</p>
+    <ul id="lista"></ul>
+  </div>
+</main>
+<main id="det" hidden></main>
+<dialog id="dlg"><form id="frm" novalidate></form></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const TIPOS = {
+  simples:{t:'Simples',v:'--simples',i:'✔️',d:'Título e pronto. Conclui segurando o cartão.'},
+  lista:{t:'Lista',v:'--lista',i:'☑️',d:'Subitens com caixinhas. Conclui quando todos estiverem marcados.'},
+  tempo:{t:'Tempo',v:'--tempo',i:'⏱️',d:'Cronômetro livre ou foco com pausas (pomodoro).'},
+  quadro:{t:'Quadro',v:'--quadro',i:'🗂️',d:'Colunas e cartões. Conclui na última coluna.'}
+};
+const SEM = ['dom','seg','ter','qua','qui','sex','sáb'];
+const A0 = {modo:'hoje'};
+const INI = {
+  simples:[
+    {tipo:'simples',t:'Pagar energia',hora:'09:00',ag:{modo:'repetir',rule:'mensal',dia:10,n:3,sem:[]}},
+    {tipo:'simples',t:'Ligar pro dentista',ag:A0}
+  ],
+  lista:[{tipo:'lista',t:'Compras da semana',sub:['Frutas','Pão','Café'],ag:A0}],
+  tempo:[
+    {tipo:'tempo',t:'Estudar',tmodo:'foco',foco:50,pausa:10,ag:{modo:'repetir',rule:'diario',n:3,dia:10,sem:[]}},
+    {tipo:'tempo',t:'Leitura',tmodo:'livre',ag:{modo:'hoje'}}
+  ],
+  quadro:[
+    {tipo:'quadro',t:'Reforma',cols:'A Fazer, Fazendo, Feito',ag:A0},
+    {tipo:'quadro',t:'Revisão semanal',cols:'Ideias, Fazendo, Revisado',ag:{modo:'repetir',rule:'semanal',sem:[1],n:3,dia:10}}
+  ]
+};
+let M = (() => { try { return JSON.parse(localStorage.getItem('anlly-proto3')) || INI } catch (e) { return INI } })();
+const salvar = () => { try { localStorage.setItem('anlly-proto3', JSON.stringify(M)) } catch (e) {} };
+let criados = [], edit = false, cur = null, sel = new Set();
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hoje0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d };
+const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const fmt = d => d.toLocaleDateString('pt-BR', {day:'numeric', month:'short'}).replace('.', '');
+
+function occ(a, n = 3) {
+  const out = [], s = hoje0(), fim = a.fim ? new Date(a.fim + 'T00:00') : null;
+  for (let k = 0; k < 800 && out.length < n; k++) {
+    const d = new Date(s); d.setDate(s.getDate() + k);
+    if (fim && d > fim) break;
+    const dm = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const ok = a.rule === 'diario' || (a.rule === 'semanal' && (a.sem || []).includes(d.getDay()))
+      || (a.rule === 'cadaN' && k % a.n === 0) || (a.rule === 'mensal' && d.getDate() === Math.min(a.dia, dm));
+    if (ok) out.push(fmt(d));
+  }
+  return out;
+}
+function regra(a) {
+  if (a.rule === 'diario') return 'Todo dia';
+  if (a.rule === 'semanal') return 'Toda ' + (a.sem || []).map(i => SEM[i]).join(', ');
+  if (a.rule === 'cadaN') return 'A cada ' + a.n + ' dias';
+  return 'Todo mês, dia ' + a.dia;
+}
+function agTxt(it) {
+  const a = it.ag, h = it.hora ? ' às ' + it.hora : '';
+  if (a.modo === 'hoje') return 'Hoje' + h;
+  if (a.modo === 'dias') {
+    const ds = a.dias.map(s => fmt(new Date(s + 'T00:00')));
+    return ds.slice(0,3).join(', ') + (ds.length > 3 ? ' e mais ' + (ds.length-3) : '') + h;
+  }
+  if (a.modo === 'repetir') return regra(a) + h + '. Próximas: ' + (occ(a).join(', ') || 'nenhuma');
+  return 'Sem data' + h;
+}
+function extra(it) {
+  if (it.tipo === 'lista') return it.sub.length + ' subitens: ' + it.sub.slice(0,3).join(', ') + (it.sub.length > 3 ? '…' : '');
+  if (it.tipo === 'tempo') return it.tmodo === 'foco' ? 'Foco ' + it.foco + ' min, pausa ' + it.pausa + ' min' : 'Cronômetro livre';
+  if (it.tipo === 'quadro') return 'Colunas: ' + it.cols;
+  return '';
+}
+function dica(m) {
+  const e = m.tipo === 'lista' ? m.sub.length + ' itens' : m.tipo === 'tempo' ? (m.tmodo === 'foco' ? m.foco + '/' + m.pausa : 'livre')
+    : m.tipo === 'quadro' ? m.cols.split(',').length + ' colunas' : '';
+  const a = m.ag.modo === 'repetir' ? regra(m.ag) : m.ag.modo === 'hoje' ? 'hoje' : m.ag.modo === 'dias' ? 'escolher dias' : '';
+  return [e, a].filter(Boolean).join(', ') || 'sem data';
+}
+
+function render() {
+  $('#secoes').innerHTML = Object.entries(TIPOS).map(([k, s]) => `
+    <section class="sec" style="--c:var(${s.v})">
+      <div class="sec-h"><h2>${s.t}</h2><p>${s.d}</p></div>
+      <div class="fila">
+        <div class="item"><button class="tile novo" type="button" data-novo="${k}" aria-label="Novo item do tipo ${s.t}">+</button><span class="nome">Novo</span></div>
+        ${M[k].map((m, i) => `
+        <div class="item">
+          <button class="tile" type="button" data-m="${k}:${i}" aria-label="Usar modelo ${esc(m.t)}">${m.tmodo === 'foco' ? '🍅' : s.i}</button>
+          ${edit ? `<button class="x" type="button" data-x="${k}:${i}" aria-label="Apagar modelo ${esc(m.t)}">×</button>` : ''}
+          <span class="nome">${esc(m.t)}</span><span class="dica">${esc(dica(m))}</span>
+        </div>`).join('')}
+      </div>
+    </section>`).join('');
+  $('#edit').textContent = edit ? 'Concluir' : 'Editar modelos';
+  $('#vazio').hidden = criados.length > 0;
+  $('#lista').innerHTML = criados.map(it => { feito(it); return `
+    <li style="--c:var(${TIPOS[it.tipo].v})"><button type="button" class="cardli" data-ver="${it.id}"><b>${esc(it.t)}</b><span class="tag">${TIPOS[it.tipo].t}${it.done ? ' ✓' : ''}</span>
+    ${extra(it) ? `<small>${esc(extra(it))}</small>` : ''}<small>${esc(agTxt(it))}</small></button></li>`; }).join('');
+}
+function toast(m) {
+  const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(toast.id); toast.id = setTimeout(() => t.classList.remove('on'), 1800);
+}
+
+function rx(rule, a = {}) {
+  if (rule === 'semanal') return '<div class="wds">' + SEM.map((n, i) =>
+    `<button type="button" class="wd${(a.sem || []).includes(i) ? ' on' : ''}" data-w="${i}" aria-label="${n}">${n[0].toUpperCase()}</button>`).join('') + '</div>';
+  if (rule === 'cadaN') return `<label>A cada quantos dias?<input type="number" id="f-n" min="1" max="365" value="${a.n || 3}"></label>`;
+  if (rule === 'mensal') return `<label>Dia do mês<input type="number" id="f-dm" min="1" max="31" value="${a.dia || 10}"></label>`;
+  return '';
+}
+function calHtml() {
+  const h = hoje0(), y = h.getFullYear(), mo = h.getMonth(), ini = new Date(y, mo, 1).getDay(), dm = new Date(y, mo+1, 0).getDate();
+  let g = SEM.map(n => `<span>${n[0].toUpperCase()}</span>`).join('') + '<i></i>'.repeat(ini);
+  for (let d = 1; d <= dm; d++) {
+    const dt = new Date(y, mo, d), s = iso(dt);
+    g += `<button type="button" class="dc${sel.has(s) ? ' on' : ''}" data-dia="${s}"${dt < h ? ' disabled' : ''}>${d}</button>`;
+  }
+  return `<div class="cal">${g}</div>`;
+}
+function agx(a = {}) {
+  if (cur.modo === 'dias') return calHtml();
+  if (cur.modo === 'repetir') return `<label>Repetir
+    <select id="f-r">${[['diario','Todo dia'],['semanal','Dias da semana'],['cadaN','A cada N dias'],['mensal','Todo mês em um dia']]
+      .map(([v, n]) => `<option value="${v}"${(a.rule || 'mensal') === v ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+    <div id="rx">${rx(a.rule || 'mensal', a)}</div>
+    <label>Termina em (opcional)<input type="date" id="f-fim" value="${a.fim || ''}"></label><div class="pv" id="pv"></div>`;
+  return '';
+}
+function tx(m = {}) {
+  if (cur.tmodo !== 'foco') return '<p class="dsc">Inicie, pause e finalize quando quiser.</p>';
+  return `<div class="duo"><label>Foco (min)<input type="number" id="f-fo" min="1" max="180" value="${m.foco || 25}"></label>
+    <label>Pausa (min)<input type="number" id="f-pa" min="1" max="60" value="${m.pausa || 5}"></label></div>`;
+}
+const seg = (attr, opts, atual) => `<div class="seg" role="group">${opts.map(([v, n]) =>
+  `<button type="button" class="sg${atual === v ? ' on' : ''}" ${attr}="${v}">${n}</button>`).join('')}</div>`;
+
+function abrir(tipo, m = {}) {
+  const a = m.ag || A0;
+  cur = {tipo, modo: a.modo === 'dias' && !(a.dias && a.dias.length) ? 'dias' : a.modo, tmodo: m.tmodo || 'livre', ag: a};
+  sel = new Set(a.dias || []);
+  const s = TIPOS[tipo];
+  let corpo = '';
+  if (tipo === 'lista') corpo = `<label>Subitens (um por linha)<textarea id="f-s" placeholder="Frutas&#10;Pão&#10;Café">${esc((m.sub || []).join('\n'))}</textarea></label>`;
+  if (tipo === 'tempo') corpo = `<div class="lb">Modo</div>${seg('data-tm', [['livre','Cronômetro livre'],['foco','Foco e pausa']], cur.tmodo)}<div id="tx">${tx(m)}</div>`;
+  if (tipo === 'quadro') corpo = `<label>Colunas (separe por vírgula)<input type="text" id="f-c" value="${esc(m.cols || 'A Fazer, Fazendo, Feito')}"></label>`;
+  const opts = [['hoje','Hoje'],['dias','Dias'],['repetir','Repetir']];
+  $('#frm').style.setProperty('--c', `var(${s.v})`);
+  $('#frm').innerHTML = `<h3>Novo item: ${s.t}</h3><p class="dsc">${s.d}</p>
+    <label>Título<input type="text" id="f-t" maxlength="120" value="${esc(m.t || '')}" placeholder="Ex.: Pagar energia"></label>
+    ${corpo}
+    <div class="lb">Quando</div>${seg('data-ag', opts, cur.modo)}<div id="agx">${agx(a)}</div>
+    <details><summary>Mais opções</summary>
+      <label>Horário<input type="time" id="f-h" value="${m.hora || ''}"></label>
+      <label>Descrição<input type="text" id="f-ds" value="${esc(m.desc || '')}" placeholder="Detalhes opcionais"></label>
+    </details>
+    <label class="chk" style="margin-top:16px"><input type="checkbox" id="f-save"> Salvar como modelo</label>
+    <p class="err" id="err" role="alert"></p>
+    <div class="acoes"><button class="btn" type="button" id="cancela">Cancelar</button><button class="btn pri" type="submit">Criar item</button></div>`;
+  $('#dlg').showModal(); pv();
+  if (!m.t) $('#f-t').focus();
+}
+
+function ler() {
+  const t = cur.tipo, it = {tipo:t, t:$('#f-t').value.trim(), desc:$('#f-ds').value.trim(), hora:$('#f-h').value, ag:{modo:cur.modo}};
+  if (t === 'lista') it.sub = $('#f-s').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (t === 'tempo') { it.tmodo = cur.tmodo; if (cur.tmodo === 'foco') { it.foco = +$('#f-fo').value || 25; it.pausa = +$('#f-pa').value || 5; } }
+  if (t === 'quadro') it.cols = $('#f-c').value.split(',').map(c => c.trim()).filter(Boolean).join(', ');
+  if (cur.modo === 'dias') it.ag.dias = [...sel].sort();
+  if (cur.modo === 'repetir') {
+    const a = it.ag; a.rule = $('#f-r').value; a.n = +($('#f-n') ? $('#f-n').value : 0) || 3; a.dia = +($('#f-dm') ? $('#f-dm').value : 0) || 10;
+    a.sem = [...document.querySelectorAll('.wd.on')].map(b => +b.dataset.w); a.fim = $('#f-fim').value;
+  }
+  return it;
+}
+function pv() {
+  if (!cur || cur.modo !== 'repetir' || !$('#pv')) return;
+  const o = occ(ler().ag);
+  $('#pv').textContent = o.length ? 'Próximas: ' + o.join(', ') : 'Escolha os dias para ver as próximas datas.';
+}
+function valida(it) {
+  if (!it.t) return 'Informe um título.';
+  if (it.tipo === 'lista' && !it.sub.length) return 'Adicione pelo menos um subitem.';
+  if (it.tipo === 'quadro' && it.cols.split(',').length < 2) return 'O quadro precisa de pelo menos 2 colunas.';
+  if (it.ag.modo === 'dias' && !it.ag.dias.length) return 'Escolha pelo menos um dia no calendário.';
+  if (it.ag.modo === 'repetir' && it.ag.rule === 'semanal' && !it.ag.sem.length) return 'Escolha pelo menos um dia da semana.';
+  return '';
+}
+function criar(it) { criados.unshift(novoEstado(it)); toast('Item criado'); render(); }
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (b.id === 'hold') { if (e.detail === 0) { const it = criados.find(x => x.id === vid); it.done = !it.done; renderDet(); } return; }
+  if (d.ver) ver(+d.ver);
+  else if (d.det) detAcao(d.det, b);
+  else if (b.id === 'edit') { edit = !edit; render(); }
+  else if (b.id === 'cancela') $('#dlg').close();
+  else if (d.novo) abrir(d.novo);
+  else if (d.m) {
+    const [k, i] = d.m.split(':'), m = M[k][+i];
+    if (m.ag.modo === 'dias') abrir(k, m); else criar(JSON.parse(JSON.stringify(m)));
+  }
+  else if (d.x) { const [k, i] = d.x.split(':'); M[k].splice(+i, 1); salvar(); render(); }
+  else if (d.ag) {
+    cur.modo = d.ag; document.querySelectorAll('[data-ag]').forEach(x => x.classList.toggle('on', x === b));
+    $('#agx').innerHTML = agx(cur.ag.modo === d.ag ? cur.ag : {}); pv();
+  }
+  else if (d.tm) {
+    cur.tmodo = d.tm; document.querySelectorAll('[data-tm]').forEach(x => x.classList.toggle('on', x === b)); $('#tx').innerHTML = tx();
+  }
+  else if (b.classList.contains('wd')) { b.classList.toggle('on'); pv(); }
+  else if (d.dia) { sel.has(d.dia) ? sel.delete(d.dia) : sel.add(d.dia); b.classList.toggle('on'); }
+});
+$('#frm').addEventListener('input', e => { if (e.target.id !== 'f-r') pv(); });
+$('#frm').addEventListener('change', e => { if (e.target.id === 'f-r') { $('#rx').innerHTML = rx(e.target.value); pv(); } });
+$('#frm').addEventListener('submit', e => {
+  e.preventDefault();
+  const it = ler(), erro = valida(it);
+  if (erro) { $('#err').textContent = erro; return; }
+  if ($('#f-save').checked) {
+    const m = JSON.parse(JSON.stringify(it)); if (m.ag.modo === 'dias') delete m.ag.dias;
+    M[it.tipo].push(m); salvar();
+  }
+  $('#dlg').close(); criar(it);
+});
+
+let seq = 0, vid = null, ht = null;
+const dur = ms => { const s = Math.max(0, Math.floor(ms/1000)); return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0') };
+const novoEstado = it => Object.assign(it, {id:++seq, done:false, chk:(it.sub||[]).map(() => false), cards:[], acum:0, ini:null, fase:'foco', ciclos:0});
+const gasto = it => it.acum + (it.ini ? Date.now() - it.ini : 0);
+const total = it => (it.fase === 'foco' ? it.foco : it.pausa) * 60000;
+function tk(it) {
+  if (it.tipo !== 'tempo' || it.tmodo !== 'foco' || !it.ini || gasto(it) < total(it)) return;
+  if (it.fase === 'pausa') it.ciclos++;
+  it.fase = it.fase === 'foco' ? 'pausa' : 'foco'; it.acum = 0; it.ini = Date.now();
+}
+const clk = it => it.tmodo === 'foco' ? dur(total(it) - gasto(it)) : dur(gasto(it));
+const faseTxt = it => it.tmodo === 'foco' ? (it.fase === 'foco' ? 'Foco' : 'Pausa') + ', ciclos completos: ' + it.ciclos : (it.ini ? 'Rodando' : it.done ? 'Finalizado' : 'Parado');
+function feito(it) {
+  if (it.tipo === 'lista') it.done = it.chk.length > 0 && it.chk.every(Boolean);
+  if (it.tipo === 'quadro') { const u = it.cols.split(',').length - 1; it.done = it.cards.length > 0 && it.cards.every(c => c.col === u); }
+}
+function show(v) { $('#home').hidden = v !== 'home'; $('#det').hidden = v !== 'det'; window.scrollTo(0, 0); }
+function ver(id) { vid = id; show('det'); renderDet(); }
+function voltar() { vid = null; show('home'); render(); }
+
+function renderDet() {
+  const it = criados.find(x => x.id === vid); if (!it) return voltar();
+  feito(it); const T = TIPOS[it.tipo], a = it.ag; let c = '';
+  if (it.tipo === 'simples') c = `<button class="hold${it.done ? ' ok' : ''}" id="hold" type="button"><span class="fill"></span><b>${it.done ? 'Concluído. Segure para reabrir' : 'Segure para concluir'}</b></button>`;
+  if (it.tipo === 'lista') {
+    const n = it.chk.filter(Boolean).length, t = it.chk.length;
+    c = `<div class="prog"><i style="width:${t ? n/t*100 : 0}%"></i></div><p class="dsc">${n} de ${t} concluídos</p>
+      <ul class="chks">${it.sub.map((s, i) => `<li><label class="chk"><input type="checkbox" data-c="${i}"${it.chk[i] ? ' checked' : ''}> ${esc(s)}</label></li>`).join('')}</ul>
+      <form data-f="sub" class="inl"><input type="text" placeholder="Novo subitem" aria-label="Novo subitem"><button class="btn" type="submit">Adicionar</button></form>`;
+  }
+  if (it.tipo === 'tempo') c = `<div class="clk" id="clk">${clk(it)}</div><p class="dsc" id="fase" style="text-align:center">${faseTxt(it)}</p>
+    <div class="inl" style="justify-content:center"><button class="btn pri" type="button" data-det="play">${it.ini ? 'Pausar' : (gasto(it) ? 'Continuar' : 'Iniciar')}</button>
+    ${it.tmodo === 'foco' ? '<button class="btn" type="button" data-det="skip">Pular fase</button>' : '<button class="btn" type="button" data-det="fin">Finalizar</button>'}</div>`;
+  if (it.tipo === 'quadro') {
+    const cols = it.cols.split(',').map(s => s.trim());
+    c = `<div class="board">${cols.map((nm, ci) => `<div class="col"><h4>${esc(nm)}</h4>
+      ${it.cards.map((cd, i) => cd.col !== ci ? '' : `<div class="cd"><span>${esc(cd.t)}</span><span>${ci > 0 ? `<button type="button" data-det="mv" data-i="${i}" data-s="-1" aria-label="Mover para ${esc(cols[ci-1])}">‹</button>` : ''}${ci < cols.length-1 ? `<button type="button" data-det="mv" data-i="${i}" data-s="1" aria-label="Mover para ${esc(cols[ci+1])}">›</button>` : ''}</span></div>`).join('')}
+      <form data-f="card" data-col="${ci}"><input type="text" placeholder="+ cartão" aria-label="Novo cartão em ${esc(nm)}"></form></div>`).join('')}</div>`;
+  }
+  const limpo = {simples:'em aberto', lista:'com as caixinhas desmarcadas', tempo:'com o tempo zerado', quadro:'com estas colunas e sem cartões'}[it.tipo];
+  const q = a.modo === 'repetir' ? regra(a) + (it.hora ? ' às ' + it.hora : '') : agTxt(it);
+  const pan = `<div class="pan"><b>Quando</b><p>${esc(q)}</p>` + (a.modo === 'repetir' ? `<div class="chips">${occ(a, 6).map(d => `<span>${d}</span>`).join('')}</div><p class="dsc">Cada ocorrência nasce ${limpo}.</p>` : '') + '</div>';
+  $('#det').style.setProperty('--c', `var(${T.v})`);
+  $('#det').innerHTML = `<div class="topo"><button class="btn" type="button" data-det="voltar">‹ Itens</button></div>
+    <div class="dcorpo"><h1>${esc(it.t)}</h1><p class="dsc"><span class="tag" style="margin:0">${T.t}</span>${it.done ? ' Concluído.' : ''}${it.desc ? ' ' + esc(it.desc) : ''}</p>
+    ${c}${pan}<div class="inl"><button class="btn" type="button" data-det="model">Salvar como modelo</button><button class="btn" type="button" data-det="del">Apagar</button></div></div>`;
+}
+
+function apagar(it) {
+  if (it.ag.modo !== 'repetir') { criados = criados.filter(x => x.id !== it.id); voltar(); toast('Item apagado'); return; }
+  $('#frm').innerHTML = `<h3>Apagar item repetido</h3><p class="dsc">Este item faz parte de uma série. O que apagar?</p>
+    <div class="opc">${[['Só este','Ocorrência apagada'],['Este e os próximos','Este e os próximos apagados'],['Toda a série','Série apagada']].map(([n, m]) => `<button class="btn" type="button" data-det="rm" data-msg="${m}">${n}</button>`).join('')}</div>
+    <div class="acoes"><button class="btn" type="button" id="cancela">Cancelar</button></div>`;
+  $('#dlg').showModal();
+}
+function detAcao(a, b) {
+  if (a === 'voltar') return voltar();
+  const it = criados.find(x => x.id === vid); if (!it) return;
+  if (a === 'play') { if (it.ini) { it.acum = gasto(it); it.ini = null } else it.ini = Date.now(); }
+  if (a === 'skip') { it.acum = 0; it.ini = it.ini ? Date.now() : null; if (it.fase === 'pausa') it.ciclos++; it.fase = it.fase === 'foco' ? 'pausa' : 'foco'; }
+  if (a === 'fin') { it.acum = gasto(it); it.ini = null; it.done = true; }
+  if (a === 'mv') it.cards[+b.dataset.i].col += +b.dataset.s;
+  if (a === 'model') {
+    const m = JSON.parse(JSON.stringify(it)); ['id','done','chk','cards','acum','ini','fase','ciclos'].forEach(k => delete m[k]);
+    if (m.ag.modo === 'dias') delete m.ag.dias;
+    M[it.tipo].push(m); salvar(); toast('Modelo salvo'); return;
+  }
+  if (a === 'del') return apagar(it);
+  if (a === 'rm') { $('#dlg').close(); criados = criados.filter(x => x.id !== it.id); voltar(); toast(b.dataset.msg); return; }
+  renderDet();
+}
+$('#det').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, v = f.querySelector('input').value.trim(), it = criados.find(x => x.id === vid);
+  if (!v || !it) return;
+  if (f.dataset.f === 'sub') { it.sub.push(v); it.chk.push(false); }
+  if (f.dataset.f === 'card') it.cards.push({t:v, col:+f.dataset.col});
+  renderDet();
+});
+$('#det').addEventListener('change', e => {
+  const i = e.target.dataset.c, it = criados.find(x => x.id === vid);
+  if (i === undefined || !it) return;
+  it.chk[+i] = e.target.checked; renderDet();
+});
+document.addEventListener('pointerdown', e => {
+  const h = e.target.closest('#hold'); if (!h) return;
+  h.classList.add('on');
+  ht = setTimeout(() => { const it = criados.find(x => x.id === vid); if (it) { it.done = !it.done; renderDet(); } }, 700);
+});
+['pointerup','pointercancel'].forEach(ev => document.addEventListener(ev, () => { clearTimeout(ht); const h = $('#hold'); if (h) h.classList.remove('on'); }, true));
+setInterval(() => {
+  const it = criados.find(x => x.id === vid); if (!it || it.tipo !== 'tempo') return;
+  tk(it); if ($('#clk')) { $('#clk').textContent = clk(it); $('#fase').textContent = faseTxt(it); }
+}, 500);
+render();
+</script>
+</body>
+</html>

@@ -95,9 +95,9 @@ docker-compose.yml  app + postgres (healthcheck; migrations via `run --rm migrat
 
 Regras de camada do cliente:
 
-- Componentes **nunca** importam o Dexie. Todo acesso passa por
-  `items.repo.ts`/`config.repo.ts`; leituras reativas com `useLiveQuery`
-  (`useItems`, `useSettings`).
+- Componentes **nunca** importam o Dexie. Todo acesso passa por repositórios
+  (`items.repo.ts`, `modelos.repo.ts`, `config.repo.ts`); leituras reativas com
+  `useLiveQuery` (`useItems`, `useSettings`).
 - Toda escrita grava o registro **e** a entrada no outbox na mesma transação
   Dexie — o SyncEngine (etapa E) envia o outbox para `/api/sync/push`.
 - Sync: `POST /api/sync/push` idempotente por id de mutação (LWW por
@@ -106,11 +106,21 @@ Regras de camada do cliente:
 - Quadros Kanban: cada projeto salva e sincroniza suas colunas; é possível
   adicionar/remover colunas, escolher qual conclui cartões e mover os cartões
   de uma coluna removida para outra.
+- Tipos de item: Simples (`padrao`), Lista (`lista`, com subitens no próprio
+  item), Tempo (`cronometro`, livre ou foco/pausa) e Quadro (`kanban`). A agenda
+  comum oferece Hoje, vários Dias ou Repetir. `diasAgendamento` segue opcional
+  para preservar itens antigos, embora a interface nova não ofereça "Sem data".
+- Modelos por tipo ficam em `modelos` (Dexie/Prisma), sincronizam com outbox e
+  tombstones, e podem ser salvos no formulário ou no detalhe. Modelos com
+  qualquer agenda abrem o formulário preenchido ao reutilizar; Hoje usa a data
+  atual e Dias pedem datas. Enquanto a Fase 3 (séries) não estiver concluída,
+  salvar um modelo Repetir cria só a próxima ocorrência.
 - Conta (`features/conta/`): tela em `/conta` (entrar/criar/sair via
   `/api/auth/*`), indicador de fase do sync no TopNav (`useSyncStatus`) e o
   guarda de troca de conta — ao conectar, `conectar()` enfileira na outbox os
-  itens que faltam (**inclusive tombstones**) e, se quem entrou é outro
-  usuário, apaga itens+outbox e zera o cursor para não misturar contas.
+  itens e modelos que faltam (**inclusive tombstones**) e, se quem entrou é
+  outro usuário, apaga itens+modelos+outbox e zera o cursor para não misturar
+  contas.
 
 ## Ícones
 

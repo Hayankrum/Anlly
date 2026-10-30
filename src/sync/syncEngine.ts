@@ -15,8 +15,9 @@ import {
   aoMudarOutbox,
 } from '../db/outbox.repo'
 import * as syncState from '../db/sync-state.repo'
-import type { Item } from '../db/schema'
+import type { SyncRegistro } from '@shared/schemas/sync'
 import { aplicarRemoto, removerTombstonesConfirmados } from '../features/items/items.repo'
+import * as modelosRepo from '../features/items/modelos.repo'
 import { alinharContaLocal, transicaoEmAndamento } from '../features/conta/conta.repo'
 import { ErroCotaExcedida, MENSAGEM_SEM_ESPACO_SYNC } from '../shared/lib/cota'
 import { estimarArmazenamento } from '../shared/lib/storage'
@@ -39,6 +40,17 @@ const DEBOUNCE_ESCRITA_MS = 1_500
 const LIMITE_PULL = 500
 const MAX_PAGINAS_PULL = 10
 const MAX_LOTES_PUSH = 20
+
+async function aplicarSyncRegistros(registros: SyncRegistro[]): Promise<void> {
+  const itens = registros
+    .filter((registro) => registro.tabela === 'items')
+    .map((registro) => registro.registro)
+  const modelos = registros
+    .filter((registro) => registro.tabela === 'modelos')
+    .map((registro) => registro.registro)
+  if (itens.length > 0) await aplicarRemoto(itens)
+  if (modelos.length > 0) await modelosRepo.aplicarRemoto(modelos)
+}
 
 let status: StatusSync = {
   fase: 'parado',
@@ -145,7 +157,7 @@ async function push(minhaGeracao: number): Promise<void> {
     if (await devoParar(minhaGeracao)) return
     const porId = new Map(resposta.resultados.map((resultado) => [resultado.mutacaoId, resultado]))
     const confirmados: string[] = [...descartaveis]
-    const vencedoresRemotos: Item[] = []
+    const vencedoresRemotos: SyncRegistro[] = []
     const semResultado: string[] = []
     let rejeitadasNesteLote = 0
     for (const entrada of envio) {
@@ -180,7 +192,7 @@ async function push(minhaGeracao: number): Promise<void> {
       })
     }
     for (const vencedor of vencedoresRemotos) {
-      await aplicarRemoto([vencedor])
+      await aplicarSyncRegistros([vencedor])
     }
     if (envio.length < LIMITE_LOTE_PUSH) return
   }
@@ -209,7 +221,7 @@ async function pull(minhaGeracao: number): Promise<void> {
         // Se não conseguir estimar, segue e deixa o bulkPut falhar (tratado depois)
       }
       try {
-        await aplicarRemoto(resposta.registros)
+        await aplicarSyncRegistros(resposta.registros)
       } catch (erro) {
         // O bulkPut pode estourar entre a checagem e a escrita: mensagem do sync.
         if (erro instanceof ErroCotaExcedida) throw new ErroCotaExcedida(MENSAGEM_SEM_ESPACO_SYNC)

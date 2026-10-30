@@ -84,12 +84,46 @@ describe('itemSchema', () => {
     expect(itemSchema.safeParse(itemBase({ tempoDecorridoMs: 1.5 })).success).toBe(false)
   })
 
-  it('aceita tipo padrao, cronometro e kanban', () => {
+  it('aceita tipos simples, lista, tempo e quadro', () => {
     expect(itemSchema.safeParse(itemBase({ tipo: 'padrao' })).success).toBe(true)
+    expect(itemSchema.safeParse(itemBase({ tipo: 'lista' })).success).toBe(true)
     expect(itemSchema.safeParse(itemBase({ tipo: 'cronometro' })).success).toBe(true)
     expect(itemSchema.safeParse(itemBase({ tipo: 'kanban' })).success).toBe(true)
   })
 
+  it('aceita subitens no próprio item e configurações de foco e pausa', () => {
+    expect(
+      itemSchema.safeParse(
+        itemBase({
+          tipo: 'lista',
+          subitens: [{ id: 'sub-1', titulo: 'Pão', concluido: false }],
+        }),
+      ).success,
+    ).toBe(true)
+    expect(
+      itemSchema.safeParse(
+        itemBase({
+          tipo: 'cronometro',
+          modoTempo: 'focoPausa',
+          minutosFoco: 50,
+          minutosPausa: 10,
+          faseTempo: 'foco',
+          ciclosConcluidos: 2,
+        }),
+      ).success,
+    ).toBe(true)
+  })
+
+  it('rejeita duração fora dos limites e subitens malformados', () => {
+    expect(
+      itemSchema.safeParse(itemBase({ tipo: 'cronometro', minutosFoco: 0 })).success,
+    ).toBe(false)
+    expect(
+      itemSchema.safeParse(
+        itemBase({ tipo: 'lista', subitens: [{ id: '', titulo: '', concluido: false }] }),
+      ).success,
+    ).toBe(false)
+  })
   it('aceita item sem tipo (antigo = padrao)', () => {
     expect(itemSchema.safeParse(itemBase()).success).toBe(true)
   })
