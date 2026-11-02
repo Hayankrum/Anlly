@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, House, List, Moon, Sun, UserRound } from 'lucide-react'
+import { CalendarDays, ChartPie, House, List, Moon, Sun, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import appConfig from '../app.config.json'
 import { useSettings } from '../../features/settings/useSettings'
@@ -17,6 +17,7 @@ const LINKS: LinkNavegacao[] = [
   { to: '/', rotulo: 'Início', icone: House, exato: true },
   { to: '/itens', rotulo: 'Itens', icone: List },
   { to: '/calendario', rotulo: 'Agenda', icone: CalendarDays },
+  { to: '/progresso', rotulo: 'Progresso', icone: ChartPie },
   { to: '/conta', rotulo: 'Conta', icone: UserRound },
 ]
 

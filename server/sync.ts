@@ -46,6 +46,7 @@ type ItemTabela = {
   ciclosConcluidos: number | null
   diasAgendamento: string[]
   horaAgendamento: string | null
+  diasConclusao: string[]
   timerIniciadoEm: bigint | null
   tempoDecorridoMs: bigint | null
   criadoEm: bigint
@@ -109,6 +110,7 @@ function toWire(item: ItemTabela): Item {
     ...(item.ordem === null ? {} : { ordem: item.ordem }),
     ...(item.diasAgendamento.length === 0 ? {} : { diasAgendamento: item.diasAgendamento }),
     ...(item.horaAgendamento === null ? {} : { horaAgendamento: item.horaAgendamento }),
+    ...(item.diasConclusao.length === 0 ? {} : { diasConclusao: item.diasConclusao }),
     ...(item.timerIniciadoEm === null ? {} : { timerIniciadoEm: Number(item.timerIniciadoEm) }),
     ...(item.tempoDecorridoMs === null ? {} : { tempoDecorridoMs: Number(item.tempoDecorridoMs) }),
     criadoEm: Number(item.criadoEm),
@@ -296,6 +298,7 @@ async function processarLote(
         ciclosConcluidos: mut.payload.ciclosConcluidos ?? null,
         diasAgendamento: mut.payload.diasAgendamento ?? [],
         horaAgendamento: mut.payload.horaAgendamento ?? null,
+        diasConclusao: mut.payload.diasConclusao ?? [],
         timerIniciadoEm:
           mut.payload.timerIniciadoEm === undefined ? null : BigInt(mut.payload.timerIniciadoEm),
         tempoDecorridoMs:

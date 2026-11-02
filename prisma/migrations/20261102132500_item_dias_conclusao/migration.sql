@@ -1,0 +1,2 @@
+ALTER TABLE "item"
+ADD COLUMN "diasConclusao" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

@@ -292,37 +292,25 @@
   color: var(--cor-texto-suave);
 }
 
-/* Selo do tipo no canto do nó — identifica itens de outro mecanismo (ex.: cronômetro). */
-.trilha-no-selo {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--cor-superficie);
-  border-radius: 50%;
-  background: var(--cor-acento);
-  color: var(--cor-texto-contraste);
+.trilha-passo--padrao {
+  --trilha-tipo-cor: #ef5b4f;
 }
 
-.trilha-passo--cronometro .trilha-no {
-  border: 2px solid color-mix(in srgb, var(--cor-acento) 55%, transparent);
+.trilha-passo--lista {
+  --trilha-tipo-cor: #d89000;
 }
 
-.trilha-passo--cronometro .trilha-no-selo {
-  background: var(--cor-acento);
-  color: var(--cor-texto-contraste);
+.trilha-passo--cronometro {
+  --trilha-tipo-cor: #3b82f6;
 }
 
-.trilha-passo--projeto .trilha-no {
-  border: 2px solid color-mix(in srgb, var(--home-ouro) 65%, transparent);
+.trilha-passo--projeto {
+  --trilha-tipo-cor: #16a36a;
 }
 
-.trilha-no-selo--projeto {
-  background: var(--home-ouro);
-  color: #4a2f00;
+.trilha-passo:not(.trilha-chegada, .trilha-passo--feito, .trilha-passo--proximo) .trilha-no {
+  background: color-mix(in srgb, var(--trilha-tipo-cor) 13%, var(--cor-superficie));
+  color: var(--trilha-tipo-cor);
 }
 
 .trilha-chegada--alcancada .trilha-no--meta {

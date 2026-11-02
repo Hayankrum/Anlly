@@ -17,6 +17,15 @@ import { todayStr, weekOf } from '../calendario/datas'
 
 const TABELA = 'items'
 
+function registrarConclusao(item: Item, concluido: boolean, agora: number): Item {
+  const atualizado = { ...item, concluido }
+  if (concluido && !item.concluido) {
+    const dia = todayStr(new Date(agora))
+    atualizado.diasConclusao = [...new Set([...(item.diasConclusao ?? []), dia])]
+  }
+  return atualizado
+}
+
 export interface OpcoesListagem {
   busca?: string
   periodo?: PeriodoItens
@@ -140,7 +149,10 @@ async function recalcularConclusaoProjetoTx(projetoId: string, agora: number): P
   const concluido =
     filhos.length > 0 && filhos.every((item) => item.coluna === colunaConclusao)
   if (projeto.concluido === concluido) return
-  const atualizado: Item = { ...projeto, concluido, updatedAt: agora }
+  const atualizado: Item = {
+    ...registrarConclusao(projeto, concluido, agora),
+    updatedAt: agora,
+  }
   await db.items.put(atualizado)
   await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
 }
@@ -367,7 +379,10 @@ export async function atualizarSubitem(
         subitem.id === subitemId ? { ...subitem, concluido } : subitem,
       )
       const novoEstado = subitens.length > 0 && subitens.every((subitem) => subitem.concluido)
-      const item = itemSchema.parse({ ...atual, subitens, concluido: novoEstado, updatedAt: agora })
+      const item = itemSchema.parse({
+        ...registrarConclusao({ ...atual, subitens }, novoEstado, agora),
+        updatedAt: agora,
+      })
       await db.items.put(item)
       await db.outbox.add(novaMutacao(TABELA, item, 'upsert', agora))
     }),
@@ -384,7 +399,10 @@ export async function alternarConcluido(item: Item): Promise<void> {
       if (atual.tipo === 'lista') return
       // Projeto kanban conclui sozinho pelo quadro — o botão manual não muda nada.
       if (atual.tipo === 'kanban' && atual.parentId === undefined) return
-      const atualizado: Item = { ...atual, concluido: !atual.concluido, updatedAt: agora }
+      const atualizado: Item = {
+        ...registrarConclusao(atual, !atual.concluido, agora),
+        updatedAt: agora,
+      }
       // Concluindo direto (sem passar pelo "Finalizar"), ainda assim encerra a
       // sessão em curso para o tempo não se perder.
       if (atualizado.concluido) encerrarSessao(atualizado, agora)
@@ -453,12 +471,11 @@ export async function moverParaColuna(
       const idsAlterados = new Set<string>()
       novaSequencia.forEach((item, posicao) => {
         const mudou = item.coluna !== coluna || (item.ordem ?? 0) !== posicao
-        const alterado: Item = {
+        const alterado: Item = registrarConclusao({
           ...item,
           coluna,
           ordem: posicao,
-          concluido: coluna === quadro.colunaConclusao,
-        }
+        }, coluna === quadro.colunaConclusao, agora)
         // Só cartão que mudou de fato ganha novo `updatedAt` (e é sincronizado).
         if (mudou) {
           alterado.updatedAt = agora
@@ -489,9 +506,8 @@ async function salvarQuadroProjetoTx(
     cartoes.length > 0 &&
     cartoes.every((cartao) => cartao.coluna === quadro.colunaConclusao)
   const atualizado: Item = {
-    ...projeto,
+    ...registrarConclusao(projeto, concluido, agora),
     quadroKanban: quadro,
-    concluido,
     updatedAt: agora,
   }
   await db.items.put(atualizado)
@@ -542,7 +558,10 @@ export async function marcarColunaConclusao(
       const atualizados = cartoes.map((cartao) => {
         const concluido = cartao.coluna === colunaConclusao
         if (cartao.concluido === concluido) return cartao
-        const atualizado = { ...cartao, concluido, updatedAt: agora }
+        const atualizado = {
+          ...registrarConclusao(cartao, concluido, agora),
+          updatedAt: agora,
+        }
         return atualizado
       })
       const alterados = atualizados.filter((cartao, indice) => cartao !== cartoes[indice])
@@ -613,7 +632,10 @@ export async function removerColunaKanban(
         ) {
           return cartao
         }
-        return { ...cartao, coluna, ordem, concluido, updatedAt: agora }
+        return {
+          ...registrarConclusao({ ...cartao, coluna, ordem }, concluido, agora),
+          updatedAt: agora,
+        }
       })
       const alterados = atualizados.filter((cartao, indice) => cartao !== cartoes[indice])
       if (alterados.length > 0) {
@@ -726,7 +748,10 @@ export async function finalizarTimer(id: string): Promise<void> {
     db.transaction('rw', db.items, db.outbox, async () => {
       const atual = await db.items.get(id)
       if (atual === undefined) return
-      const atualizado: Item = { ...atual, concluido: true, updatedAt: agora }
+      const atualizado: Item = {
+        ...registrarConclusao(atual, true, agora),
+        updatedAt: agora,
+      }
       encerrarSessao(atualizado, agora)
       await db.items.put(atualizado)
       await db.outbox.add(novaMutacao(TABELA, atualizado, 'upsert', agora))
@@ -858,14 +883,35 @@ export async function aplicarRemoto(registros: Item[]): Promise<number> {
         (await db.outbox.toArray()).map((entrada) => `${entrada.tabela}:${entrada.registroId}`),
       )
       const paraGravar: Item[] = []
+      const mutacoesHistorico: EntradaOutbox[] = []
       for (const registro of registros) {
         if (pendentes.has(`${TABELA}:${registro.id}`)) continue
         const atual = await db.items.get(registro.id)
         if (atual !== undefined && atual.updatedAt > registro.updatedAt) continue
-        paraGravar.push(registro)
+        const diasRemotos = new Set(registro.diasConclusao ?? [])
+        const diasConclusao = [
+          ...new Set([...diasRemotos, ...(atual?.diasConclusao ?? [])]),
+        ].sort()
+        const precisaSincronizarHistorico =
+          atual?.diasConclusao?.some((dia) => !diasRemotos.has(dia)) ?? false
+        const agora = Date.now()
+        const atualizado: Item = {
+          ...registro,
+          ...(diasConclusao.length > 0 ? { diasConclusao } : {}),
+          ...(precisaSincronizarHistorico
+            ? { updatedAt: Math.max(agora, registro.updatedAt + 1) }
+            : {}),
+        }
+        paraGravar.push(atualizado)
+        if (precisaSincronizarHistorico) {
+          mutacoesHistorico.push(novaMutacao(TABELA, atualizado, 'upsert', agora))
+        }
       }
       if (paraGravar.length > 0) {
         await db.items.bulkPut(paraGravar)
+        if (mutacoesHistorico.length > 0) {
+          await db.outbox.bulkAdd(mutacoesHistorico)
+        }
         aplicados = paraGravar.length
       }
     }),

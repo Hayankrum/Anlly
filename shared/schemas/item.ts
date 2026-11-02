@@ -155,6 +155,8 @@ export const itemSchema = z.object({
     .optional(),
   /** Opcional: horário do agendamento (HH:mm, 24h) — mesmo horário em todos os dias. */
   horaAgendamento: z.string().regex(HORA_AGENDAMENTO_RE).optional(),
+  /** Dias em que o item foi concluído, preservados para o histórico de progresso. */
+  diasConclusao: z.array(z.string().regex(DATA_AGENDAMENTO_RE)).max(5000).optional(),
   /**
    * Cronômetro: epoch ms em que a última sessão foi iniciada. Presente = rodando.
    * Guardado no item (não em estado local) para sobreviver a reload/offline.

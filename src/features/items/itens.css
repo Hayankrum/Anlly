@@ -107,6 +107,18 @@
   color: var(--item-tipo-cor);
 }
 
+.itens-botao--modelo .itens-botao-titulo {
+  display: -webkit-box;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .itens-modelo-inicial {
   font-size: 2rem;
   font-weight: 700;

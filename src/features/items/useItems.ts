@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { Item, PeriodoItens } from '../../db/schema'
+import db from '../../db/database'
 import * as itemsRepo from './items.repo'
 
 export interface OpcoesItens {
@@ -37,6 +38,21 @@ export function useItemsStats(): Estatisticas {
     const concluidos = itens.filter((item) => item.concluido).length
     return { total: itens.length, concluidos, pendentes: itens.length - concluidos }
   }, [], ESTATISTICAS_VAZIA)
+}
+
+/** Itens e cartões com histórico de conclusão para a ofensiva e o gráfico semanal. */
+export function useHistoricoConclusoes(): Item[] {
+  const chave = 'historico-conclusoes'
+  const resultado = useLiveQuery(
+    () =>
+      db.items
+        .filter((item) => item.deletedAt === undefined && (item.diasConclusao?.length ?? 0) > 0)
+        .toArray(),
+    [],
+    cacheItens.get(chave) ?? ([] as Item[]),
+  )
+  cacheItens.set(chave, resultado)
+  return resultado
 }
 
 /** Cartões do quadro de um projeto, reativos (atualizam ao arrastar/salvar). */

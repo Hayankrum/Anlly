@@ -350,6 +350,7 @@ export function QuadroProjeto({ projetoId, podeEditar, config }: QuadroProjetoPr
           titulo={edicao.modo === 'criar' ? 'Novo cartão' : 'Editar cartão'}
           onFechar={() => setEdicao(null)}
           largura="estreito"
+          folha
         >
           <form onSubmit={(evento) => void salvar(evento)} noValidate>
             <Input

@@ -396,6 +396,25 @@
   color: var(--cor-texto);
 }
 
+@media (max-width: 767px) {
+  .toast-area {
+    width: min(360px, calc(100vw - 24px));
+    gap: 5px;
+  }
+
+  .toast {
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 10px;
+    font-size: 0.84rem;
+  }
+
+  .toast-acao {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+}
+
 @keyframes toast-entrar {
   from {
     opacity: 0;

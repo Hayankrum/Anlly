@@ -115,6 +115,7 @@ model Item {
   // vale para todos eles.
   diasAgendamento String[]
   horaAgendamento String?
+  diasConclusao String[] @default([])
   // Cronômetro do item: epoch ms da sessão em curso (null = parado) e a soma
   // das sessões já encerradas, em milissegundos.
   timerIniciadoEm BigInt?

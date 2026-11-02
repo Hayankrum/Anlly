@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { Columns3, ListTodo, Timer } from 'lucide-react'
+import { Check, Columns3, ListChecks, Timer } from 'lucide-react'
 import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
 import { tempoRelativo } from '../../shared/lib/date'
 import type { Item } from '../../db/schema'
@@ -26,6 +26,13 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
   const ehCronometro = item.tipo === 'cronometro'
   const ehProjeto = item.tipo === 'kanban'
   const ehLista = item.tipo === 'lista'
+  const IconeTipo = ehProjeto
+    ? Columns3
+    : ehCronometro
+      ? Timer
+      : ehLista
+        ? ListChecks
+        : Check
 
   const { progresso, segurando, propsSegurar } = useSegurarParaConcluir({
     aoConcluir: () => {
@@ -38,8 +45,15 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
   if (concluido) classes.push('trilha-passo--feito')
   if (proximo) classes.push('trilha-passo--proximo')
   if (segurando) classes.push('trilha-passo--segurando')
-  if (ehCronometro) classes.push('trilha-passo--cronometro')
-  if (ehProjeto) classes.push('trilha-passo--projeto')
+  classes.push(
+    ehProjeto
+      ? 'trilha-passo--projeto'
+      : ehCronometro
+        ? 'trilha-passo--cronometro'
+        : ehLista
+          ? 'trilha-passo--lista'
+          : 'trilha-passo--padrao',
+  )
 
   const lado = x > 0.5 ? 'trilha-bolha--esquerda' : 'trilha-bolha--direita'
 
@@ -93,17 +107,7 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
               <path d="m5 13 4.5 4.5L19 7" />
             </svg>
           ) : (
-            <ListTodo size={26} strokeWidth={1.9} aria-hidden="true" />
-          )}
-          {ehCronometro && (
-            <span className="trilha-no-selo" aria-hidden="true">
-              <Timer size={11} strokeWidth={2.6} />
-            </span>
-          )}
-          {ehProjeto && (
-            <span className="trilha-no-selo trilha-no-selo--projeto" aria-hidden="true">
-              <Columns3 size={11} strokeWidth={2.6} />
-            </span>
+            <IconeTipo size={30} strokeWidth={1.9} aria-hidden="true" />
           )}
         </span>
       </button>
