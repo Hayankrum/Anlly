@@ -301,7 +301,7 @@ export function ItemDetalhePage() {
         </div>
       </div>
 
-      <section className="cartao item-detalhe" aria-label="Detalhes do item">
+      <section className="item-detalhe" aria-label="Detalhes do item">
         <p className="item-detalhe-descricao">
           {item.descricao ? item.descricao : 'Sem descrição.'}
         </p>
@@ -499,7 +499,13 @@ export function ItemDetalhePage() {
         </button>
       )}
 
-      <Modal aberto={editando} titulo="Editar item" onFechar={() => setEditando(false)} largura="estreito">
+      <Modal
+        aberto={editando}
+        titulo="Editar item"
+        onFechar={() => setEditando(false)}
+        largura="estreito"
+        folha
+      >
         <ItemForm
           item={item}
           aoCancelar={() => setEditando(false)}

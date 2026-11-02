@@ -200,6 +200,57 @@
   outline-offset: 2px;
 }
 
+/* Folha inferior (mobile): o modal encosta na base e sobe deslizando. */
+@media (max-width: 767px) {
+  .modal-fundo--folha {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-dialogo--folha {
+    max-width: none;
+    max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 0.35);
+    animation: modal-folha-subir 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .modal-dialogo--folha .modal-cabecalho {
+    position: relative;
+    padding-top: 18px;
+  }
+
+  /* Puxador visual da folha. */
+  .modal-dialogo--folha .modal-cabecalho::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--cor-borda-forte);
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes modal-folha-subir {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .modal-dialogo--folha {
+    animation: none;
+  }
+}
+
 .modal-cabecalho {
   display: flex;
   align-items: center;

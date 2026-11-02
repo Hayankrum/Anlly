@@ -9,12 +9,22 @@ export interface ModalProps {
   children: ReactNode
   rodape?: ReactNode
   largura?: 'padrao' | 'estreito'
+  /** No mobile, sobe da base da tela como uma folha inferior. */
+  folha?: boolean
 }
 
 const SELETOR_FOCAVEIS =
   'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-export function Modal({ aberto, titulo, onFechar, children, rodape, largura = 'padrao' }: ModalProps) {
+export function Modal({
+  aberto,
+  titulo,
+  onFechar,
+  children,
+  rodape,
+  largura = 'padrao',
+  folha = false,
+}: ModalProps) {
   const tituloId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
   const focoAnterior = useRef<HTMLElement | null>(null)
@@ -72,13 +82,13 @@ export function Modal({ aberto, titulo, onFechar, children, rodape, largura = 'p
 
   return createPortal(
     <div
-      className="modal-fundo"
+      className={`modal-fundo${folha ? ' modal-fundo--folha' : ''}`}
       onMouseDown={(evento) => {
         if (evento.target === evento.currentTarget) onFechar()
       }}
     >
       <div
-        className={`modal-dialogo modal-dialogo--${largura}`}
+        className={`modal-dialogo modal-dialogo--${largura}${folha ? ' modal-dialogo--folha' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={tituloId}

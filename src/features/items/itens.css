@@ -323,6 +323,98 @@
   cursor: not-allowed;
 }
 
+/* Formulário em folha inferior no mobile: tudo mais compacto para caber
+   sem rolagem excessiva. */
+@media (max-width: 767px) {
+  .modal-dialogo--folha .modal-corpo {
+    padding: 8px 16px 4px;
+  }
+
+  .modal-dialogo--folha .item-form {
+    gap: 10px;
+  }
+
+  .modal-dialogo--folha .item-form .campo {
+    gap: 4px;
+  }
+
+  .modal-dialogo--folha .campo-controle {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  .modal-dialogo--folha .campo-controle--area {
+    min-height: 68px;
+  }
+
+  .modal-dialogo--folha .item-form-grupo > legend {
+    margin-bottom: 4px;
+  }
+
+  .modal-dialogo--folha .item-form-opcao,
+  .modal-dialogo--folha .item-form-dia {
+    min-height: 36px;
+  }
+
+  .modal-dialogo--folha .item-form-dia {
+    min-width: 36px;
+  }
+
+  .modal-dialogo--folha .item-form-dupla,
+  .modal-dialogo--folha .item-form-repeticao {
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .modal-dialogo--folha .calendario {
+    padding: 8px;
+  }
+
+  .modal-dialogo--folha .calendario-cabecalho {
+    margin-bottom: 4px;
+  }
+
+  .modal-dialogo--folha .calendario-nav {
+    width: 30px;
+    height: 30px;
+  }
+
+  .modal-dialogo--folha .calendario-semana-dia {
+    padding: 2px 0;
+  }
+
+  .modal-dialogo--folha .calendario-dia {
+    min-height: 34px;
+  }
+
+  .modal-dialogo--folha .calendario-rodape {
+    margin-top: 4px;
+  }
+
+  .modal-dialogo--folha .item-form-previa {
+    padding: 8px 10px;
+    font-size: 0.84rem;
+  }
+
+  .modal-dialogo--folha .item-form-mais-opcoes summary {
+    padding: 4px 0;
+  }
+
+  .modal-dialogo--folha .item-form-mais-opcoes[open] {
+    gap: 8px;
+  }
+
+  .modal-dialogo--folha .item-form-salvar-modelo {
+    min-height: 36px;
+    font-size: 0.86rem;
+  }
+
+  .modal-dialogo--folha .formulario-acoes {
+    gap: 8px;
+    margin-top: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .itens-botao-icone {
     transition: none;

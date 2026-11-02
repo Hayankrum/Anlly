@@ -259,6 +259,7 @@ export function ItensPage() {
           setModeloInicial(undefined)
         }}
         largura="estreito"
+        folha
       >
         {tipoCriacao !== null && (
           <ItemForm
