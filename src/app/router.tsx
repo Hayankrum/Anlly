@@ -5,6 +5,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { ItemDetalhePage } from '../features/items/ItemDetalhePage'
 import { ItensPage } from '../features/items/ItensPage'
 import { CalendarioPage } from '../features/calendario/CalendarioPage'
+import { BoasVindasPage } from '../features/boas-vindas/BoasVindasPage'
 import { AboutPage } from '../features/about/AboutPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { ContaPage } from '../features/conta/ContaPage'
@@ -29,4 +30,6 @@ export const router = createHashRouter([
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
+  // Fora do AppShell: tela cheia, sem barras de navegação.
+  { path: 'boas-vindas', element: <BoasVindasPage /> },
 ])

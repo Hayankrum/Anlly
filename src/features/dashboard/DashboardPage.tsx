@@ -55,6 +55,8 @@ export function DashboardPage() {
   const concluidos = itens.filter((item) => item.concluido).length
   const pendentes = total - concluidos
   const aproveitamento = percentual(concluidos, total)
+  const totalSemana = semana.reduce((soma, dia) => soma + dia.concluidos, 0)
+  const maximoSemana = Math.max(...semana.map((dia) => dia.concluidos), 1)
   const categorias = CATEGORIAS.map((categoria) => {
     const daCategoria = itens.filter((item) => tipoDoItem(item) === categoria.tipo)
     return {
@@ -63,31 +65,26 @@ export function DashboardPage() {
       concluidos: daCategoria.filter((item) => item.concluido).length,
     }
   })
-  const maiorCategoria = Math.max(...categorias.map((categoria) => categoria.total), 1)
-  const maximoSemana = Math.max(...semana.map((dia) => dia.concluidos), 1)
 
   return (
     <div className="pagina dashboard">
-      <section className="dashboard-ofensiva" aria-label="Sequência de dias ativos">
-        <span className="dashboard-ofensiva-icone"><Flame size={25} fill="currentColor" aria-hidden="true" /></span>
-        <strong className="dashboard-ofensiva-numero">{sequencia}</strong>
-        <span className="dashboard-ofensiva-texto">
-          <strong>{sequencia === 1 ? 'dia consecutivo' : 'dias consecutivos'}</strong>
-          <small>{sequencia > 0 ? 'Continue assim!' : 'Conclua um item para começar sua ofensiva.'}</small>
-        </span>
-      </section>
+      <header className="pagina-cabecalho">
+        <h1 className="pagina-titulo">Progresso</h1>
+      </header>
 
-      <section className="dashboard-painel dashboard-semana" aria-labelledby="dashboard-semana-titulo">
+      <section
+        className="cartao dashboard-painel dashboard-semana"
+        aria-labelledby="dashboard-semana-titulo"
+      >
         <div className="dashboard-painel-cabecalho">
-          <div>
-            <h2 id="dashboard-semana-titulo">Sua semana</h2>
-            <p>Itens concluídos por dia</p>
-          </div>
-          <span className="dashboard-semana-total">
-            {semana.reduce((soma, dia) => soma + dia.concluidos, 0)} nesta semana
-          </span>
+          <h2 id="dashboard-semana-titulo">Sua semana</h2>
+          <span className="dashboard-semana-total">{totalSemana} nesta semana</span>
         </div>
-        <div className="dashboard-grafico-semana" role="list" aria-label="Conclusões por dia nesta semana">
+        <div
+          className="dashboard-grafico-semana"
+          role="list"
+          aria-label="Conclusões por dia nesta semana"
+        >
           {semana.map((dia) => (
             <div
               key={dia.data}
@@ -96,51 +93,80 @@ export function DashboardPage() {
               aria-label={`${dia.rotulo}, dia ${dia.dia}: ${dia.concluidos} itens concluídos${dia.hoje ? ', hoje' : ''}`}
             >
               <span className="dashboard-dia-quantidade">{dia.concluidos || ''}</span>
-              <div className="dashboard-dia-trilho">
+              <div className="dashboard-dia-area">
                 <span
                   className="dashboard-dia-barra"
-                  style={{ height: `${dia.concluidos === 0 ? 3 : Math.max(12, (dia.concluidos / maximoSemana) * 100)}%` }}
+                  style={{
+                    height: `${dia.concluidos === 0 ? 4 : Math.max(18, (dia.concluidos / maximoSemana) * 100)}%`,
+                  }}
                 />
               </div>
-              <span className="dashboard-dia-rotulo">{dia.rotulo}</span>
-              <span className="dashboard-dia-numero">{dia.dia}</span>
             </div>
+          ))}
+        </div>
+        <div className="dashboard-semana-rotulos" aria-hidden="true">
+          {semana.map((dia) => (
+            <span key={dia.data} className={dia.hoje ? 'eh-hoje' : undefined}>
+              {dia.rotulo}
+            </span>
           ))}
         </div>
       </section>
 
       <section className="dashboard-resumo" aria-label="Resumo do progresso">
-        <article className="dashboard-metrica dashboard-metrica--total">
-          <span className="dashboard-metrica-icone"><ListChecks size={19} aria-hidden="true" /></span>
-          <span className="dashboard-metrica-rotulo">Total de itens</span>
-          <strong>{total}</strong>
+        <article className="cartao dashboard-metrica dashboard-metrica--ofensiva">
+          <span className="dashboard-metrica-icone">
+            <Flame size={18} fill="currentColor" aria-hidden="true" />
+          </span>
+          <span className="dashboard-metrica-info">
+            <span className="dashboard-metrica-rotulo">Ofensiva</span>
+            <strong>
+              {sequencia} {sequencia === 1 ? 'dia' : 'dias'}
+            </strong>
+          </span>
         </article>
-        <article className="dashboard-metrica dashboard-metrica--feito">
-          <span className="dashboard-metrica-icone"><CheckCircle2 size={19} aria-hidden="true" /></span>
-          <span className="dashboard-metrica-rotulo">Concluídos</span>
-          <strong>{concluidos}</strong>
+        <article className="cartao dashboard-metrica dashboard-metrica--total">
+          <span className="dashboard-metrica-icone">
+            <ListChecks size={18} aria-hidden="true" />
+          </span>
+          <span className="dashboard-metrica-info">
+            <span className="dashboard-metrica-rotulo">Total</span>
+            <strong>{total}</strong>
+          </span>
         </article>
-        <article className="dashboard-metrica dashboard-metrica--pendente">
-          <span className="dashboard-metrica-icone"><Timer size={19} aria-hidden="true" /></span>
-          <span className="dashboard-metrica-rotulo">Pendentes</span>
-          <strong>{pendentes}</strong>
+        <article className="cartao dashboard-metrica dashboard-metrica--feito">
+          <span className="dashboard-metrica-icone">
+            <CheckCircle2 size={18} aria-hidden="true" />
+          </span>
+          <span className="dashboard-metrica-info">
+            <span className="dashboard-metrica-rotulo">Concluídos</span>
+            <strong>{concluidos}</strong>
+          </span>
         </article>
-        <article className="dashboard-metrica dashboard-metrica--percentual">
-          <span className="dashboard-metrica-icone"><Check size={19} aria-hidden="true" /></span>
-          <span className="dashboard-metrica-rotulo">Progresso geral</span>
-          <strong>{aproveitamento}%</strong>
+        <article className="cartao dashboard-metrica dashboard-metrica--pendente">
+          <span className="dashboard-metrica-icone">
+            <Timer size={18} aria-hidden="true" />
+          </span>
+          <span className="dashboard-metrica-info">
+            <span className="dashboard-metrica-rotulo">Pendentes</span>
+            <strong>{pendentes}</strong>
+          </span>
         </article>
       </section>
 
       {total === 0 ? (
-        <section className="dashboard-vazio">
-          <h2>Seu progresso começa com o primeiro passo</h2>
-          <p>Crie um item para acompanhar suas tarefas e projetos por aqui.</p>
-          <Link className="btn btn--primario" to="/itens">Criar primeiro item</Link>
-        </section>
+        <div className="lista-vazia">
+          <p className="lista-vazia-titulo">Seu progresso começa com o primeiro passo</p>
+          <Link className="btn btn--primario" to="/itens">
+            Criar primeiro item
+          </Link>
+        </div>
       ) : (
         <div className="dashboard-grade">
-          <section className="dashboard-painel dashboard-progresso" aria-labelledby="dashboard-progresso-titulo">
+          <section
+            className="cartao dashboard-painel dashboard-progresso"
+            aria-labelledby="dashboard-progresso-titulo"
+          >
             <div className="dashboard-painel-cabecalho">
               <h2 id="dashboard-progresso-titulo">Conclusão geral</h2>
             </div>
@@ -150,7 +176,7 @@ export function DashboardPage() {
                 role="img"
                 aria-label={`${aproveitamento}% concluído: ${concluidos} concluídos e ${pendentes} pendentes`}
                 style={{
-                  background: `conic-gradient(var(--cor-sucesso) 0 ${aproveitamento}%, var(--cor-superficie-2) ${aproveitamento}% 100%)`,
+                  background: `conic-gradient(var(--cor-sucesso) 0 ${aproveitamento}%, var(--cor-trilha) ${aproveitamento}% 100%)`,
                 }}
               >
                 <span>
@@ -158,44 +184,42 @@ export function DashboardPage() {
                   <small>concluído</small>
                 </span>
               </div>
-              <div className="dashboard-legenda">
-                <span><i className="dashboard-legenda-ponto dashboard-legenda-ponto--feito" />Concluídos<strong>{concluidos}</strong></span>
-                <span><i className="dashboard-legenda-ponto dashboard-legenda-ponto--pendente" />Pendentes<strong>{pendentes}</strong></span>
-                <span className="dashboard-legenda-total">Total de itens<strong>{total}</strong></span>
-              </div>
             </div>
           </section>
 
-          <section className="dashboard-painel dashboard-categorias" aria-labelledby="dashboard-categorias-titulo">
+          <section
+            className="cartao dashboard-painel dashboard-categorias"
+            aria-labelledby="dashboard-categorias-titulo"
+          >
             <div className="dashboard-painel-cabecalho">
               <h2 id="dashboard-categorias-titulo">Itens por tipo</h2>
             </div>
-            <div className="dashboard-categoria-legenda" aria-label="Legenda do gráfico">
-              <span><i className="dashboard-legenda-ponto dashboard-legenda-ponto--feito" />Concluídos</span>
-              <span><i className="dashboard-legenda-ponto dashboard-legenda-ponto--pendente" />Pendentes</span>
-            </div>
             <ul>
-              {categorias.map(({ tipo, titulo, cor, icone: Icone, total: quantidade, concluidos: feitos }) => (
-                <li key={tipo} style={{ '--categoria-cor': cor } as CSSProperties}>
-                  <span className="dashboard-categoria-icone"><Icone size={17} aria-hidden="true" /></span>
-                  <span className="dashboard-categoria-nome">{titulo}</span>
-                  <span className="dashboard-categoria-total">{quantidade}</span>
-                  <span
-                    className="dashboard-categoria-barra"
-                    role="img"
-                    aria-label={`${titulo}: ${feitos} concluídos e ${quantidade - feitos} pendentes`}
-                  >
+              {categorias.map(
+                ({ tipo, titulo, cor, icone: Icone, total: quantidade, concluidos: feitos }) => (
+                  <li key={tipo} style={{ '--categoria-cor': cor } as CSSProperties}>
+                    <span className="dashboard-categoria-icone">
+                      <Icone size={16} aria-hidden="true" />
+                    </span>
+                    <span className="dashboard-categoria-nome">{titulo}</span>
+                    <span className="dashboard-categoria-total">
+                      {feitos}/{quantidade}
+                    </span>
                     <span
-                      className="dashboard-categoria-feitos"
-                      style={{ width: `${(feitos / maiorCategoria) * 100}%` }}
-                    />
-                    <span
-                      className="dashboard-categoria-pendentes"
-                      style={{ width: `${((quantidade - feitos) / maiorCategoria) * 100}%` }}
-                    />
-                  </span>
-                </li>
-              ))}
+                      className="dashboard-categoria-barra"
+                      role="img"
+                      aria-label={`${titulo}: ${feitos} de ${quantidade} concluídos`}
+                    >
+                      <span
+                        className="dashboard-categoria-feitos"
+                        style={{
+                          width: `${quantidade === 0 ? 0 : (feitos / quantidade) * 100}%`,
+                        }}
+                      />
+                    </span>
+                  </li>
+                ),
+              )}
             </ul>
           </section>
         </div>

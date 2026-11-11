@@ -16,7 +16,7 @@
     raiz.style.colorScheme = escuro ? 'dark' : 'light';
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute('content', escuro ? '#09090b' : '#ffffff');
+      meta.setAttribute('content', escuro ? '#251c15' : '#faecdf');
     }
   } catch (erro) {}
 })();

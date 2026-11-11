@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { UserRound } from 'lucide-react'
+import { LayoutGrid, Route, UserRound } from 'lucide-react'
 import { useToast } from '../../shared/ui/Toast'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { formatarDataISO } from '../../shared/lib/date'
@@ -9,6 +9,7 @@ import { usePodeEditar } from '../conta/usePodeEditar'
 import type { Item } from '../../db/schema'
 import * as itemsRepo from '../items/items.repo'
 import { todayStr } from '../calendario/datas'
+import { Blocos } from './Blocos'
 import { Trilha } from './Trilha'
 import './home.css'
 
@@ -31,12 +32,26 @@ function ordenarTrilha(itens: Item[]): Item[] {
   })
 }
 
+/** Como a home mostra o dia: o mapa da jornada ou a grade de blocos. */
+type VistaHome = 'trilha' | 'blocos'
+
+const CHAVE_VISTA_HOME = 'meu-app:vista-home'
+
+function lerVistaSalva(): VistaHome {
+  try {
+    return localStorage.getItem(CHAVE_VISTA_HOME) === 'blocos' ? 'blocos' : 'trilha'
+  } catch {
+    return 'trilha'
+  }
+}
+
 export function HomePage() {
   const podeEditar = usePodeEditar()
   const itensBrutos = useItems()
   const { mostrar } = useToast()
   const navegar = useNavigate()
   const [agora, setAgora] = useState(() => new Date())
+  const [vista, setVista] = useState<VistaHome>(lerVistaSalva)
 
   // Mantém a data da home virando o dia sem re-renderizar o app inteiro.
   useEffect(() => {
@@ -68,37 +83,50 @@ export function HomePage() {
   const concluidos = itens.filter((item) => item.concluido).length
   const percentual = itens.length === 0 ? 0 : Math.round((concluidos / itens.length) * 100)
 
+  function alternarVista() {
+    setVista((atual) => {
+      const proxima = atual === 'trilha' ? 'blocos' : 'trilha'
+      try {
+        localStorage.setItem(CHAVE_VISTA_HOME, proxima)
+      } catch {
+        // armazenamento indisponível: a vista só vale para esta visita
+      }
+      return proxima
+    })
+  }
+
   return (
     <div className="pagina home">
-      <header className="home-hero" aria-labelledby="home-data">
-        <div className="home-hero-texto">
-          <h1 className="home-data" id="home-data">
-            {dataCompacta(agora)}
-          </h1>
-        </div>
+      <header className="home-barra" aria-labelledby="home-data">
+        <h1 className="home-barra-data" id="home-data">
+          {dataCompacta(agora)}
+        </h1>
 
-        {itens.length > 0 && (
-          <div className="home-hero-progresso" aria-label={`${percentual}% concluído`}>
-            <svg viewBox="0 0 48 48" width={56} height={56} aria-hidden="true">
-              <circle className="home-hero-anel-base" cx={24} cy={24} r={20} />
-              <circle
-                className="home-hero-anel-preenchido"
-                cx={24}
-                cy={24}
-                r={20}
-                strokeDasharray={`${(2 * Math.PI * 20 * percentual) / 100} ${2 * Math.PI * 20}`}
-              />
-            </svg>
-            <span className="home-hero-percentual">{percentual}%</span>
-          </div>
-        )}
+        {itens.length > 0 && <span className="home-barra-progresso">{percentual}%</span>}
+
+        {podeEditar &&
+          itens.length > 0 && (
+            <button
+              className="home-barra-acao"
+              type="button"
+              aria-label={vista === 'trilha' ? 'Mostrar em blocos' : 'Mostrar em trilha'}
+              title={vista === 'trilha' ? 'Mostrar em blocos' : 'Mostrar em trilha'}
+              onClick={alternarVista}
+            >
+              {vista === 'trilha' ? (
+                <LayoutGrid size={22} aria-hidden="true" />
+              ) : (
+                <Route size={22} aria-hidden="true" />
+              )}
+            </button>
+          )}
       </header>
 
       {podeEditar ? (
         <section className="home-jornada" aria-labelledby="jornada-titulo">
           <div className="secao-cabecalho">
             <h2 className="secao-titulo" id="jornada-titulo">
-              Sua jornada
+              {vista === 'trilha' ? 'Sua jornada' : 'Blocos de hoje'}
             </h2>
             {itens.length > 0 && (
               <span className="secao-contagem">
@@ -133,8 +161,14 @@ export function HomePage() {
                 </>
               )}
             </div>
-          ) : (
+          ) : vista === 'trilha' ? (
             <Trilha
+              itens={itens}
+              aoAbrir={(item) => navegar(`/itens/${item.id}`)}
+              aoConcluir={(item) => void concluir(item)}
+            />
+          ) : (
+            <Blocos
               itens={itens}
               aoAbrir={(item) => navegar(`/itens/${item.id}`)}
               aoConcluir={(item) => void concluir(item)}

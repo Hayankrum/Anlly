@@ -117,6 +117,15 @@
   margin-top: 16px;
 }
 
+/* Botão que reabre a apresentação inicial, em destaque no primeiro cartão. */
+.sobre-pagina .sobre-botao-apresentacao {
+  min-height: 44px;
+  margin-top: 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  box-shadow: var(--sombra-nav);
+}
+
 .compartilhar {
   display: flex;
   flex-direction: column;

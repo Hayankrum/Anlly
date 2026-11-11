@@ -1,0 +1,487 @@
+/* ---------- Tela de apresentação (primeira visita) ---------- */
+
+.boas-vindas {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 24px;
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.boas-vindas-moldura {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+/* ---------- Topo: barra de progresso + pular ---------- */
+
+.boas-vindas-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.boas-vindas-progresso {
+  flex: 1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cor-trilha);
+}
+
+.boas-vindas-progresso-preenchimento {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cor-acento);
+  transition: width 0.3s ease;
+}
+
+.boas-vindas .boas-vindas-pular {
+  flex: 0 0 auto;
+  padding-inline: 10px;
+}
+
+/* ---------- Passo atual: ilustração + título + textos ---------- */
+
+.boas-vindas-passo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  animation: boas-vindas-passo-entrar 0.28s ease-out both;
+}
+
+.boas-vindas-passo--tras {
+  animation-name: boas-vindas-passo-voltar;
+}
+
+.boas-vindas-titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.boas-vindas-texto {
+  max-width: 340px;
+  margin-top: 8px;
+  color: var(--cor-texto-suave);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.boas-vindas-detalhe {
+  max-width: 340px;
+  margin-top: 6px;
+  color: var(--cor-texto-terciario);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* ---------- Mascote ---------- */
+
+.bv-mascote {
+  display: grid;
+  place-items: center;
+  width: 152px;
+  aspect-ratio: 1;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cor-acento) 12%, transparent);
+}
+
+.bv-mascote img {
+  width: 116px;
+  height: 116px;
+  object-fit: contain;
+}
+
+/* ---------- Canvas comum: miniatura da tela do app ---------- */
+
+.bv-canvas {
+  position: relative;
+  width: 236px;
+  margin-bottom: 22px;
+  padding: 16px 14px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 20px;
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra);
+}
+
+/* ---------- Trilha do dia ---------- */
+
+.bv-trilha {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 16px;
+}
+
+.bv-trilha::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 4px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--cor-trilha);
+}
+
+.bv-trilha-bloco {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 30px;
+  padding: 4px 12px 4px 10px;
+  border-radius: 10px;
+  background: var(--cor-fundo);
+  box-shadow: var(--sombra-nav);
+  color: var(--cor-texto);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.bv-trilha-bloco--feito svg {
+  color: var(--cor-sucesso);
+}
+
+.bv-trilha-bolinha {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--cor-acento) 55%, transparent);
+}
+
+/* ---------- Quatro tipos de item ---------- */
+
+.bv-tipos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.bv-tipos-ladrilho {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 8px;
+  border: 1.5px solid color-mix(in srgb, var(--tipo-cor) 32%, var(--cor-borda-forte));
+  border-radius: 12px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.bv-tipos-ladrilho svg {
+  color: var(--tipo-cor);
+}
+
+.bv-tipos-ladrilho--simples {
+  --tipo-cor: #ef5b4f;
+}
+
+.bv-tipos-ladrilho--lista {
+  --tipo-cor: #d89000;
+}
+
+.bv-tipos-ladrilho--tempo {
+  --tipo-cor: #3b82f6;
+}
+
+.bv-tipos-ladrilho--quadro {
+  --tipo-cor: #16a36a;
+}
+
+/* ---------- Agenda ---------- */
+
+.bv-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bv-agenda-semana,
+.bv-agenda-grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.bv-agenda-semana span {
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: var(--cor-texto-terciario);
+}
+
+.bv-agenda-grade {
+  gap: 3px;
+}
+
+.bv-agenda-dia {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--cor-texto-suave);
+}
+
+.bv-agenda-dia--com-item::after {
+  content: '';
+  position: absolute;
+  bottom: 1.5px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--cor-acento);
+}
+
+.bv-agenda-dia--hoje {
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--cor-acento) 55%, transparent);
+  color: var(--cor-acento);
+  font-weight: 700;
+}
+
+.bv-agenda-dia--selecionado {
+  background: var(--cor-acento-fundo);
+  color: var(--cor-texto-contraste);
+  font-weight: 700;
+}
+
+.bv-agenda-dia--selecionado::after {
+  display: none;
+}
+
+/* ---------- Progresso e ofensiva ---------- */
+
+.bv-ofensiva {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+  box-shadow: var(--sombra-nav);
+  color: #ea580c;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.bv-ofensiva svg {
+  color: #ea580c;
+}
+
+.bv-grafico {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 5px;
+  height: 76px;
+  margin-top: 16px;
+  border-bottom: 2px solid var(--cor-trilha);
+}
+
+.bv-grafico-barra {
+  flex: 1;
+  max-width: 14px;
+  border-radius: 3px 3px 0 0;
+  background: color-mix(in srgb, var(--cor-acento) 38%, var(--cor-trilha));
+}
+
+.bv-grafico-barra--hoje {
+  background: var(--cor-acento);
+}
+
+.bv-grafico-rotulos {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: 4px;
+}
+
+.bv-grafico-rotulos span {
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: var(--cor-texto-terciario);
+}
+
+/* ---------- Funciona offline ---------- */
+
+.bv-offline {
+  display: grid;
+  place-items: center;
+}
+
+.bv-offline-celular {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 128px;
+  padding: 10px;
+  border: 2px solid var(--cor-borda-forte);
+  border-radius: 16px;
+  background: var(--cor-fundo);
+}
+
+.bv-offline-topo {
+  width: 44%;
+  height: 8px;
+  margin: 0 auto 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cor-acento) 25%, transparent);
+}
+
+.bv-offline-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 20px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra-nav);
+}
+
+.bv-offline-item svg {
+  color: var(--cor-sucesso);
+}
+
+.bv-offline-bolinha {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--cor-acento) 55%, transparent);
+}
+
+.bv-offline-linha {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--cor-trilha);
+}
+
+.bv-offline-selo {
+  position: absolute;
+  right: 40px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--cor-superficie);
+  border-radius: 50%;
+  background: var(--cor-sucesso);
+  color: #fffaf6;
+  box-shadow: var(--sombra-nav);
+}
+
+/* ---------- Controles ---------- */
+
+.boas-vindas-controles {
+  display: flex;
+  gap: 10px;
+}
+
+.boas-vindas-controles .btn {
+  min-height: 46px;
+  padding-inline: 18px;
+  border-radius: 14px;
+}
+
+.boas-vindas-controles .btn--primario {
+  flex: 1;
+  font-size: 0.95rem;
+  box-shadow: var(--sombra-nav);
+}
+
+/* ---------- Animações ---------- */
+
+@keyframes boas-vindas-passo-entrar {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes boas-vindas-passo-voltar {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---------- Telas pequenas ---------- */
+
+@media (max-width: 767px) {
+  .boas-vindas {
+    padding: 20px 16px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .boas-vindas-moldura {
+    gap: 14px;
+  }
+
+  .boas-vindas-titulo {
+    font-size: 1.35rem;
+  }
+
+  .boas-vindas-texto {
+    font-size: 0.9rem;
+  }
+
+  .boas-vindas-detalhe {
+    font-size: 0.78rem;
+  }
+
+  .boas-vindas-passo {
+    min-height: 260px;
+  }
+
+  .bv-mascote {
+    width: 128px;
+  }
+
+  .bv-mascote img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .bv-canvas {
+    width: 208px;
+    padding: 14px 12px;
+  }
+}

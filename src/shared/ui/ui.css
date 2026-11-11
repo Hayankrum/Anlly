@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 6px;
   border: 1px solid transparent;
-  border-radius: 1px;
+  border-radius: 12px;
   font-weight: 400;
   line-height: 1.2;
   text-decoration: none;
@@ -59,12 +59,13 @@
 }
 
 .btn--secundario {
-  background: var(--cor-superficie-2);
+  background: var(--cor-superficie);
+  border-color: var(--cor-borda-forte);
   color: var(--cor-texto);
 }
 
 .btn--secundario:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--cor-acento) 12%, var(--cor-superficie-2));
+  background: color-mix(in srgb, var(--cor-acento) 12%, var(--cor-superficie));
 }
 
 .btn--perigo {
@@ -177,7 +178,7 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgb(9 9 11 / 0.55);
+  background: rgb(42 31 22 / 0.55);
 }
 
 .modal-dialogo {
@@ -494,8 +495,9 @@
 }
 
 .segmentado button[aria-pressed='true'] {
-  background: var(--cor-superficie-2);
+  background: var(--cor-superficie);
   color: var(--cor-texto);
+  box-shadow: 0 1px 4px rgb(42 31 22 / 12%);
 }
 
 .segmentado button:focus-visible {

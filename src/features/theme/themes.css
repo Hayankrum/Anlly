@@ -1,68 +1,71 @@
-/* Paleta zinc — espelho visual do next_base (globals.css) */
+/* Paleta creme/marrom — espelho visual do v0_estudo (style.css) */
 
 :root {
   color-scheme: light;
 
-  --cor-fundo: #ffffff;
-  --cor-superficie: #f4f4f5;
-  --cor-superficie-2: #e4e4e7;
-  --cor-superficie-3: #d4d4d8;
-  --cor-campo: #ffffff;
-  --cor-campo-borda: #d4d4d8;
-  --cor-texto: #18181b;
-  --cor-texto-suave: #52525b;
-  --cor-texto-terciario: #71717a;
-  --cor-borda: #e4e4e7;
-  --cor-borda-forte: #d4d4d8;
-  --cor-acento: #2563eb;
-  --cor-acento-fundo: #2563eb;
-  --cor-acento-ativo: #1d4ed8;
-  --cor-texto-contraste: #ffffff;
-  --cor-foco: #2563eb;
+  --cor-fundo: #faecdf;
+  --cor-superficie: #fff9f5;
+  --cor-superficie-2: #f7eadd;
+  --cor-superficie-3: #f0e5dc;
+  --cor-campo: #fffdfb;
+  --cor-campo-borda: #e2d2c5;
+  --cor-texto: #30261f;
+  --cor-texto-suave: #594c42;
+  --cor-texto-terciario: #8a7b6f;
+  --cor-borda: #eadbd0;
+  --cor-borda-forte: #ddcdbf;
+  --cor-acento: #80552f;
+  --cor-acento-fundo: #80552f;
+  --cor-acento-ativo: #6d4727;
+  --cor-texto-contraste: #fffaf6;
+  --cor-foco: #80552f;
   /* fundo de hover com tom do acento — deixa os hovers menos "cinza" */
-  --cor-hover: color-mix(in srgb, #2563eb 9%, transparent);
-  --cor-perigo: #dc2626;
-  --cor-perigo-fundo: #fee2e2;
-  --cor-sucesso: #16a34a;
-  --cor-aviso-fundo: #fffbeb;
-  --cor-aviso-borda: #fcd34d;
-  --cor-aviso-texto: #92400e;
-  --cor-nav: color-mix(in srgb, #e4e4e7 85%, transparent);
-  --sombra: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 10px rgb(0 0 0 / 0.06);
-  --sombra-nav: 0 2px 10px rgb(0 0 0 / 0.1);
-  --raio: 8px;
+  --cor-hover: color-mix(in srgb, #6f4c30 9%, transparent);
+  --cor-perigo: #a14837;
+  --cor-perigo-fundo: #f8e7e2;
+  --cor-sucesso: #60734e;
+  --cor-aviso-fundo: #faf0e7;
+  --cor-aviso-borda: #bd7942;
+  --cor-aviso-texto: #734300;
+  --cor-nav: color-mix(in srgb, #fff9f5 88%, transparent);
+  /* tom da estrada da trilha — precisa contrastar com o fundo creme da página */
+  --cor-trilha: #e5d0b9;
+  --sombra: 0 2px 8px rgb(75 49 29 / 7%), 0 5px 20px rgb(75 49 29 / 4%);
+  --sombra-nav: 0 2px 10px rgb(75 49 29 / 10%);
+  --raio: 16px;
   --watermark-opacity: 0.06;
 }
 
 [data-theme='escuro'] {
   color-scheme: dark;
 
-  --cor-fundo: #09090b;
-  --cor-superficie: #18181b;
-  --cor-superficie-2: #27272a;
-  --cor-superficie-3: #3f3f46;
-  --cor-campo: #18181b;
-  --cor-campo-borda: #3f3f46;
-  --cor-texto: #fafafa;
-  --cor-texto-suave: #a1a1aa;
-  --cor-texto-terciario: #71717a;
-  --cor-borda: #27272a;
-  --cor-borda-forte: #3f3f46;
-  --cor-acento: #60a5fa;
-  --cor-acento-fundo: #3b82f6;
-  --cor-acento-ativo: #60a5fa;
-  --cor-texto-contraste: #09090b;
-  --cor-foco: #60a5fa;
-  --cor-hover: color-mix(in srgb, #60a5fa 16%, transparent);
-  --cor-perigo: #f87171;
-  --cor-perigo-fundo: #450a0a;
-  --cor-sucesso: #4ade80;
-  --cor-aviso-fundo: #2b2113;
-  --cor-aviso-borda: #78350f;
-  --cor-aviso-texto: #fcd34d;
-  --cor-nav: color-mix(in srgb, #27272a 85%, transparent);
-  --sombra: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 10px rgb(0 0 0 / 0.35);
-  --sombra-nav: 0 2px 10px rgb(0 0 0 / 0.4);
+  --cor-fundo: #251c15;
+  --cor-superficie: #2f251c;
+  --cor-superficie-2: #3d3023;
+  --cor-superficie-3: #4d3d2d;
+  --cor-campo: #2f251c;
+  --cor-campo-borda: #4d3d2d;
+  --cor-texto: #f3e9dd;
+  --cor-texto-suave: #c9b8a5;
+  --cor-texto-terciario: #a08e7b;
+  --cor-borda: #3d3023;
+  --cor-borda-forte: #4d3d2d;
+  --cor-acento: #e2b184;
+  --cor-acento-fundo: #a9713f;
+  --cor-acento-ativo: #c0804a;
+  --cor-texto-contraste: #fffaf6;
+  --cor-foco: #e2b184;
+  --cor-hover: color-mix(in srgb, #e2b184 14%, transparent);
+  --cor-perigo: #e5907e;
+  --cor-perigo-fundo: #472620;
+  --cor-sucesso: #9cb582;
+  --cor-aviso-fundo: #3b2c1a;
+  --cor-aviso-borda: #8a5f33;
+  --cor-aviso-texto: #e6bb7d;
+  --cor-nav: color-mix(in srgb, #2f251c 88%, transparent);
+  --cor-trilha: #443626;
+  --sombra: 0 1px 2px rgb(15 10 6 / 0.4), 0 2px 10px rgb(15 10 6 / 0.35);
+  --sombra-nav: 0 2px 10px rgb(15 10 6 / 0.4);
   --watermark-opacity: 0.08;
 }
 
@@ -70,32 +73,33 @@
   [data-theme='sistema'] {
     color-scheme: dark;
 
-    --cor-fundo: #09090b;
-    --cor-superficie: #18181b;
-    --cor-superficie-2: #27272a;
-    --cor-superficie-3: #3f3f46;
-    --cor-campo: #18181b;
-    --cor-campo-borda: #3f3f46;
-    --cor-texto: #fafafa;
-    --cor-texto-suave: #a1a1aa;
-    --cor-texto-terciario: #71717a;
-    --cor-borda: #27272a;
-    --cor-borda-forte: #3f3f46;
-    --cor-acento: #60a5fa;
-    --cor-acento-fundo: #3b82f6;
-    --cor-acento-ativo: #60a5fa;
-    --cor-texto-contraste: #09090b;
-    --cor-foco: #60a5fa;
-    --cor-hover: color-mix(in srgb, #60a5fa 16%, transparent);
-    --cor-perigo: #f87171;
-    --cor-perigo-fundo: #450a0a;
-    --cor-sucesso: #4ade80;
-    --cor-aviso-fundo: #2b2113;
-    --cor-aviso-borda: #78350f;
-    --cor-aviso-texto: #fcd34d;
-    --cor-nav: color-mix(in srgb, #27272a 85%, transparent);
-    --sombra: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 10px rgb(0 0 0 / 0.35);
-    --sombra-nav: 0 2px 10px rgb(0 0 0 / 0.4);
+    --cor-fundo: #251c15;
+    --cor-superficie: #2f251c;
+    --cor-superficie-2: #3d3023;
+    --cor-superficie-3: #4d3d2d;
+    --cor-campo: #2f251c;
+    --cor-campo-borda: #4d3d2d;
+    --cor-texto: #f3e9dd;
+    --cor-texto-suave: #c9b8a5;
+    --cor-texto-terciario: #a08e7b;
+    --cor-borda: #3d3023;
+    --cor-borda-forte: #4d3d2d;
+    --cor-acento: #e2b184;
+    --cor-acento-fundo: #a9713f;
+    --cor-acento-ativo: #c0804a;
+    --cor-texto-contraste: #fffaf6;
+    --cor-foco: #e2b184;
+    --cor-hover: color-mix(in srgb, #e2b184 14%, transparent);
+    --cor-perigo: #e5907e;
+    --cor-perigo-fundo: #472620;
+    --cor-sucesso: #9cb582;
+    --cor-aviso-fundo: #3b2c1a;
+    --cor-aviso-borda: #8a5f33;
+    --cor-aviso-texto: #e6bb7d;
+    --cor-nav: color-mix(in srgb, #2f251c 88%, transparent);
+    --cor-trilha: #443626;
+    --sombra: 0 1px 2px rgb(15 10 6 / 0.4), 0 2px 10px rgb(15 10 6 / 0.35);
+    --sombra-nav: 0 2px 10px rgb(15 10 6 / 0.4);
     --watermark-opacity: 0.08;
   }
 }

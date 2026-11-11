@@ -6,10 +6,11 @@ import {
   ExternalLink,
   HardDrive,
   Palette,
+  Presentation,
   ShieldCheck,
   Smartphone,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import appConfig from '../../app/app.config.json'
 import { Button } from '../../shared/ui/Button'
 import { useInstallPrompt } from '../pwa/useInstallPrompt'
@@ -27,6 +28,7 @@ const FUNCIONALIDADES = [
 ] as const
 
 export function AboutPage() {
+  const navegar = useNavigate()
   const { canInstall, isIOS, install } = useInstallPrompt()
 
   return (
@@ -45,6 +47,14 @@ export function AboutPage() {
           aria-hidden="true"
         />
         <p className="sobre-texto">{appConfig.description.replace(/^Anlly\s*[—-]\s*/i, '')}</p>
+        <Button
+          className="sobre-botao-apresentacao"
+          block
+          onClick={() => navegar('/boas-vindas')}
+        >
+          <Presentation size={18} aria-hidden="true" />
+          Ver apresentação
+        </Button>
       </section>
 
       <section className="cartao">

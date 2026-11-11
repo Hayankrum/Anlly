@@ -1,39 +1,42 @@
 .pagina.itens-pagina {
-  gap: 2px;
+  gap: 14px;
   max-width: 720px;
-  padding-top: 0;
 }
 
 .itens-secao {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 2px 0;
+  gap: 8px;
 }
 
 .itens-secao-titulo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  margin: 0;
   color: var(--cor-texto);
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.itens-secao-titulo::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  background: var(--cor-borda);
+.itens-secao-chip {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--item-tipo-cor) 14%, transparent);
+  color: var(--item-tipo-cor);
 }
 
 .itens-lista-horizontal {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   overflow-x: auto;
   margin: 0;
-  padding: 2px 2px 0;
+  padding: 2px 2px 4px;
   list-style: none;
   scrollbar-width: none;
 }
@@ -65,30 +68,57 @@
   place-items: center;
   width: 96px;
   height: 96px;
-  border: 2px dashed var(--cor-borda-forte);
+  border: 2px solid var(--cor-borda-forte);
   border-radius: 24px;
-  background: var(--cor-superficie-2);
+  background: var(--cor-superficie);
   color: var(--cor-texto-suave);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+/* "Novo" — cartão de criação com o tom quente do FAB do v0. */
+.itens-botao--novo .itens-botao-icone {
+  border: 0;
+  background: color-mix(in srgb, var(--cor-acento) 14%, var(--cor-superficie));
+  color: var(--cor-acento);
+  box-shadow: var(--sombra-nav);
 }
 
 .itens-botao--novo:hover .itens-botao-icone {
-  border-color: var(--cor-acento);
-  background: var(--cor-hover);
-  color: var(--cor-acento);
+  transform: translateY(-2px);
+}
+
+.itens-botao--novo:active .itens-botao-icone {
+  transform: translateY(0);
+}
+
+/* Modelo — cartão com a identidade da cor do tipo. */
+.itens-botao--modelo .itens-botao-icone {
+  border-color: color-mix(in srgb, var(--item-tipo-cor) 30%, var(--cor-borda-forte));
+  background: var(--cor-superficie);
+  color: var(--item-tipo-cor);
+}
+
+.itens-botao--modelo:hover .itens-botao-icone {
+  border-color: color-mix(in srgb, var(--item-tipo-cor) 55%, var(--cor-borda-forte));
+  box-shadow: var(--sombra);
+  transform: translateY(-2px);
 }
 
 .itens-botao-titulo {
   margin-top: 8px;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .itens-botao-tipo {
   position: absolute;
   top: 8px;
   right: 8px;
-  color: var(--cor-acento);
+  color: var(--item-tipo-cor);
 }
 
 .itens-botao:focus-visible {
@@ -98,13 +128,6 @@
 
 .itens-modelo-item {
   position: relative;
-}
-
-.itens-botao--modelo .itens-botao-icone {
-  border-style: solid;
-  border-color: color-mix(in srgb, var(--item-tipo-cor) 35%, var(--cor-borda));
-  background: color-mix(in srgb, var(--item-tipo-cor) 9%, var(--cor-superficie));
-  color: var(--item-tipo-cor);
 }
 
 .itens-botao--modelo .itens-botao-titulo {
@@ -125,24 +148,33 @@
 }
 
 .itens-modelo-agenda {
-  margin-top: 3px;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--cor-hover);
   color: var(--cor-texto-suave);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .itens-modelo-excluir {
   position: absolute;
-  top: -3px;
-  right: -5px;
+  top: -4px;
+  right: -6px;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--cor-borda);
   border-radius: 50%;
   background: var(--cor-superficie);
   color: var(--cor-perigo);
+  box-shadow: var(--sombra);
   cursor: pointer;
+}
+
+.itens-modelo-excluir:hover {
+  background: color-mix(in srgb, var(--cor-perigo) 10%, var(--cor-superficie));
 }
 
 .itens-modelo-excluir:focus-visible,
@@ -153,16 +185,19 @@
 
 .itens-editar-modelos {
   align-self: center;
-  min-height: 40px;
-  padding: 6px 12px;
+  min-height: 36px;
+  padding: 6px 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
   color: var(--cor-texto-suave);
   font: inherit;
-  font-size: 0.84rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
 }
 
 .itens-editar-modelos:hover,
@@ -185,14 +220,6 @@
 
 .itens-secao--quadro {
   --item-tipo-cor: #16a36a;
-}
-
-.itens-secao .itens-secao-titulo {
-  color: var(--item-tipo-cor);
-}
-
-.itens-secao .itens-botao-tipo {
-  color: var(--item-tipo-cor);
 }
 
 .item-form {

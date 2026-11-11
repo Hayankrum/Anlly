@@ -119,6 +119,14 @@ export function CalendarioPage() {
         ? 'próxima semana'
         : 'próximo dia'
 
+  const filtrandoMapa = filtrandoDia || vista === 'dia'
+  const rotuloMapa = filtrandoMapa
+    ? dayLabel(calendar.selectedDate)
+    : vista === 'semana'
+      ? weekLabel(calendar.weekDates)
+      : calendar.label
+  const itensMapa = filtrandoMapa ? dayItems : vista === 'semana' ? weekItems : monthItems
+
   return (
     <div className="pagina calendario-pagina">
       <div className="calendario-toolbar">
@@ -167,78 +175,60 @@ export function CalendarioPage() {
         </div>
       </div>
 
-      {vista === 'dia' && (
-        <MapaHoras
-          date={calendar.selectedDate}
-          items={dayItems}
-          onOpenItem={(item) => abrirItem(item.itemId)}
-        />
-      )}
-
       {vista === 'semana' && (
-        <SemanaCalendario
-          dates={calendar.weekDates}
-          today={calendar.today}
-          selectedDate={calendar.selectedDate}
-          diasComItens={calendar.diasComItens}
-          onSelectDate={selecionarDia}
-        />
+        <section className="cartao calendario-cartao">
+          <SemanaCalendario
+            dates={calendar.weekDates}
+            today={calendar.today}
+            selectedDate={calendar.selectedDate}
+            diasComItens={calendar.diasComItens}
+            onSelectDate={selecionarDia}
+          />
+        </section>
       )}
 
       {vista === 'mes' &&
         (emVistaAno ? (
-          <VistaAno
-            year={calendar.year}
-            today={calendar.today}
-            selectedDate={calendar.selectedDate}
-            diasComItens={calendar.diasComItens}
-            onSelectDate={(date) => {
-              calendar.goTo(date)
-              setVistaAno(false)
-              setFiltrandoDia(true)
-            }}
-          />
+          <section className="cartao calendario-cartao">
+            <VistaAno
+              year={calendar.year}
+              today={calendar.today}
+              selectedDate={calendar.selectedDate}
+              diasComItens={calendar.diasComItens}
+              onSelectDate={(date) => {
+                calendar.goTo(date)
+                setVistaAno(false)
+                setFiltrandoDia(true)
+              }}
+            />
+          </section>
         ) : (
-          <MesCalendario
-            year={calendar.year}
-            month={calendar.month}
-            selectedDate={calendar.selectedDate}
-            today={calendar.today}
-            diasComItens={calendar.diasComItens}
-            onSelectDate={selecionarDia}
-          />
+          <section className="cartao calendario-cartao">
+            <MesCalendario
+              year={calendar.year}
+              month={calendar.month}
+              selectedDate={calendar.selectedDate}
+              today={calendar.today}
+              diasComItens={calendar.diasComItens}
+              onSelectDate={selecionarDia}
+            />
+          </section>
         ))}
 
-      {vista !== 'dia' && (
-        <>
-          <section className="timeline-section" aria-labelledby="titulo-mapa-horas">
-            <header className="timeline-cabecalho">
-              <h2 className="cartao-titulo" id="titulo-mapa-horas">
-                Mapa de horas
-              </h2>
-              <span className="timeline-date">
-                {filtrandoDia
-                  ? dayLabel(calendar.selectedDate)
-                  : vista === 'semana'
-                    ? weekLabel(calendar.weekDates)
-                    : calendar.label}
-              </span>
-            </header>
-          </section>
-          <MapaHoras
-            date={filtrandoDia ? calendar.selectedDate : undefined}
-            dates={!filtrandoDia && vista === 'semana' ? calendar.weekDates : undefined}
-            items={
-              filtrandoDia
-                ? dayItems
-                : vista === 'semana'
-                  ? weekItems
-                  : monthItems
-            }
-            onOpenItem={(item) => abrirItem(item.itemId)}
-          />
-        </>
-      )}
+      <section className="cartao calendario-mapa" aria-labelledby="titulo-mapa-horas">
+        <header className="timeline-cabecalho">
+          <h2 className="cartao-titulo" id="titulo-mapa-horas">
+            Mapa de horas
+          </h2>
+          <span className="timeline-date">{rotuloMapa}</span>
+        </header>
+        <MapaHoras
+          date={filtrandoMapa ? calendar.selectedDate : undefined}
+          dates={!filtrandoDia && vista === 'semana' ? calendar.weekDates : undefined}
+          items={itensMapa}
+          onOpenItem={(item) => abrirItem(item.itemId)}
+        />
+      </section>
 
     </div>
   )

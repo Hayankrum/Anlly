@@ -23,8 +23,7 @@ body {
   background: var(--cor-fundo);
   color: var(--cor-texto);
   font-family:
-    system-ui,
-    -apple-system,
+    'Google Sans',
     'Segoe UI',
     Roboto,
     'Helvetica Neue',

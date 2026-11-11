@@ -184,6 +184,10 @@ export function ItensPage() {
 
   return (
     <div className="pagina itens-pagina">
+      <header className="pagina-cabecalho">
+        <h1 className="pagina-titulo">Itens</h1>
+      </header>
+
       {SECOES.map(({ titulo, icone: Icone, tipo, classe }) => (
         <section
           className={`itens-secao itens-secao--${classe}`}
@@ -191,6 +195,9 @@ export function ItensPage() {
           aria-labelledby={`itens-${tipo}`}
         >
           <h2 className="itens-secao-titulo" id={`itens-${tipo}`}>
+            <span className="itens-secao-chip" aria-hidden="true">
+              <Icone size={15} />
+            </span>
             {titulo}
           </h2>
           <ul className="itens-lista-horizontal" aria-label={`Opções de ${titulo}`}>

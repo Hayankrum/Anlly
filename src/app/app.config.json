@@ -4,8 +4,8 @@
   "shortName": "Anlly",
   "description": "Anlly — organize seu dia a dia.",
   "dbName": "AnllyDB",
-  "themeColor": "#09090b",
-  "backgroundColor": "#ffffff",
-  "metaThemeColorClaro": "#ffffff",
-  "metaThemeColorEscuro": "#09090b"
+  "themeColor": "#251c15",
+  "backgroundColor": "#faecdf",
+  "metaThemeColorClaro": "#faecdf",
+  "metaThemeColorEscuro": "#251c15"
 }
