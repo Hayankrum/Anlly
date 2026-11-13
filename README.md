@@ -10,35 +10,19 @@ O plano de evolução e as notas de cada etapa estão em [PLAN.md](./PLAN.md).
 ## Requisitos
 
 - Node 22+ (testado com Node 26)
-- Docker + Docker Compose (para Postgres e para o deploy)
+- Um Postgres acessível (Neon ou instância local)
 
-## Começando rápido (docker)
+## Começando rápido
 
 ```bash
-cp .env.example .env         # preencha AUTH_SECRET (openssl rand -base64 32)
-docker compose up -d postgres
-docker compose run --rm migrate    # aplica as migrations (passo explícito)
+cp .env.example .env         # aponte DATABASE_URL e preencha AUTH_SECRET (openssl rand -base64 32)
 npm install
+npm run db:migrate           # prisma migrate dev (--config explícito)
 npm run dev                  # Vite em :5173 + API em :3000 (proxy /api)
 ```
 
 `npm run dev` sobe **os dois processos** (web e api) com `concurrently`; o
 navegador fala só com `:5173` e o Vite repassa `/api` (com cookies) para `:3000`.
-
-Para subir o app completo em produção via Docker:
-
-```bash
-docker compose up --build app   # app em http://localhost:3000 (serve dist/ + API)
-```
-
-## Começando rápido (Postgres local, sem docker no app)
-
-```bash
-cp .env.example .env         # aponte DATABASE_URL para o seu Postgres
-npm install
-npm run db:migrate           # prisma migrate dev (--config explícito)
-npm run dev
-```
 
 ## Scripts
 
@@ -49,11 +33,10 @@ npm run dev
 | `npm start` | produção: **um processo, uma porta** — `node dist-server/index.js` serve API e `dist/` |
 | `npm run typecheck` | `tsc` nos dois projetos (client e server) |
 | `npm run db:migrate` | `prisma migrate dev --config prisma7.config.ts` |
-| `npm run db:deploy` | `prisma migrate deploy --config prisma7.config.ts` (produção/Docker) |
+| `npm run db:deploy` | `prisma migrate deploy --config prisma7.config.ts` (produção) |
 | `npm run db:studio` | Prisma Studio |
-| `npm run icons` | regenera PNGs dos ícones a partir dos SVGs |
 
-Produção sem Docker: `npm run build && npm start` (usa `.env` se existir).
+Produção: `npm run build && npm start` (usa `.env` se existir).
 
 ## Variáveis de ambiente
 
@@ -89,8 +72,7 @@ src/            cliente (Vite + React + Dexie + PWA)
 server/         API Hono (auth, sync push/pull, estáticos em produção)
 shared/         schemas Zod usados por cliente e servidor (@shared/*)
 prisma/         schema.prisma + migrations
-Dockerfile      multi-stage: deps → build → runtime (non-root, só prod)
-docker-compose.yml  app + postgres (healthcheck; migrations via `run --rm migrate`)
+api/            entry da Function do Vercel (bundle gerado no build)
 ```
 
 Regras de camada do cliente:
@@ -121,11 +103,6 @@ Regras de camada do cliente:
   itens e modelos que faltam (**inclusive tombstones**) e, se quem entrou é
   outro usuário, apaga itens+modelos+outbox e zera o cursor para não misturar
   contas.
-
-## Ícones
-
-SVGs em `public/icons/`; PNGs gerados — regenere com `npm run icons` (requer
-`rsvg-convert`, ImageMagick ou Inkscape) e refaça o `build`.
 
 ## Limitações conhecidas
 

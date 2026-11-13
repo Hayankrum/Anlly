@@ -12,5 +12,4 @@ npm-debug.log*
 .claude/
 .windsurf/
 skills-lock.json
-
-/server/generated/prisma
+.directory
