@@ -14,6 +14,7 @@ import * as modelosRepo from './modelos.repo'
 import type { EntradaModelo, Modelo } from '@shared/schemas/modelo'
 import { useSessao } from '../conta/useSessao'
 import { ItemForm } from './ItemForm'
+import { iconeDoItem } from './icones'
 import './itens.css'
 
 interface ContextoCriacao {
@@ -184,10 +185,6 @@ export function ItensPage() {
 
   return (
     <div className="pagina itens-pagina">
-      <header className="pagina-cabecalho">
-        <h1 className="pagina-titulo">Itens</h1>
-      </header>
-
       {SECOES.map(({ titulo, icone: Icone, tipo, classe }) => (
         <section
           className={`itens-secao itens-secao--${classe}`}
@@ -196,7 +193,7 @@ export function ItensPage() {
         >
           <h2 className="itens-secao-titulo" id={`itens-${tipo}`}>
             <span className="itens-secao-chip" aria-hidden="true">
-              <Icone size={15} />
+              <Icone size={13} />
             </span>
             {titulo}
           </h2>
@@ -209,42 +206,48 @@ export function ItensPage() {
                 onClick={() => abrirFormulario(tipo)}
               >
                 <span className="itens-botao-icone" aria-hidden="true">
-                  <Plus size={28} />
+                  <Plus size={24} />
                 </span>
                 <span className="itens-botao-titulo">Novo</span>
-                <Icone className="itens-botao-tipo" size={17} aria-hidden="true" />
+                <Icone className="itens-botao-tipo" size={14} aria-hidden="true" />
               </button>
             </li>
             {(modelos ?? [])
               .filter((modelo) => modelo.tipo === tipo)
-              .map((modelo) => (
-                <li className="itens-modelo-item" key={modelo.id}>
-                  <button
-                    className="itens-botao itens-botao--modelo"
-                    type="button"
-                    aria-label={`Usar o modelo ${modelo.titulo}`}
-                    onClick={() => void abrirModelo(modelo)}
-                  >
-                    <span className="itens-botao-icone">
-                      <span className="itens-modelo-inicial" aria-hidden="true">
-                        {modelo.titulo.slice(0, 1).toLocaleUpperCase('pt-BR')}
-                      </span>
-                    </span>
-                    <span className="itens-botao-titulo">{modelo.titulo}</span>
-                    <span className="itens-modelo-agenda">{rotuloAgenda(modelo)}</span>
-                  </button>
-                  {editandoModelos ? (
+              .map((modelo) => {
+                const IconeModelo = iconeDoItem(modelo.icone, modelo.tipo)
+                return (
+                  <li className="itens-modelo-item" key={modelo.id}>
                     <button
-                      className="itens-modelo-excluir"
+                      className="itens-botao itens-botao--modelo"
                       type="button"
-                      aria-label={`Excluir modelo ${modelo.titulo}`}
-                      onClick={() => void excluirModelo(modelo.id)}
+                      aria-label={`Usar o modelo ${modelo.titulo}`}
+                      onClick={() => void abrirModelo(modelo)}
                     >
-                      <X size={15} aria-hidden="true" />
+                      <span className="itens-botao-icone">
+                        <IconeModelo
+                          className="itens-modelo-icone"
+                          size={30}
+                          strokeWidth={1.8}
+                          aria-hidden="true"
+                        />
+                      </span>
+                      <span className="itens-botao-titulo">{modelo.titulo}</span>
+                      <span className="itens-modelo-agenda">{rotuloAgenda(modelo)}</span>
                     </button>
-                  ) : null}
-                </li>
-              ))}
+                    {editandoModelos ? (
+                      <button
+                        className="itens-modelo-excluir"
+                        type="button"
+                        aria-label={`Excluir modelo ${modelo.titulo}`}
+                        onClick={() => void excluirModelo(modelo.id)}
+                      >
+                        <X size={13} aria-hidden="true" />
+                      </button>
+                    ) : null}
+                  </li>
+                )
+              })}
           </ul>
         </section>
       ))}

@@ -6,6 +6,7 @@ import {
   obterQuadroKanban,
   QUADRO_KANBAN_PADRAO,
   type ColunaKanban,
+  type IconeItem,
   type ModoTempo,
   type QuadroKanban,
   type Subitem,
@@ -52,6 +53,8 @@ export interface EntradaItem {
   descricao: string
   /** Variante de conclusão. Ausente = `padrao` (segurar para concluir). */
   tipo?: TipoItem
+  /** Ícone escolhido no formulário. Ausente = ícone padrão do tipo. */
+  icone?: IconeItem
   /** Dias escolhidos no calendário (YYYY-MM-DD, opcional). Um item pode marcar vários. */
   diasAgendamento?: string[]
   /** HH:mm escolhido no formulário (opcional) — mesmo horário em todos os dias. */
@@ -173,6 +176,7 @@ export async function criar(entrada: EntradaItem): Promise<string> {
         criadoEm: agora,
         updatedAt: agora,
       }
+      if (entrada.icone !== undefined) item.icone = entrada.icone
       if (tipo === 'kanban') item.quadroKanban = entrada.quadroKanban ?? QUADRO_KANBAN_PADRAO
       if (tipo === 'lista') item.subitens = entrada.subitens ?? []
       if (tipo === 'cronometro') {
@@ -296,6 +300,8 @@ export async function atualizar(id: string, entrada: EntradaItem): Promise<void>
         tipo: entrada.tipo ?? atual.tipo ?? 'padrao',
         updatedAt: agora,
       }
+      if (entrada.icone === undefined) delete item.icone
+      else item.icone = entrada.icone
       // Só um item que já era `cronometro` mantém o acumulado. Qualquer troca
       // de tipo limpa o cronômetro para não exibir tempo órfão em outro mecanismo.
       if (item.tipo !== 'cronometro' || atual.tipo !== 'cronometro') {

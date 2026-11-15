@@ -10,6 +10,7 @@ import type { Item, TipoItem } from '@shared/schemas/item'
 import { modeloSchema, type Modelo } from '@shared/schemas/modelo'
 import {
   faseTempoSchema,
+  iconeItemSchema,
   modoTempoSchema,
   quadroKanbanSchema,
   subitemSchema,
@@ -34,6 +35,7 @@ type ItemTabela = {
   descricao: string
   concluido: boolean
   tipo: string
+  icone: string | null
   parentId: string | null
   coluna: string | null
   ordem: number | null
@@ -87,6 +89,7 @@ function toWire(item: ItemTabela): Item {
   const subitens = z.array(subitemSchema).safeParse(item.subitens)
   const modoTempo = modoTempoSchema.safeParse(item.modoTempo)
   const faseTempo = faseTempoSchema.safeParse(item.faseTempo)
+  const icone = iconeItemSchema.safeParse(item.icone)
   const base = {
     id: item.id,
     titulo: item.titulo,
@@ -96,6 +99,7 @@ function toWire(item: ItemTabela): Item {
     tipo: (TIPOS_ITEM as readonly string[]).includes(item.tipo)
       ? (item.tipo as TipoItem)
       : ('padrao' as TipoItem),
+    ...(icone.success ? { icone: icone.data } : {}),
     ...(item.parentId === null ? {} : { parentId: item.parentId }),
     ...(item.coluna === null ? {} : { coluna: item.coluna }),
     ...(quadroKanban.success ? { quadroKanban: quadroKanban.data } : {}),
@@ -286,6 +290,7 @@ async function processarLote(
         descricao: mut.payload.descricao,
         concluido: mut.payload.concluido,
         tipo: mut.payload.tipo ?? 'padrao',
+        icone: mut.payload.icone ?? null,
         parentId: mut.payload.parentId ?? null,
         coluna: mut.payload.coluna ?? null,
         ordem: mut.payload.ordem ?? null,

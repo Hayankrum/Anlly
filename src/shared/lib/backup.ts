@@ -5,6 +5,7 @@ import { SCHEMA_VERSION, type Item } from '../../db/schema'
 import {
   TIPOS_ITEM,
   colunaKanbanSchema,
+  iconeItemSchema,
   quadroKanbanSchema,
   type TipoItem,
 } from '@shared/schemas/item'
@@ -53,6 +54,8 @@ function validarItem(bruto: unknown, indice: number): Item | { erro: string } {
   normalizado.tipo = (TIPOS_ITEM as readonly string[]).includes(item.tipo as string)
     ? (item.tipo as TipoItem)
     : 'padrao'
+  const icone = iconeItemSchema.safeParse(item.icone)
+  if (icone.success) normalizado.icone = icone.data
   if (typeof item.deletedAt === 'number') normalizado.deletedAt = item.deletedAt
   // Dias: formato novo é array; backups antigos tinham um único "dataAgendamento".
   const DATA_RE = /^\d{4}-\d{2}-\d{2}$/

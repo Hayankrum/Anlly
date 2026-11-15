@@ -68,10 +68,6 @@ export function DashboardPage() {
 
   return (
     <div className="pagina dashboard">
-      <header className="pagina-cabecalho">
-        <h1 className="pagina-titulo">Progresso</h1>
-      </header>
-
       <section
         className="cartao dashboard-painel dashboard-semana"
         aria-labelledby="dashboard-semana-titulo"

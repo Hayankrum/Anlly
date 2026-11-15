@@ -15,6 +15,7 @@ function exemplos(usuarioId: string): Modelo[] {
       id: `${usuarioId}:modelo-inicial:pagar-energia`,
       titulo: 'Pagar energia',
       tipo: 'padrao',
+      icone: 'dinheiro',
       agenda: { modo: 'repetir', regra: { frequencia: 'mensal', diaMes: 10 } },
       horaAgendamento: '09:00',
       updatedAt: agora,
@@ -23,6 +24,7 @@ function exemplos(usuarioId: string): Modelo[] {
       id: `${usuarioId}:modelo-inicial:estudar-foco`,
       titulo: 'Estudar foco 50/10',
       tipo: 'cronometro',
+      icone: 'estudo',
       modoTempo: 'focoPausa',
       minutosFoco: 50,
       minutosPausa: 10,
@@ -33,6 +35,7 @@ function exemplos(usuarioId: string): Modelo[] {
       id: `${usuarioId}:modelo-inicial:compras`,
       titulo: 'Compras da semana',
       tipo: 'lista',
+      icone: 'compras',
       subitens: [
         { id: 'modelo-compra-frutas', titulo: 'Frutas', concluido: false },
         { id: 'modelo-compra-pao', titulo: 'Pão', concluido: false },
@@ -45,6 +48,7 @@ function exemplos(usuarioId: string): Modelo[] {
       id: `${usuarioId}:modelo-inicial:reforma`,
       titulo: 'Reforma',
       tipo: 'kanban',
+      icone: 'trabalho',
       quadroKanban: QUADRO_KANBAN_PADRAO,
       agenda: { modo: 'hoje' },
       updatedAt: agora,
@@ -148,6 +152,7 @@ export function modeloDoItem(
     titulo: item.titulo,
     descricao: item.descricao,
     tipo: item.tipo ?? 'padrao',
+    ...(item.icone === undefined ? {} : { icone: item.icone }),
     ...(item.subitens === undefined
       ? {}
       : { subitens: item.subitens.map((subitem) => ({ ...subitem, concluido: false })) }),

@@ -1,21 +1,21 @@
 .pagina.itens-pagina {
-  gap: 14px;
+  gap: 10px;
   max-width: 720px;
 }
 
 .itens-secao {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .itens-secao-titulo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   color: var(--cor-texto);
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -24,19 +24,19 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  border-radius: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   background: color-mix(in srgb, var(--item-tipo-cor) 14%, transparent);
   color: var(--item-tipo-cor);
 }
 
 .itens-lista-horizontal {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   overflow-x: auto;
   margin: 0;
-  padding: 2px 2px 4px;
+  padding: 1px 1px 3px;
   list-style: none;
   scrollbar-width: none;
 }
@@ -54,8 +54,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 96px;
-  min-height: 126px;
+  width: 78px;
+  min-height: 104px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -66,10 +66,10 @@
 .itens-botao-icone {
   display: grid;
   place-items: center;
-  width: 96px;
-  height: 96px;
+  width: 78px;
+  height: 78px;
   border: 2px solid var(--cor-borda-forte);
-  border-radius: 24px;
+  border-radius: 20px;
   background: var(--cor-superficie);
   color: var(--cor-texto-suave);
   transition:
@@ -109,15 +109,15 @@
 }
 
 .itens-botao-titulo {
-  margin-top: 8px;
-  font-size: 0.84rem;
+  margin-top: 5px;
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
 .itens-botao-tipo {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   color: var(--item-tipo-cor);
 }
 
@@ -142,29 +142,28 @@
   -webkit-line-clamp: 2;
 }
 
-.itens-modelo-inicial {
-  font-size: 2rem;
-  font-weight: 700;
+.itens-modelo-icone {
+  flex: 0 0 auto;
 }
 
 .itens-modelo-agenda {
-  margin-top: 4px;
-  padding: 1px 8px;
+  margin-top: 2px;
+  padding: 0 6px;
   border-radius: 999px;
   background: var(--cor-hover);
   color: var(--cor-texto-suave);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
 }
 
 .itens-modelo-excluir {
   position: absolute;
-  top: -4px;
-  right: -6px;
+  top: -3px;
+  right: -4px;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--cor-borda);
   border-radius: 50%;
   background: var(--cor-superficie);
@@ -185,14 +184,14 @@
 
 .itens-editar-modelos {
   align-self: center;
-  min-height: 36px;
-  padding: 6px 14px;
+  min-height: 32px;
+  padding: 4px 12px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--cor-texto-suave);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -246,6 +245,45 @@
 .item-form-opcoes {
   display: flex;
   gap: 6px;
+}
+
+.item-form-icones {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.item-form-icone {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: 11px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.item-form-icone:hover {
+  background: var(--cor-hover);
+  color: var(--cor-acento);
+}
+
+.item-form-icone.is-selected {
+  border-color: var(--cor-acento);
+  background: color-mix(in srgb, var(--cor-acento) 14%, var(--cor-superficie));
+  color: var(--cor-acento);
+}
+
+.item-form-icone:focus-visible {
+  outline: 2px solid var(--cor-foco);
+  outline-offset: 2px;
 }
 
 .item-form-opcao,

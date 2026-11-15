@@ -29,6 +29,11 @@ describe('itemSchema', () => {
     expect(itemSchema.safeParse(itemBase({ id: '' })).success).toBe(false)
   })
 
+  it('aceita ícone conhecido e rejeita ícone desconhecido', () => {
+    expect(itemSchema.safeParse(itemBase({ icone: 'estrela' })).success).toBe(true)
+    expect(itemSchema.safeParse(itemBase({ icone: 'inexistente' })).success).toBe(false)
+  })
+
   it('rejeita data fora do formato YYYY-MM-DD', () => {
     const resultado = itemSchema.safeParse(itemBase({ diasAgendamento: ['19/10/2026'] }))
     expect(resultado.success).toBe(false)

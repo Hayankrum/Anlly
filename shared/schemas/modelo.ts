@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  iconeItemSchema,
   quadroKanbanSchema,
   repeticaoSchema,
   subitemSchema,
@@ -17,6 +18,8 @@ export const modeloSchema = z.object({
   titulo: z.string().trim().min(1).max(120),
   descricao: z.string().max(2000).optional(),
   tipo: tipoItemSchema,
+  /** Ícone escolhido para o modelo. Ausente = ícone padrão do tipo. */
+  icone: iconeItemSchema.optional(),
   subitens: z.array(subitemSchema).max(100).optional(),
   modoTempo: z.enum(['livre', 'focoPausa']).optional(),
   minutosFoco: z.number().int().min(1).max(180).optional(),

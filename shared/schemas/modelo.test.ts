@@ -14,6 +14,11 @@ describe('modeloSchema', () => {
     expect(modeloSchema.safeParse(modeloBase).success).toBe(true)
   })
 
+  it('aceita ícone de modelo conhecido', () => {
+    expect(modeloSchema.safeParse({ ...modeloBase, icone: 'compras' }).success).toBe(true)
+    expect(modeloSchema.safeParse({ ...modeloBase, icone: 'inexistente' }).success).toBe(false)
+  })
+
   it('aceita modelo de lista sem guardar dias concretos', () => {
     expect(
       modeloSchema.safeParse({

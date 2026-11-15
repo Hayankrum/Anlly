@@ -8,6 +8,7 @@ import {
   LIMITE_DIAS_AGENDAMENTO,
   quadroKanbanSchema,
   repeticaoSchema,
+  type IconeItem,
   type RegraRepeticao,
   type TipoItem,
 } from '@shared/schemas/item'
@@ -16,6 +17,7 @@ import { calcularProximasOcorrencias, rotuloRegraRepeticao } from './repeticao'
 import type { EntradaItem } from './items.repo'
 import { gerarId } from '../../shared/lib/id'
 import type { AgendaModelo, EntradaModelo, Modelo } from '@shared/schemas/modelo'
+import { ICONES_DISPONIVEIS, iconeInicial } from './icones'
 
 export interface ItemFormProps {
   item?: Item
@@ -95,6 +97,9 @@ export function ItemForm({
   const [titulo, setTitulo] = useState(item?.titulo ?? modelo?.titulo ?? '')
   const [descricao, setDescricao] = useState(item?.descricao ?? modelo?.descricao ?? '')
   const tipo = item?.tipo ?? modelo?.tipo ?? tipoInicial ?? 'padrao'
+  const [icone, setIcone] = useState<IconeItem>(() =>
+    iconeInicial(item?.icone ?? modelo?.icone, tipo),
+  )
   const [dias, setDias] = useState<string[]>(
     item?.diasAgendamento ??
       (modelo?.agenda.modo === 'dias' ? [] : dataInicial ? [dataInicial] : [hoje]),
@@ -128,6 +133,7 @@ export function ItemForm({
   const [salvarComoModelo, setSalvarComoModelo] = useState(false)
   const idDias = useId()
   const idAgenda = useId()
+  const idIcone = useId()
   const idModoTempo = useId()
   const idSemana = useId()
 
@@ -266,6 +272,7 @@ export function ItemForm({
         titulo: tituloLimpo,
         descricao: descricao.trim(),
         tipo,
+        icone,
         diasAgendamento: proximosDias,
         horaAgendamento: hora ?? undefined,
         ...(subitens === undefined ? {} : { subitens }),
@@ -291,6 +298,7 @@ export function ItemForm({
           titulo: tituloLimpo,
           descricao: descricao.trim(),
           tipo,
+          icone,
           ...(subitens === undefined ? {} : { subitens: subitens.map((subitem) => ({ ...subitem, concluido: false })) }),
           ...(tipo === 'cronometro'
             ? { modoTempo, ...(modoTempo === 'focoPausa' ? { minutosFoco, minutosPausa } : {}) }
@@ -317,6 +325,27 @@ export function ItemForm({
         erro={erro ?? undefined}
         required
       />
+
+      <fieldset className="item-form-grupo">
+        <legend className="campo-label" id={idIcone}>
+          Ícone
+        </legend>
+        <div className="item-form-icones" role="group" aria-labelledby={idIcone}>
+          {ICONES_DISPONIVEIS.map(({ id, rotulo, icone: Icone }) => (
+            <button
+              key={id}
+              type="button"
+              className={`item-form-icone${icone === id ? ' is-selected' : ''}`}
+              aria-label={rotulo}
+              aria-pressed={icone === id}
+              title={rotulo}
+              onClick={() => setIcone(id)}
+            >
+              <Icone size={20} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </fieldset>
 
       {tipo === 'lista' ? (
         <TextArea

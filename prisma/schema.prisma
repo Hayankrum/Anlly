@@ -95,6 +95,9 @@ model Item {
   // Variante de conclusão: 'padrao' (segurar p/ concluir), 'cronometro' ou
   // 'kanban' (projeto com quadro embutido no detalhe).
   tipo      String   @default("padrao")
+  // Ícone escolhido pelo utilizador (chave da lista ICONES_ITEM); null = usar
+  // o ícone padrão do tipo no cliente.
+  icone     String?
   // Kanban: id do projeto dono quando o item é um cartão do quadro (null =
   // item normal ou o próprio projeto). Projetos concluem quando todos os
   // cartões estão na coluna 'feito'.

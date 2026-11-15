@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react'
-import { Check, Columns3, ListChecks, Timer } from 'lucide-react'
 import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
 import { tempoRelativo } from '../../shared/lib/date'
 import type { Item } from '../../db/schema'
+import { iconeDoItem } from '../items/icones'
 
 interface TrilhaPassoProps {
   item: Item
@@ -26,13 +26,7 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
   const ehCronometro = item.tipo === 'cronometro'
   const ehProjeto = item.tipo === 'kanban'
   const ehLista = item.tipo === 'lista'
-  const IconeTipo = ehProjeto
-    ? Columns3
-    : ehCronometro
-      ? Timer
-      : ehLista
-        ? ListChecks
-        : Check
+  const IconeDoItem = iconeDoItem(item.icone, item.tipo)
 
   const { progresso, segurando, propsSegurar } = useSegurarParaConcluir({
     aoConcluir: () => {
@@ -92,23 +86,23 @@ export function TrilhaPasso({ item, x, proximo, aoAbrir, aoConcluir }: TrilhaPas
       <button type="button" className="trilha-toque" aria-label={rotuloAcessivel} {...propsSegurar}>
         <span className="trilha-anel" aria-hidden="true" />
         <span className="trilha-no">
+          <IconeDoItem size={30} strokeWidth={1.9} aria-hidden="true" />
           {concluido ? (
-            <svg
-              viewBox="0 0 24 24"
-              width={26}
-              height={26}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m5 13 4.5 4.5L19 7" />
-            </svg>
-          ) : (
-            <IconeTipo size={30} strokeWidth={1.9} aria-hidden="true" />
-          )}
+            <span className="trilha-no-check" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                width={13}
+                height={13}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5 13 4.5 4.5L19 7" />
+              </svg>
+            </span>
+          ) : null}
         </span>
       </button>
     </li>

@@ -19,6 +19,40 @@ export const TIPOS_ITEM = ['padrao', 'lista', 'cronometro', 'kanban'] as const
 export const tipoItemSchema = z.enum(TIPOS_ITEM)
 export type TipoItem = z.infer<typeof tipoItemSchema>
 
+/**
+ * Ícones que o utilizador pode escolher para identificar um item/modelo.
+ * O valor é gravado no item e sincronizado; o componente correspondente vive
+ * na UI (`features/items/icones.ts`).
+ */
+export const ICONES_ITEM = [
+  'check',
+  'lista',
+  'relogio',
+  'quadro',
+  'estrela',
+  'coracao',
+  'casa',
+  'trabalho',
+  'estudo',
+  'saude',
+  'compras',
+  'dinheiro',
+  'treino',
+  'viagem',
+  'comida',
+  'musica',
+] as const
+export const iconeItemSchema = z.enum(ICONES_ITEM)
+export type IconeItem = z.infer<typeof iconeItemSchema>
+
+/** Ícone usado quando o item ainda não tem um escolhido. */
+export const ICONE_POR_TIPO: Record<TipoItem, IconeItem> = {
+  padrao: 'check',
+  lista: 'lista',
+  cronometro: 'relogio',
+  kanban: 'quadro',
+}
+
 export const subitemSchema = z.object({
   id: z.string().min(1),
   titulo: z.string().trim().min(1).max(120),
@@ -129,6 +163,8 @@ export const itemSchema = z.object({
   concluido: z.boolean(),
   /** Variante de conclusão. Ausente em itens antigos = `padrao`. */
   tipo: tipoItemSchema.optional(),
+  /** Ícone escolhido no formulário. Ausente = ícone padrão do tipo. */
+  icone: iconeItemSchema.optional(),
   /**
    * Item é cartão de um projeto Kanban quando presente: id do projeto dono.
    * Cartões só existem dentro do quadro do projeto — nunca em listas gerais.
