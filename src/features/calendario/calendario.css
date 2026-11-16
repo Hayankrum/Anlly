@@ -254,6 +254,7 @@
 
 .timeline-viewport {
   position: relative;
+  min-height: 260px;
   max-height: min(60vh, 520px);
   overflow-y: auto;
   /* Com vários compromissos sobrepostos a faixa fica larga e rola para o lado
