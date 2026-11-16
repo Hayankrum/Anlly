@@ -115,17 +115,17 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
       if (date === today) {
         const now = new Date().getHours()
         start = Math.max(0, now - 1)
-        end = Math.min(23, now + 4)
+        end = Math.min(24, now + 4)
       } else {
         start = 7
         end = 20
       }
     }
     start = Math.max(0, start - 1)
-    end = Math.min(23, Math.max(end, start + 3))
+    end = Math.min(24, Math.max(end, start + 3))
     const hours: number[] = []
     for (let hour = start; hour <= end; hour++) hours.push(hour)
-    return { start, hours }
+    return { start, end, hours }
   }, [comHora, date, today])
 
   const trackHeight = windowHours.hours.length * HOUR_HEIGHT
@@ -189,7 +189,7 @@ export function MapaHoras({ date, dates, items, onOpenItem }: MapaHorasProps) {
           <div className="timeline-gutter">
             {windowHours.hours.map((hour, index) => (
               <span key={hour} className="timeline-hour" style={{ top: index * HOUR_HEIGHT }}>
-                {String(hour).padStart(2, '0')}:00
+                {String(hour % 24).padStart(2, '0')}:00
               </span>
             ))}
           </div>
