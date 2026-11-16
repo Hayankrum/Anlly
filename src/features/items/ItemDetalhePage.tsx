@@ -5,7 +5,7 @@ import { ArrowLeft, BookmarkPlus, Check, Pause, Pencil, Play, RotateCcw, Trash2 
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { Modal } from '../../shared/ui/Modal'
 import { useToast } from '../../shared/ui/Toast'
-import { formatarDataHora, formatarDuracao } from '../../shared/lib/date'
+import { formatarDataHora, formatarDuracao, formatarTempoRelogio } from '../../shared/lib/date'
 import { ErroCotaExcedida } from '../../shared/lib/cota'
 import { useCronometro } from '../../shared/lib/useCronometro'
 import { useSegurarParaConcluir } from '../../shared/lib/useSegurarParaConcluir'
@@ -25,6 +25,10 @@ interface LeituraItem {
 }
 
 const LEITURA_INICIAL: LeituraItem = { carregado: false, item: undefined }
+
+/** Geometria do anel de progresso do modo foco/pausa (viewBox 180×180). */
+const ANEL_RAIO = 78
+const ANEL_CIRCUNFERENCIA = 2 * Math.PI * ANEL_RAIO
 
 export function ItemDetalhePage() {
   const { id = '' } = useParams()
@@ -54,6 +58,14 @@ export function ItemDetalhePage() {
   const ehFocoPausa = item?.modoTempo === 'focoPausa'
   const duracaoFaseMs =
     (item?.faseTempo === 'pausa' ? item.minutosPausa ?? 5 : item?.minutosFoco ?? 25) * 60_000
+  // No modo foco/pausa o cronômetro conta para trás: o que sobra da fase atual.
+  const restanteFaseMs = ehFocoPausa ? Math.max(0, duracaoFaseMs - tempoMs) : tempoMs
+  const progressoFase =
+    ehFocoPausa && duracaoFaseMs > 0
+      ? Math.min(1, Math.max(0, restanteFaseMs / duracaoFaseMs))
+      : 0
+  const fasePausa = item?.faseTempo === 'pausa'
+  const ciclosConcluidos = item?.ciclosConcluidos ?? 0
   const faseAvancadaRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -245,10 +257,10 @@ export function ItemDetalhePage() {
   const conteudoConcluido = (
     <>
       {ehCronometro && tempoMs > 0 ? (
-        <p className="item-cronometro-tempo">
-          {formatarDuracao(tempoMs)}
-          <span className="item-cronometro-estado">Tempo dedicado</span>
-        </p>
+        <div className="item-timer-resumo">
+          <span className="item-timer-resumo-rotulo">Tempo dedicado</span>
+          <span className="item-timer-resumo-tempo">{formatarDuracao(tempoMs)}</span>
+        </div>
       ) : null}
       <button
         type="button"
@@ -383,34 +395,86 @@ export function ItemDetalhePage() {
       ) : item.concluido ? (
         conteudoConcluido
       ) : ehCronometro ? (
-        <div className="item-cronometro">
-          <p className={`item-cronometro-tempo${cronometroRodando ? ' item-cronometro-tempo--rodando' : ''}`} aria-live="polite">
-            {formatarDuracao(ehFocoPausa ? Math.max(0, duracaoFaseMs - tempoMs) : tempoMs)}
-            <span className="item-cronometro-estado">
-              {ehFocoPausa
-                ? `${item.faseTempo === 'pausa' ? 'Pausa' : 'Foco'} · ${item.ciclosConcluidos ?? 0} ciclos`
-                : cronometroRodando
-                  ? 'em andamento'
-                  : tempoMs > 0
-                    ? 'pausado'
-                    : 'pronto'}
+        <section
+          className={`item-timer${ehFocoPausa ? ' item-timer--foco' : ''}${
+            cronometroRodando ? ' item-timer--rodando' : ''
+          }`}
+          aria-label={ehFocoPausa ? 'Cronômetro de foco e pausa' : 'Cronômetro'}
+        >
+          <div className="item-timer-cabecalho">
+            <span
+              className={`item-timer-selo${cronometroRodando ? ' item-timer-selo--ativo' : ''}`}
+            >
+              <span className="item-timer-selo-ponto" aria-hidden="true" />
+              {cronometroRodando ? 'Em andamento' : tempoMs > 0 ? 'Pausado' : 'Pronto'}
             </span>
-          </p>
+            {ehFocoPausa ? (
+              <span className="item-timer-ciclos">
+                {ciclosConcluidos} {ciclosConcluidos === 1 ? 'ciclo' : 'ciclos'}
+              </span>
+            ) : null}
+          </div>
 
-          <div className="item-cronometro-acoes">
-            {cronometroRodando ? (
-              <>
+          {ehFocoPausa ? (
+            <div className={`item-timer-anel item-timer-anel--${fasePausa ? 'pausa' : 'foco'}`}>
+              <svg className="item-timer-anel-svg" viewBox="0 0 180 180" aria-hidden="true">
+                <circle className="item-timer-anel-trilha" cx="90" cy="90" r={ANEL_RAIO} />
+                <circle
+                  className="item-timer-anel-progresso"
+                  cx="90"
+                  cy="90"
+                  r={ANEL_RAIO}
+                  strokeDasharray={ANEL_CIRCUNFERENCIA}
+                  strokeDashoffset={ANEL_CIRCUNFERENCIA * (1 - progressoFase)}
+                  transform="rotate(-90 90 90)"
+                />
+              </svg>
+              <div className="item-timer-anel-centro">
+                <span className="item-timer-tempo" aria-live="polite">
+                  {formatarTempoRelogio(restanteFaseMs)}
+                </span>
+                <span className="item-timer-fase">{fasePausa ? 'Pausa' : 'Foco'}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="item-timer-anel item-timer-anel--livre">
+              <svg className="item-timer-anel-svg" viewBox="0 0 180 180" aria-hidden="true">
+                <circle className="item-timer-anel-trilha" cx="90" cy="90" r={ANEL_RAIO} />
+                <circle className="item-timer-anel-arco" cx="90" cy="90" r={ANEL_RAIO} />
+              </svg>
+              <div className="item-timer-anel-centro">
+                <span className="item-timer-tempo" aria-live="polite">
+                  {formatarTempoRelogio(tempoMs)}
+                </span>
+                <span className="item-timer-fase">Livre</span>
+              </div>
+            </div>
+          )}
+
+          <div className="item-timer-acoes">
+            {cronometroRodando || tempoMs > 0 ? (
+              <div className="item-timer-linha item-timer-linha--acoes">
                 <button
                   type="button"
-                  className="item-cronometro-btn item-cronometro-btn--pausar"
-                  onClick={() => void acaoTimer(() => itemsRepo.pausarTimer(item.id))}
+                  className="item-timer-btn item-timer-btn--primario"
+                  onClick={() =>
+                    void acaoTimer(() =>
+                      cronometroRodando
+                        ? itemsRepo.pausarTimer(item.id)
+                        : itemsRepo.iniciarTimer(item.id),
+                    )
+                  }
                 >
-                  <Pause size={18} aria-hidden="true" />
-                  Pausar
+                  {cronometroRodando ? (
+                    <Pause size={18} aria-hidden="true" />
+                  ) : (
+                    <Play size={18} aria-hidden="true" />
+                  )}
+                  {cronometroRodando ? 'Pausar' : 'Continuar'}
                 </button>
                 <button
                   type="button"
-                  className="item-cronometro-btn item-cronometro-btn--resetar"
+                  className="item-timer-btn"
                   onClick={() => setConfirmandoReset(true)}
                 >
                   <RotateCcw size={18} aria-hidden="true" />
@@ -418,7 +482,7 @@ export function ItemDetalhePage() {
                 </button>
                 <button
                   type="button"
-                  className="item-cronometro-btn item-cronometro-btn--finalizar"
+                  className="item-timer-btn item-timer-btn--finalizar"
                   onClick={() =>
                     void acaoTimer(() => itemsRepo.finalizarTimer(item.id), {
                       mensagem: 'Item concluído',
@@ -429,68 +493,28 @@ export function ItemDetalhePage() {
                   <Check size={18} aria-hidden="true" />
                   Finalizar
                 </button>
-                {ehFocoPausa ? (
-                  <button
-                    type="button"
-                    className="item-cronometro-btn"
-                    onClick={() =>
-                      void acaoTimer(() => itemsRepo.avancarFaseTimer(item.id, true))
-                    }
-                  >
-                    Pular fase
-                  </button>
-                ) : null}
-              </>
+              </div>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="item-cronometro-btn item-cronometro-btn--iniciar"
-                  onClick={() => void acaoTimer(() => itemsRepo.iniciarTimer(item.id))}
-                >
-                  <Play size={18} aria-hidden="true" />
-                  {tempoMs > 0 ? 'Continuar' : 'Iniciar'}
-                </button>
-                {tempoMs > 0 ? (
-                  <>
-                    <button
-                      type="button"
-                      className="item-cronometro-btn item-cronometro-btn--resetar"
-                      onClick={() => setConfirmandoReset(true)}
-                    >
-                      <RotateCcw size={18} aria-hidden="true" />
-                      Zerar
-                    </button>
-                    <button
-                      type="button"
-                      className="item-cronometro-btn item-cronometro-btn--finalizar"
-                      onClick={() =>
-                        void acaoTimer(() => itemsRepo.finalizarTimer(item.id), {
-                          mensagem: 'Item concluído',
-                          tipo: 'sucesso',
-                        })
-                      }
-                    >
-                      <Check size={18} aria-hidden="true" />
-                      Finalizar
-                    </button>
-                  </>
-                ) : null}
-                {ehFocoPausa ? (
-                  <button
-                    type="button"
-                    className="item-cronometro-btn"
-                    onClick={() =>
-                      void acaoTimer(() => itemsRepo.avancarFaseTimer(item.id, true))
-                    }
-                  >
-                    Pular fase
-                  </button>
-                ) : null}
-              </>
+              <button
+                type="button"
+                className="item-timer-btn item-timer-btn--primario"
+                onClick={() => void acaoTimer(() => itemsRepo.iniciarTimer(item.id))}
+              >
+                <Play size={18} aria-hidden="true" />
+                Iniciar
+              </button>
             )}
+            {ehFocoPausa ? (
+              <button
+                type="button"
+                className="item-timer-btn item-timer-btn--fantasma"
+                onClick={() => void acaoTimer(() => itemsRepo.avancarFaseTimer(item.id, true))}
+              >
+                Pular fase
+              </button>
+            ) : null}
           </div>
-        </div>
+        </section>
       ) : (
         <button
           type="button"

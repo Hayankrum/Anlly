@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="claro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview — Ações do cronômetro</title>
+    <link rel="stylesheet" href="/src/features/theme/themes.css" />
+    <link rel="stylesheet" href="/src/shared/ui/ui.css" />
+    <link rel="stylesheet" href="/src/features/items/items.css" />
+    <style>
+      body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        padding: 24px;
+        background: var(--cor-fundo);
+        color: var(--cor-texto);
+        font-family: 'Google Sans', 'Segoe UI', Roboto, sans-serif;
+      }
+      .largura { width: 336px; }
+      .largura--estreita { width: 296px; }
+      .rotulo { margin: 0 0 8px; color: var(--cor-texto-suave); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    </style>
+  </head>
+  <body>
+    <div class="largura">
+      <p class="rotulo">Foco/pausa rodando · 360px</p>
+      <section class="item-timer item-timer--foco item-timer--rodando">
+        <div class="item-timer-cabecalho">
+          <span class="item-timer-selo item-timer-selo--ativo"
+            ><span class="item-timer-selo-ponto"></span>Em andamento</span
+          >
+          <span class="item-timer-ciclos">3 ciclos</span>
+        </div>
+        <div class="item-timer-anel item-timer-anel--foco">
+          <svg class="item-timer-anel-svg" viewBox="0 0 180 180">
+            <circle class="item-timer-anel-trilha" cx="90" cy="90" r="78"></circle>
+            <circle class="item-timer-anel-progresso" cx="90" cy="90" r="78" stroke-dasharray="490.09" stroke-dashoffset="245" transform="rotate(-90 90 90)"></circle>
+          </svg>
+          <div class="item-timer-anel-centro">
+            <span class="item-timer-tempo">24:59</span>
+            <span class="item-timer-fase">Foco</span>
+          </div>
+        </div>
+        <div class="item-timer-acoes">
+          <div class="item-timer-linha item-timer-linha--acoes">
+            <button class="item-timer-btn item-timer-btn--primario">Pausar</button>
+            <button class="item-timer-btn">Zerar</button>
+            <button class="item-timer-btn item-timer-btn--finalizar">Finalizar</button>
+          </div>
+          <button class="item-timer-btn item-timer-btn--fantasma">Pular fase</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="largura--estreita">
+      <p class="rotulo">Livre pausado · 320px</p>
+      <section class="item-timer">
+        <div class="item-timer-cabecalho">
+          <span class="item-timer-selo"><span class="item-timer-selo-ponto"></span>Pausado</span>
+        </div>
+        <div class="item-timer-anel item-timer-anel--livre">
+          <svg class="item-timer-anel-svg" viewBox="0 0 180 180">
+            <circle class="item-timer-anel-trilha" cx="90" cy="90" r="78"></circle>
+            <circle class="item-timer-anel-arco" cx="90" cy="90" r="78"></circle>
+          </svg>
+          <div class="item-timer-anel-centro">
+            <span class="item-timer-tempo">1:12:34</span>
+            <span class="item-timer-fase">Livre</span>
+          </div>
+        </div>
+        <div class="item-timer-acoes">
+          <div class="item-timer-linha item-timer-linha--acoes">
+            <button class="item-timer-btn item-timer-btn--primario">Continuar</button>
+            <button class="item-timer-btn">Zerar</button>
+            <button class="item-timer-btn item-timer-btn--finalizar">Finalizar</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="largura">
+      <p class="rotulo">Livre pronto</p>
+      <section class="item-timer">
+        <div class="item-timer-cabecalho">
+          <span class="item-timer-selo"><span class="item-timer-selo-ponto"></span>Pronto</span>
+        </div>
+        <div class="item-timer-anel item-timer-anel--livre">
+          <svg class="item-timer-anel-svg" viewBox="0 0 180 180">
+            <circle class="item-timer-anel-trilha" cx="90" cy="90" r="78"></circle>
+            <circle class="item-timer-anel-arco" cx="90" cy="90" r="78"></circle>
+          </svg>
+          <div class="item-timer-anel-centro">
+            <span class="item-timer-tempo">00:00</span>
+            <span class="item-timer-fase">Livre</span>
+          </div>
+        </div>
+        <div class="item-timer-acoes">
+          <button class="item-timer-btn item-timer-btn--primario">Iniciar</button>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

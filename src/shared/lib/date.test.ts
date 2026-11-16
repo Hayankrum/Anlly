@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatarDataISO, formatarBytes, formatarDuracao, diasDesde, tempoRelativo } from './date'
+import { formatarDataISO, formatarBytes, formatarDuracao, formatarTempoRelogio, diasDesde, tempoRelativo } from './date'
 
 describe('formatarDataISO', () => {
   it('converte YYYY-MM-DD para DD/MM/YYYY', () => {
@@ -77,5 +77,25 @@ describe('formatarDuracao', () => {
   it('formata horas sem segundos', () => {
     expect(formatarDuracao(3_600_000)).toBe('1h')
     expect(formatarDuracao(4_500_000)).toBe('1h 15min')
+  })
+})
+
+describe('formatarTempoRelogio', () => {
+  it('retorna 00:00 para valores vazios ou inválidos', () => {
+    expect(formatarTempoRelogio(0)).toBe('00:00')
+    expect(formatarTempoRelogio(-10)).toBe('00:00')
+    expect(formatarTempoRelogio(Number.NaN)).toBe('00:00')
+  })
+
+  it('mantém largura estável (mm:ss com dois dígitos)', () => {
+    expect(formatarTempoRelogio(5_000)).toBe('00:05')
+    expect(formatarTempoRelogio(90_000)).toBe('01:30')
+    expect(formatarTempoRelogio(3_000_000)).toBe('50:00')
+    expect(formatarTempoRelogio(2_999_000)).toBe('49:59')
+  })
+
+  it('mostra horas quando passa de 60 minutos', () => {
+    expect(formatarTempoRelogio(3_600_000)).toBe('1:00:00')
+    expect(formatarTempoRelogio(4_500_000)).toBe('1:15:00')
   })
 })

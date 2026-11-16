@@ -69,6 +69,23 @@ export function formatarDuracao(ms: number): string {
   return partes.join(' ')
 }
 
+/**
+ * 299_000 → "04:59"; 3_599_000 → "59:59"; 3_600_000 → "1:00:00".
+ * Formato de largura estável (dígitos com tabular-nums), ideal para contagens
+ * regressivas — ao contrário de `formatarDuracao`, o texto não muda de tamanho
+ * quando os segundos aparecem.
+ */
+export function formatarTempoRelogio(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return '00:00'
+  const totalSegundos = Math.floor(ms / 1000)
+  const horas = Math.floor(totalSegundos / 3600)
+  const minutos = Math.floor((totalSegundos % 3600) / 60)
+  const segundos = totalSegundos % 60
+  const mm = String(minutos).padStart(2, '0')
+  const ss = String(segundos).padStart(2, '0')
+  return horas > 0 ? `${horas}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
 export function formatarBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
   const unidades = ['B', 'KB', 'MB', 'GB', 'TB']

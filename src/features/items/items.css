@@ -272,10 +272,197 @@
   margin: 0;
 }
 
-.item-cronometro {
+/* ---------- Cronômetro (item do tipo "Tempo") ---------- */
+
+.item-timer {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 18px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.item-timer-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  width: 100%;
+}
+
+.item-timer-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto-suave);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.item-timer-selo-ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cor-texto-terciario);
+}
+
+.item-timer-selo--ativo {
+  background: color-mix(in srgb, var(--cor-acento) 14%, transparent);
+  color: var(--cor-acento);
+}
+
+.item-timer-selo--ativo .item-timer-selo-ponto {
+  background: var(--cor-acento);
+  animation: item-timer-pulso 1.6s ease-in-out infinite;
+}
+
+.item-timer-ciclos {
+  color: var(--cor-texto-suave);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Anel de progresso (modo foco e pausa) */
+.item-timer-anel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(220px, 62vw);
+  aspect-ratio: 1;
+}
+
+.item-timer-anel-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.item-timer-anel-trilha,
+.item-timer-anel-progresso,
+.item-timer-anel-arco {
+  fill: none;
+  stroke-width: 10;
+}
+
+.item-timer-anel-trilha {
+  stroke: var(--cor-superficie-2);
+}
+
+.item-timer-anel-progresso {
+  stroke: var(--cor-acento);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.35s linear;
+}
+
+.item-timer-anel--pausa .item-timer-anel-progresso {
+  stroke: var(--cor-sucesso);
+}
+
+/* Cronômetro livre: arco indeterminado que gira enquanto conta. */
+.item-timer-anel-arco {
+  stroke: var(--cor-acento);
+  stroke-linecap: round;
+  /* ~1/4 do círculo visível (circunferência ≈ 490.09) */
+  stroke-dasharray: 122 368.09;
+}
+
+.item-timer--rodando .item-timer-anel--livre .item-timer-anel-svg {
+  animation: item-timer-girar 1.4s linear infinite;
+}
+
+.item-timer-anel-centro {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.item-timer-tempo {
+  font-size: clamp(2.2rem, 13vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--cor-texto);
+}
+
+.item-timer--rodando .item-timer-anel--foco .item-timer-tempo,
+.item-timer--rodando .item-timer-anel--livre .item-timer-tempo {
+  color: var(--cor-acento);
+}
+
+.item-timer--rodando .item-timer-anel--pausa .item-timer-tempo {
+  color: var(--cor-sucesso);
+}
+
+.item-timer-fase {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cor-acento);
+}
+
+.item-timer-anel--pausa .item-timer-fase {
+  color: var(--cor-sucesso);
+}
+
+@keyframes item-timer-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Resumo do tempo dedicado (item concluído) */
+.item-timer-resumo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.item-timer-resumo-rotulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-texto-terciario);
+}
+
+.item-timer-resumo-tempo {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--cor-texto);
+}
+
+@keyframes item-timer-pulso {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
 }
 
 .item-lista-progresso {
@@ -332,38 +519,35 @@
   text-decoration: line-through;
 }
 
-.item-cronometro-tempo {
+.item-timer-acoes {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-  font-size: 2.4rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: var(--cor-texto);
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
 
-.item-cronometro-tempo--rodando {
-  color: var(--cor-acento);
+.item-timer-linha {
+  display: flex;
+  gap: 8px;
+  width: 100%;
 }
 
-.item-cronometro-estado {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--cor-texto-terciario);
+.item-timer-linha > .item-timer-btn {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.item-cronometro-acoes {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+/* Linha compacta com as três ações principais (ícone sobre o rótulo). */
+.item-timer-linha--acoes > .item-timer-btn {
+  flex-direction: column;
+  gap: 3px;
+  min-height: 54px;
+  padding: 7px 6px;
+  font-size: 0.78rem;
+  line-height: 1.15;
 }
 
-.item-cronometro-btn {
-  flex: 1;
+.item-timer-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -372,45 +556,62 @@
   padding: 0 16px;
   border: 2px solid var(--cor-borda-forte);
   border-radius: var(--raio);
-  background: transparent;
+  background: var(--cor-superficie);
   color: var(--cor-texto);
   font: inherit;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.item-cronometro-btn:focus-visible {
+.item-timer-btn:hover {
+  background: var(--cor-superficie-2);
+}
+
+.item-timer-btn:focus-visible {
   outline: 2px solid var(--cor-foco);
   outline-offset: 2px;
 }
 
-.item-cronometro-btn:only-child {
-  grid-column: 1 / -1;
+.item-timer-btn--primario {
+  border-color: var(--cor-acento-fundo);
+  background: var(--cor-acento-fundo);
+  color: var(--cor-texto-contraste);
 }
 
-.item-cronometro-btn--iniciar {
-  border-color: var(--cor-acento);
-  background: color-mix(in srgb, var(--cor-acento) 14%, transparent);
-  color: var(--cor-acento);
+.item-timer-btn--primario:hover {
+  border-color: var(--cor-acento-ativo);
+  background: var(--cor-acento-ativo);
 }
 
-.item-cronometro-btn--iniciar:hover {
-  background: color-mix(in srgb, var(--cor-acento) 22%, transparent);
-}
-
-.item-cronometro-btn--pausar:hover {
-  background: var(--cor-superficie-2);
-}
-
-.item-cronometro-btn--finalizar {
-  grid-column: 1 / -1;
+.item-timer-btn--finalizar {
   border-color: color-mix(in srgb, var(--cor-sucesso) 55%, transparent);
   background: color-mix(in srgb, var(--cor-sucesso) 14%, transparent);
   color: var(--cor-sucesso);
 }
 
-.item-cronometro-btn--finalizar:hover {
-  background: color-mix(in srgb, var(--cor-sucesso) 22%, transparent);
+.item-timer-btn--finalizar:hover {
+  background: color-mix(in srgb, var(--cor-sucesso) 24%, transparent);
+}
+
+.item-timer-btn--fantasma {
+  align-self: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--cor-texto-suave);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.item-timer-btn--fantasma:hover {
+  background: var(--cor-hover);
+  color: var(--cor-texto);
 }
 
 .item-segurar {
@@ -482,6 +683,18 @@
 @media (prefers-reduced-motion: reduce) {
   .item-lista-barra > span {
     transition: none;
+  }
+
+  .item-timer-anel-progresso {
+    transition: none;
+  }
+
+  .item-timer--rodando .item-timer-anel--livre .item-timer-anel-svg {
+    animation: none;
+  }
+
+  .item-timer-selo--ativo .item-timer-selo-ponto {
+    animation: none;
   }
 }
 
