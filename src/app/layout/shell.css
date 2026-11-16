@@ -150,7 +150,7 @@
   width: 100%;
   max-width: 768px;
   margin-inline: auto;
-  padding: 24px 24px calc(96px + env(safe-area-inset-bottom));
+  padding: 16px 12px calc(96px + env(safe-area-inset-bottom));
   overflow: visible;
   min-width: 0;
 }
@@ -166,7 +166,7 @@
   right: 0;
   bottom: calc(12px + env(safe-area-inset-bottom));
   z-index: 50;
-  padding: 0 16px;
+  padding: 0 10px;
 }
 
 .bottom-nav-lista {
@@ -237,7 +237,6 @@
   }
 
   .shell-conteudo {
-    padding-top: 88px;
-    padding-bottom: 48px;
+    padding: 88px 24px 48px;
   }
 }

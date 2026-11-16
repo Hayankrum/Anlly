@@ -85,7 +85,7 @@
   .home-barra {
     gap: 8px;
     min-height: 54px;
-    padding: 0 8px 0 14px;
+    padding: 0 6px 0 12px;
   }
 
   .home-barra-data {
@@ -96,23 +96,27 @@
 /* ---------- Blocos (vista em grade do dia) ---------- */
 
 .blocos-grade {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 14px;
+  column-count: 2;
+  column-gap: 14px;
   margin: 0;
   padding: 4px 0 8px;
   list-style: none;
 }
 
+.blocos-grade > li {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
 @media (min-width: 640px) {
   .blocos-grade {
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    column-count: 3;
   }
 }
 
 .bloco {
   display: flex;
-  min-height: 104px;
+  min-height: 88px;
   overflow: hidden;
   border: 2px solid var(--cor-borda-forte);
   border-radius: 20px;
@@ -128,6 +132,7 @@
 }
 
 .bloco-corpo {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -139,6 +144,20 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
+}
+
+.bloco-icone-fundo {
+  position: absolute;
+  left: -6px;
+  bottom: -8px;
+  color: var(--cor-texto-suave);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.bloco--feito .bloco-icone-fundo {
+  opacity: 0.08;
 }
 
 .bloco-corpo:focus-visible {
@@ -452,8 +471,8 @@
 }
 
 .trilha-passo:not(.trilha-chegada, .trilha-passo--feito, .trilha-passo--proximo) .trilha-no {
-  background: color-mix(in srgb, var(--trilha-tipo-cor) 13%, var(--cor-superficie));
-  color: var(--trilha-tipo-cor);
+  background: var(--trilha-tipo-cor);
+  color: var(--cor-texto-contraste);
 }
 
 .trilha-chegada--alcancada .trilha-no--meta {

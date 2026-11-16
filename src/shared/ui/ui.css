@@ -430,7 +430,13 @@
 .pagina {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .pagina {
+    gap: 16px;
+  }
 }
 
 .pagina-cabecalho {
@@ -457,7 +463,13 @@
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  padding: 16px;
+  padding: 12px;
+}
+
+@media (min-width: 768px) {
+  .cartao {
+    padding: 16px;
+  }
 }
 
 .cartao-titulo {

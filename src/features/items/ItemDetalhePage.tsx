@@ -229,10 +229,14 @@ export function ItemDetalhePage() {
               Entrar / Criar conta
             </Link>
           )}
-          <Link className="btn btn--secundario" to="/calendario">
+          <button
+            type="button"
+            className="btn btn--secundario"
+            onClick={() => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/calendario'))}
+          >
             <ArrowLeft size={16} aria-hidden="true" />
-            Voltar para agenda
-          </Link>
+            Voltar
+          </button>
         </div>
       </div>
     )
@@ -263,10 +267,14 @@ export function ItemDetalhePage() {
       <div className="pagina-cabecalho pagina-cabecalho--detalhe">
         <div>
           <p className="pagina-subtitulo">
-            <Link className="item-voltar" to="/calendario">
+            <button
+              type="button"
+              className="item-voltar"
+              onClick={() => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/calendario'))}
+            >
               <ArrowLeft size={14} aria-hidden="true" />
-              Agenda
-            </Link>
+              Voltar
+            </button>
           </p>
           <h1 className="pagina-titulo">{item.titulo}</h1>
         </div>

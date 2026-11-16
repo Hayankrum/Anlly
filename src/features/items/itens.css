@@ -97,14 +97,15 @@
 
 /* Modelo — cartão com a identidade da cor do tipo. */
 .itens-botao--modelo .itens-botao-icone {
-  border-color: color-mix(in srgb, var(--item-tipo-cor) 30%, var(--cor-borda-forte));
-  background: var(--cor-superficie);
-  color: var(--item-tipo-cor);
+  border-color: transparent;
+  background: var(--item-tipo-cor);
+  color: var(--cor-texto-contraste);
 }
 
 .itens-botao--modelo:hover .itens-botao-icone {
-  border-color: color-mix(in srgb, var(--item-tipo-cor) 55%, var(--cor-borda-forte));
+  border-color: transparent;
   box-shadow: var(--sombra);
+  filter: brightness(1.05);
   transform: translateY(-2px);
 }
 

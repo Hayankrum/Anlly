@@ -1,6 +1,7 @@
 import { Check, Circle } from 'lucide-react'
 import { tempoRelativo } from '../../shared/lib/date'
 import type { Item } from '../../db/schema'
+import { iconeDoItem } from '../items/icones'
 
 interface BlocosProps {
   itens: Item[]
@@ -34,33 +35,37 @@ function metaDoBloco(item: Item): string {
 export function Blocos({ itens, aoAbrir, aoConcluir }: BlocosProps) {
   return (
     <ul className="blocos-grade" aria-label="Itens de hoje em blocos">
-      {itens.map((item) => (
-        <li key={item.id} className={item.concluido ? 'bloco bloco--feito' : 'bloco'}>
-          <button type="button" className="bloco-corpo" onClick={() => aoAbrir(item)}>
-            <span className="bloco-titulo">{item.titulo}</span>
-            <span className="bloco-subtitulo">{metaDoBloco(item)}</span>
-          </button>
-          <button
-            type="button"
-            className="bloco-check"
-            aria-pressed={item.concluido}
-            aria-label={
-              item.tipo === 'lista'
-                ? `Ver subitens de ${item.titulo}`
-                : item.concluido
-                  ? `Desfazer conclusão de ${item.titulo}`
-                  : `Concluir ${item.titulo}`
-            }
-            onClick={() => (item.tipo === 'lista' ? aoAbrir(item) : aoConcluir(item))}
-          >
-            {item.concluido ? (
-              <Check size={19} aria-hidden="true" />
-            ) : (
-              <Circle size={19} aria-hidden="true" />
-            )}
-          </button>
-        </li>
-      ))}
+      {itens.map((item) => {
+        const Icone = iconeDoItem(item.icone, item.tipo)
+        return (
+          <li key={item.id} className={item.concluido ? 'bloco bloco--feito' : 'bloco'}>
+            <button type="button" className="bloco-corpo" onClick={() => aoAbrir(item)}>
+              <Icone className="bloco-icone-fundo" size={56} strokeWidth={1.6} aria-hidden="true" />
+              <span className="bloco-titulo">{item.titulo}</span>
+              <span className="bloco-subtitulo">{metaDoBloco(item)}</span>
+            </button>
+            <button
+              type="button"
+              className="bloco-check"
+              aria-pressed={item.concluido}
+              aria-label={
+                item.tipo === 'lista'
+                  ? `Ver subitens de ${item.titulo}`
+                  : item.concluido
+                    ? `Desfazer conclusão de ${item.titulo}`
+                    : `Concluir ${item.titulo}`
+              }
+              onClick={() => (item.tipo === 'lista' ? aoAbrir(item) : aoConcluir(item))}
+            >
+              {item.concluido ? (
+                <Check size={19} aria-hidden="true" />
+              ) : (
+                <Circle size={19} aria-hidden="true" />
+              )}
+            </button>
+          </li>
+        )
+      })}
     </ul>
   )
 }
